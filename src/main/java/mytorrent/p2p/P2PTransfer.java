@@ -23,8 +23,6 @@
  */
 package mytorrent.p2p;
 
-import java.io.File;
-
 /**
  *
  * @author Bo Feng
@@ -35,6 +33,10 @@ public interface P2PTransfer {
     public long registry(int peerId, String[] files);
 
     public FileHash.Entry[] search(String filename);
-
-    public File obtain(String filename);
+    
+    public boolean ping();
+    
+    public void startup();
+    
+    public void exit();
 }

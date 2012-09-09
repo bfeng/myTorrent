@@ -24,6 +24,7 @@
 package mytorrent.p2p;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.Socket;
 import java.nio.file.FileSystems;
@@ -41,6 +42,18 @@ public class P2PSender extends Thread {
     private String filename;
     private Socket socket;
 
+    public P2PSender(Socket sock) throws IOException {
+        this.socket = sock;
+
+        InputStream in = socket.getInputStream();
+        char[] data = new char[256];
+        for (int i = 0; i < data.length; i++) {
+            data[i] = (char) in.read();
+        }
+        this.filename = String.valueOf(data);
+        in.close();
+    }
+
     public P2PSender(Socket socket, String filename) {
         this.socket = socket;
         this.filename = filename;
@@ -50,8 +63,9 @@ public class P2PSender extends Thread {
     public void run() {
         try {
             OutputStream os = socket.getOutputStream();
-            Path path = FileSystems.getDefault().getPath("shared", filename);
-            Files.copy(path, os);
+//            Path path = FileSystems.getDefault().getPath("shared", filename);
+//            Files.copy(path, os);
+            System.out.println("I'm going to send: " + filename);
             os.close();
         } catch (IOException ex) {
             Logger.getLogger(P2PSender.class.getName()).log(Level.SEVERE, filename, ex);
