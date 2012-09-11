@@ -23,6 +23,9 @@
  */
 package mytorrent;
 
+import mytorrent.gui.BannerManager;
+import mytorrent.gui.CommandParser;
+
 /**
  *
  * @author Bo Feng
@@ -34,5 +37,42 @@ public class MyTorrent {
      * @param args the command line arguments
      */
     public static void main(String[] args) {
+
+        //Print banner
+        /* BannerManager.clearConsole();*/
+        BannerManager.printBanner();
+
+
+
+        //while(true);
+        while (true) {
+            BannerManager.printCursor();
+
+
+            CommandParser i = new CommandParser();
+            String[] userinput = i.run();
+            if (userinput[0].toLowerCase().startsWith("reg")) {
+                /* Register */
+                System.out.println("This is the Register part!");
+                System.out.println(i.Counter());
+                System.out.println(userinput[2]);
+                System.out.println(userinput[3]);
+                continue;
+            } else if (userinput[0].toLowerCase().startsWith("sea")) {
+                /* Search */
+                System.out.println("This is the Search part!");
+                continue;
+            } else if (userinput[0].toLowerCase().startsWith("obt")) {
+                /* Obtain */
+                System.out.println("This is the obtain part!");
+                continue;
+
+            } else {
+                System.out.println("Command not recognized!");
+                continue;
+            }
+
+        }
+
     }
 }
