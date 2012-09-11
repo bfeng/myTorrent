@@ -23,14 +23,13 @@
  */
 package mytorrent.p2p;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.Socket;
-import java.nio.file.FileSystems;
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import org.apache.commons.io.FileUtils;
 
 /**
  *
@@ -50,8 +49,7 @@ public class P2PReceiver extends Thread {
     public void run() {
         try {
             InputStream in = socket.getInputStream();
-            Path path = FileSystems.getDefault().getPath("shared", filename);
-            Files.copy(in, path);
+            FileUtils.copyInputStreamToFile(in, new File("shared/" + filename));
         } catch (IOException ex) {
             Logger.getLogger(P2PReceiver.class.getName()).log(Level.SEVERE, null, ex);
         }
