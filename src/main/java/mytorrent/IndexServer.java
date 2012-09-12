@@ -23,8 +23,12 @@
  */
 package mytorrent;
 
+import java.io.BufferedReader;
+import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.OutputStream;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.logging.Level;
@@ -70,18 +74,23 @@ public class IndexServer implements P2PTransfer, Runnable {
     @Override
     public void run() {
         InputStream is = null;
+        OutputStream os = null;
         try {
             is = socket.getInputStream();
+            os = socket.getOutputStream();
+            BufferedReader br = new BufferedReader(new InputStreamReader(is));
+            String cmd = br.readLine();
             
-            // run the protocol
-            // return specific result to the client
+            System.out.println("Received: " + cmd);
             
-            is.close();
+            DataOutputStream out = new DataOutputStream(os);
+            out.writeBytes(cmd);
         } catch (IOException ex) {
             Logger.getLogger(IndexServer.class.getName()).log(Level.SEVERE, null, ex);
         } finally {
             try {
                 is.close();
+                socket.close();
             } catch (IOException ex) {
                 Logger.getLogger(IndexServer.class.getName()).log(Level.SEVERE, null, ex);
             }
@@ -91,11 +100,14 @@ public class IndexServer implements P2PTransfer, Runnable {
     public static void main(String[] args) {
         try {
             ServerSocket ss = new ServerSocket(port);
-            while (true) {
+            boolean listening = true;
+            while (listening) {
+                Socket sock = ss.accept();
                 IndexServer is = new IndexServer();
-                is.socket = ss.accept();
+                is.socket = sock;
                 new Thread(is).start();
             }
+            ss.close();
         } catch (IOException ex) {
             Logger.getLogger(IndexServer.class.getName()).log(Level.SEVERE, null, ex);
         }
