@@ -75,8 +75,8 @@ public class IndexServer implements P2PTransfer, Runnable {
 
         //Loop for the times with respect to the number of files
         int i = 0;
-        String ThisFileName = null;
-        String ThisFileRegName = null;
+        String ThisFileName;
+        String ThisFileRegName;
         boolean exists;
         boolean peerexists;
         PrintWriter pw;
@@ -130,61 +130,7 @@ public class IndexServer implements P2PTransfer, Runnable {
             //proceed to the next file
             i++;
         }
-
-
-        /*
-        File thefile = new File("\registry.txt");
-        boolean success = thefile.createNewFile();
-        PrintWriter filewriter = new PrintWriter(new FileWriter(thefile));
-        if (success) {
-        for (int i = 0; i < arraysize; i++) {
-        filewriter.println(files[i] + " " + peer);
-        }
-        } else {
-        Scanner filescanner = new Scanner(new FileReader(thefile));
-        int i = 0;
-        String theline = null;
-        String newline;
-        boolean exist;
-        
-        //Loop for the times with respect to the number of files
-        while (i < arraysize) {
-        
-        exist = false;
-        //loop until the line with the file name is found
-        while ((filescanner.hasNextLine()) && !exist) {
-        
-        theline = filescanner.nextLine();
-        if (theline.startsWith(files[i])) {
-        exist = true;
-        }
-        }
-        //loop complete with either EOF or file found
-        if (exist) {
-        //line with the filename is found
-        //identify if the current peerId is on the line
-        if (theline.contains(peer)) {
-        //already registered, just break
-        //do nothing
-        } else {
-        //append the peerId in the line
-        newline = theline + " " + peer;
-        filewriter.println(newline);
-        }
-        } else {
-        //not exist, need create new line with the file name
-        filewriter.println(files[i] + " " + peer);
-        }
-        
-        //proceed to the next file
-        i++;
-        }
-        }
-         */
-
-
-
-
+        //returnvalue
         long returnvalue = 0;
 
         return returnvalue;
@@ -192,7 +138,7 @@ public class IndexServer implements P2PTransfer, Runnable {
 
     @Override
     public Entry[] search(String filename) {
-        //throw new UnsupportedOperationException("Not supported yet.");
+        //throw new UnsupportedOperationException("Not supported yet.");\
 
         boolean exists = (new File(filename)).exists();
         if (exists) {
@@ -209,13 +155,25 @@ public class IndexServer implements P2PTransfer, Runnable {
                 }
                 sn.close();
                 sn = new Scanner(new FileReader(filename));
+                String[] Peers = new String[i];
                 //Entry stuff
+
+                Entry[] returnEntry = new Entry[i];
+                long templong;
+                for (int k = i; k > 0; k--) {
+                    templong = Long.parseLong(Peers[k-1]);
+                    returnEntry[k - 1].setPeerId(templong);
+                    returnEntry[k - 1].setFilename(filename);
+                }
+
+
 
 
             } catch (FileNotFoundException ex) {
                 Logger.getLogger(IndexServer.class.getName()).log(Level.SEVERE, null, ex);
             }
-
+            
+            return returnEntry;
 
 
         }
