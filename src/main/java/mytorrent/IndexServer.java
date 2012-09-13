@@ -24,6 +24,7 @@
 package mytorrent;
 
 import java.io.BufferedReader;
+import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.PrintWriter;
@@ -65,66 +66,154 @@ public class IndexServer implements P2PTransfer, Runnable {
     @Override
     public long registry(int peerId, String[] files) {
         //throw new UnsupportedOperationException("Not supported yet.");
-        //kk
-        long returnvalue;
+
+        //Neccessary Information
         String peer = "" + peerId;
         int arraysize = files.length;
 
 
 
-        File thefile = new File("registry.txt");
+        //Loop for the times with respect to the number of files
+        int i = 0;
+        String ThisFileName = null;
+        String ThisFileRegName = null;
+        boolean exists;
+        boolean peerexists;
+        PrintWriter pw;
+        Scanner sn;
+        String theline;
+        while (i < arraysize) {
+
+            ThisFileName = files[i];
+            ThisFileRegName = ThisFileName + "xx";
+
+            exists = (new File(ThisFileRegName)).exists();
+            pw = null;
+            sn = null;
+
+            if (!exists) {
+                try {
+                    pw = new PrintWriter(new FileWriter(new File(ThisFileRegName)));
+                    pw.println(peer);
+                    pw.close();
+                } catch (IOException ex) {
+                    Logger.getLogger(IndexServer.class.getName()).log(Level.SEVERE, null, ex);
+                }
+
+            } else {
+                try {
+                    sn = new Scanner(new FileReader(ThisFileRegName));
+                    //Loop for peer in each line in the file (Scanner)
+                    peerexists = false;
+                    while ((sn.hasNextLine()) && !peerexists) {
+                        theline = sn.nextLine();
+                        if (theline.startsWith(peer)) {
+                            peerexists = true;
+                        }
+                    }
+                    sn.close();
+                    if (!peerexists) {
+                        try {
+                            pw = new PrintWriter(new FileWriter(new File(ThisFileRegName), true));
+                            pw.println(peer);
+                            pw.close();
+                        } catch (IOException ex) {
+                            Logger.getLogger(IndexServer.class.getName()).log(Level.SEVERE, null, ex);
+                        }
+
+                    }
+                } catch (FileNotFoundException ex) {
+                    Logger.getLogger(IndexServer.class.getName()).log(Level.SEVERE, null, ex);
+                }
+
+            }
+            //proceed to the next file
+            i++;
+        }
+
+
+        /*
+        File thefile = new File("\registry.txt");
         boolean success = thefile.createNewFile();
         PrintWriter filewriter = new PrintWriter(new FileWriter(thefile));
         if (success) {
-            for (int i = 0; i < arraysize; i++) {
-                filewriter.println(files[i] + " " + peer);
-            }
-
-
-
-
-
-
+        for (int i = 0; i < arraysize; i++) {
+        filewriter.println(files[i] + " " + peer);
+        }
         } else {
+        Scanner filescanner = new Scanner(new FileReader(thefile));
+        int i = 0;
+        String theline = null;
+        String newline;
+        boolean exist;
+        
+        //Loop for the times with respect to the number of files
+        while (i < arraysize) {
+        
+        exist = false;
+        //loop until the line with the file name is found
+        while ((filescanner.hasNextLine()) && !exist) {
+        
+        theline = filescanner.nextLine();
+        if (theline.startsWith(files[i])) {
+        exist = true;
+        }
+        }
+        //loop complete with either EOF or file found
+        if (exist) {
+        //line with the filename is found
+        //identify if the current peerId is on the line
+        if (theline.contains(peer)) {
+        //already registered, just break
+        //do nothing
+        } else {
+        //append the peerId in the line
+        newline = theline + " " + peer;
+        filewriter.println(newline);
+        }
+        } else {
+        //not exist, need create new line with the file name
+        filewriter.println(files[i] + " " + peer);
+        }
+        
+        //proceed to the next file
+        i++;
+        }
+        }
+         */
 
-            Scanner filescanner = new Scanner(new FileReader(thefile));
 
-            int i = 0;
-            String theline = null;
-            String newline;
-            boolean exist;
 
-            //Loop for the times with respect to the number of files
-            while (i < arraysize) {
 
-                exist = false;
-                //loop until the line with the file name is found
-                while ((filescanner.hasNextLine()) && !exist) {
+        long returnvalue = 0;
 
-                    theline = filescanner.nextLine();
-                    if (theline.startsWith(files[i])) {
-                        exist = true;
-                    }
+        return returnvalue;
+    }
+
+    @Override
+    public Entry[] search(String filename) {
+        //throw new UnsupportedOperationException("Not supported yet.");
+
+        boolean exists = (new File(filename)).exists();
+        if (exists) {
+
+
+
+            try {
+                Scanner sn = new Scanner(new FileReader(filename));
+                //Count line number
+                int i = 0;
+                while (sn.hasNextLine()) {
+                    sn.next();
+                    i++;
                 }
-                //loop complete with either EOF or file found
-                if (exist) {
-                    //line with the filename is found
-                    //identify if the current peerId is on the line
-                    if (theline.contains(peer)) {
-                        //already registered, just break
-                        //do nothing
-                    } else {
-                        //append the peerId in the line
-                        newline = theline + " " + peer;
-                        filewriter.println(newline);
-                    }
-                } else {
-                    //not exist, need create new line with the file name
-                    filewriter.println(files[i] + " " + peer);
-                }
+                sn.close();
+                sn = new Scanner(new FileReader(filename));
+                //Entry stuff
 
-                //proceed to the next file
-                i++;
+
+            } catch (FileNotFoundException ex) {
+                Logger.getLogger(IndexServer.class.getName()).log(Level.SEVERE, null, ex);
             }
 
 
@@ -135,14 +224,6 @@ public class IndexServer implements P2PTransfer, Runnable {
 
 
 
-
-
-        return returnvalue;
-    }
-
-    @Override
-    public Entry[] search(String filename) {
-        //throw new UnsupportedOperationException("Not supported yet.");
     }
 
     @Override
@@ -242,17 +323,22 @@ public class IndexServer implements P2PTransfer, Runnable {
             cmd = rawcmd.split("\\s");
             int cmdSize = cmd.length;
             if (cmd[0].equals("registry")) {
-
                 //Do registry
                 int peerid = Integer.parseInt(cmd[1]);
                 String[] filenames = Arrays.copyOfRange(cmd, 2, cmdSize - 1);
                 long returnReg = this.registry(peerid, filenames);
-
                 //Send to client work DONE
                 linewriter.println(returnReg);
 
             } else if (cmd[0].equals("search")) {
                 //Do search
+                String filename1 = cmd[1];
+                Entry[] ReturnEntry = this.search(filename1);
+
+                //Send to client Entry
+
+
+
             } else if (cmd[0].equals("ping")) {
                 //Do ping
                 this.ping();
