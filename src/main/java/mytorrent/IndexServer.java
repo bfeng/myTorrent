@@ -24,6 +24,7 @@
 package mytorrent;
 
 import java.io.BufferedReader;
+import java.io.PrintWriter;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -44,7 +45,18 @@ import mytorrent.p2p.P2PTransfer;
 public class IndexServer implements P2PTransfer, Runnable {
 
     private static final int port = 5700;
-    private Socket socket;
+    private ServerSocket ss;           //need cleanup
+    private Socket socket;             //need cleanup
+    //raw data streams
+    private InputStream is;
+    private OutputStream os;
+    //Line reader and writer used to communicate mainly in run()
+    private BufferedReader linereader; //need cleanup
+    private PrintWriter linewriter;    //need cleanup
+    private String rawcmd;
+    private String[] cmd;
+    //Status flags
+    private boolean RUNNING;
 
     @Override
     public long registry(int peerId, String[] files) {
@@ -58,58 +70,150 @@ public class IndexServer implements P2PTransfer, Runnable {
 
     @Override
     public boolean ping() {
-        throw new UnsupportedOperationException("Not supported yet.");
+        //throw new UnsupportedOperationException("Not supported yet.");
+
+        //print on server console
+        System.out.println("Received: " + cmd[0]);
+        linewriter.println(cmd[0]);
+        //DataOutputStream out = new DataOutputStream(os);
+        //out.writeBytes(cmd);
+        return true;
     }
 
     @Override
     public void startup() {
-        throw new UnsupportedOperationException("Not supported yet.");
+        //throw new UnsupportedOperationException("Not supported yet.");
+
+        //server startup with client socket returned
+
+        //Start up serversocket
+        try {
+
+            this.ss = new ServerSocket(port);
+
+        } catch (IOException e) {
+            System.err.println("Could not listen on port: " + port + ".");
+            System.exit(1);
+        }
+
+        //Start up serversocket listening block, until return this.socket
+        try {
+            socket = null;
+            this.socket = ss.accept();
+        } catch (IOException e) {
+            System.err.println("Accept failed during Startup.");
+            System.exit(1);
+        }
+
     }
 
     @Override
     public void exit() {
-        throw new UnsupportedOperationException("Not supported yet.");
-    }
+        //throw new UnsupportedOperationException("Not supported yet.");
 
-    @Override
-    public void run() {
-        InputStream is = null;
-        OutputStream os = null;
+        //clean up
         try {
-            is = socket.getInputStream();
-            os = socket.getOutputStream();
-            BufferedReader br = new BufferedReader(new InputStreamReader(is));
-            String cmd = br.readLine();
-            
-            System.out.println("Received: " + cmd);
-            
-            DataOutputStream out = new DataOutputStream(os);
-            out.writeBytes(cmd);
+            linereader.close();
         } catch (IOException ex) {
             Logger.getLogger(IndexServer.class.getName()).log(Level.SEVERE, null, ex);
-        } finally {
-            try {
-                is.close();
-                socket.close();
-            } catch (IOException ex) {
-                Logger.getLogger(IndexServer.class.getName()).log(Level.SEVERE, null, ex);
-            }
         }
-    }
-
-    public static void main(String[] args) {
+        linewriter.close();
         try {
-            ServerSocket ss = new ServerSocket(port);
-            boolean listening = true;
-            while (listening) {
-                Socket sock = ss.accept();
-                IndexServer is = new IndexServer();
-                is.socket = sock;
-                new Thread(is).start();
-            }
+            socket.close();
+        } catch (IOException ex) {
+            Logger.getLogger(IndexServer.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        try {
             ss.close();
         } catch (IOException ex) {
             Logger.getLogger(IndexServer.class.getName()).log(Level.SEVERE, null, ex);
         }
+
+    }
+
+    @Override
+    public void run() {
+
+
+        //this.startup();
+
+        //while (RUNNING) {
+
+
+            //cmd line communication connection with client
+            try {
+                is = socket.getInputStream();
+                os = socket.getOutputStream();
+                linewriter = new PrintWriter(os, true);
+                linereader = new BufferedReader(new InputStreamReader(is));
+            } catch (IOException e) {
+                System.err.println("Couldn't get I/O for the connection to: " + socket.getInetAddress().getHostAddress());
+                System.exit(1);
+            }
+
+            //parse the cmd line input
+            try {
+                rawcmd = linereader.readLine();
+            } catch (IOException ex) {
+                Logger.getLogger(IndexServer.class.getName()).log(Level.SEVERE, null, ex);
+            }
+            cmd = rawcmd.split("\\s");
+            if (cmd[0].equals("registry")) {
+                //Do registry
+            } else if (cmd[0].equals("search")) {
+                //Do search
+            } else if (cmd[0].equals("ping")) {
+                //Do ping
+                this.ping();
+            } else {
+                System.err.println("Command " + cmd[0] + "is not supported!");
+            }
+
+
+/*
+            try {
+                linewriter.close();
+                linereader.close();
+                os.close();
+                is.close();
+                socket.close();
+            } catch (IOException ex) {
+                Logger.getLogger(IndexServer.class.getName()).log(Level.SEVERE, null, ex);
+                System.err.println("Couldn't close linereader!");
+            }
+
+
+            //Renew the server listening block
+            socket = null;
+            try {
+                this.socket = ss.accept();
+            } catch (IOException ex) {
+                Logger.getLogger(IndexServer.class.getName()).log(Level.SEVERE, null, ex);
+            }
+
+*/
+
+
+        
+
+
+
+
+    }
+
+    public static void main(String[] args) {
+
+
+
+
+        boolean listening = true;
+        while (listening) {
+
+            IndexServer is1 = new IndexServer();
+            is1.startup();
+            new Thread(is1).start();
+            is1.exit();
+        }
+
     }
 }

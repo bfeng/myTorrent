@@ -61,5 +61,27 @@ public class IndexServerTestCase {
             Logger.getLogger(IndexServerTestCase.class.getName()).log(Level.SEVERE, null, ex);
             fail(ex.getMessage());
         }
+        
+        /*
+        try {
+            Socket sock = new Socket("localhost", 5700);
+            PrintWriter out = new PrintWriter(new OutputStreamWriter(sock.getOutputStream()));
+            BufferedReader in = new BufferedReader(new InputStreamReader(sock.getInputStream()));
+
+            out.println("ping2");
+            out.flush();
+
+            assertEquals("ping2", in.readLine());
+
+            in.close();
+            out.close();
+            sock.close();
+
+        } catch (Exception ex) {
+            Logger.getLogger(IndexServerTestCase.class.getName()).log(Level.SEVERE, null, ex);
+            fail(ex.getMessage());
+        }      
+         * 
+         */
     }
 }
