@@ -140,6 +140,7 @@ public class IndexServer implements P2PTransfer, Runnable {
     public Entry[] search(String filename) {
         //throw new UnsupportedOperationException("Not supported yet.");\
 
+        Entry[] returnEntry = null;
         boolean exists = (new File(filename)).exists();
         if (exists) {
 
@@ -158,10 +159,10 @@ public class IndexServer implements P2PTransfer, Runnable {
                 String[] Peers = new String[i];
                 //Entry stuff
 
-                Entry[] returnEntry = new Entry[i];
+                returnEntry = new Entry[i];
                 long templong;
                 for (int k = i; k > 0; k--) {
-                    templong = Long.parseLong(Peers[k-1]);
+                    templong = Long.parseLong(Peers[k - 1]);
                     returnEntry[k - 1].setPeerId(templong);
                     returnEntry[k - 1].setFilename(filename);
                 }
@@ -172,14 +173,14 @@ public class IndexServer implements P2PTransfer, Runnable {
             } catch (FileNotFoundException ex) {
                 Logger.getLogger(IndexServer.class.getName()).log(Level.SEVERE, null, ex);
             }
-            
-            return returnEntry;
+
+
 
 
         }
 
 
-
+        return returnEntry;
 
 
     }
