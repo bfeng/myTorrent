@@ -41,10 +41,9 @@ import mytorrent.p2p.P2PTransfer;
  * @author Bo Feng
  * @version 1.0
  */
-public class IndexServer implements P2PTransfer, Runnable {
+public class IndexServer implements P2PTransfer {
 
     private static final int port = 5700;
-    private Socket socket;
 
     @Override
     public long registry(int peerId, String[] files) {
@@ -71,6 +70,28 @@ public class IndexServer implements P2PTransfer, Runnable {
         throw new UnsupportedOperationException("Not supported yet.");
     }
 
+    public static void main(String[] args) {
+        try {
+            ServerSocket ss = new ServerSocket(port);
+            boolean listening = true;
+            while (listening) {
+                new IndexServerThread(ss.accept()).start();
+            }
+            ss.close();
+        } catch (IOException ex) {
+            Logger.getLogger(IndexServer.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }
+}
+
+class IndexServerThread extends Thread {
+
+    private Socket socket;
+
+    public IndexServerThread(Socket socket) {
+        this.socket = socket;
+    }
+
     @Override
     public void run() {
         InputStream is = null;
@@ -80,9 +101,9 @@ public class IndexServer implements P2PTransfer, Runnable {
             os = socket.getOutputStream();
             BufferedReader br = new BufferedReader(new InputStreamReader(is));
             String cmd = br.readLine();
-            
+
             System.out.println("Received: " + cmd);
-            
+
             DataOutputStream out = new DataOutputStream(os);
             out.writeBytes(cmd);
         } catch (IOException ex) {
@@ -94,22 +115,6 @@ public class IndexServer implements P2PTransfer, Runnable {
             } catch (IOException ex) {
                 Logger.getLogger(IndexServer.class.getName()).log(Level.SEVERE, null, ex);
             }
-        }
-    }
-
-    public static void main(String[] args) {
-        try {
-            ServerSocket ss = new ServerSocket(port);
-            boolean listening = true;
-            while (listening) {
-                Socket sock = ss.accept();
-                IndexServer is = new IndexServer();
-                is.socket = sock;
-                new Thread(is).start();
-            }
-            ss.close();
-        } catch (IOException ex) {
-            Logger.getLogger(IndexServer.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
 }
