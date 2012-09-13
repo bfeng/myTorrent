@@ -24,14 +24,18 @@
 package mytorrent;
 
 import java.io.BufferedReader;
+import java.io.FileReader;
+import java.io.FileWriter;
 import java.io.PrintWriter;
-import java.io.DataOutputStream;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.util.Arrays;
+import java.util.Scanner;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import mytorrent.p2p.FileHash.Entry;
@@ -56,16 +60,89 @@ public class IndexServer implements P2PTransfer, Runnable {
     private String rawcmd;
     private String[] cmd;
     //Status flags
-    private boolean RUNNING;
+    private boolean RUNNING = true;
 
     @Override
     public long registry(int peerId, String[] files) {
-        throw new UnsupportedOperationException("Not supported yet.");
+        //throw new UnsupportedOperationException("Not supported yet.");
+        //kk
+        long returnvalue;
+        String peer = "" + peerId;
+        int arraysize = files.length;
+
+
+
+        File thefile = new File("registry.txt");
+        boolean success = thefile.createNewFile();
+        PrintWriter filewriter = new PrintWriter(new FileWriter(thefile));
+        if (success) {
+            for (int i = 0; i < arraysize; i++) {
+                filewriter.println(files[i] + " " + peer);
+            }
+
+
+
+
+
+
+        } else {
+
+            Scanner filescanner = new Scanner(new FileReader(thefile));
+
+            int i = 0;
+            String theline = null;
+            String newline;
+            boolean exist;
+
+            //Loop for the times with respect to the number of files
+            while (i < arraysize) {
+
+                exist = false;
+                //loop until the line with the file name is found
+                while ((filescanner.hasNextLine()) && !exist) {
+
+                    theline = filescanner.nextLine();
+                    if (theline.startsWith(files[i])) {
+                        exist = true;
+                    }
+                }
+                //loop complete with either EOF or file found
+                if (exist) {
+                    //line with the filename is found
+                    //identify if the current peerId is on the line
+                    if (theline.contains(peer)) {
+                        //already registered, just break
+                        //do nothing
+                    } else {
+                        //append the peerId in the line
+                        newline = theline + " " + peer;
+                        filewriter.println(newline);
+                    }
+                } else {
+                    //not exist, need create new line with the file name
+                    filewriter.println(files[i] + " " + peer);
+                }
+
+                //proceed to the next file
+                i++;
+            }
+
+
+
+        }
+
+
+
+
+
+
+
+        return returnvalue;
     }
 
     @Override
     public Entry[] search(String filename) {
-        throw new UnsupportedOperationException("Not supported yet.");
+        //throw new UnsupportedOperationException("Not supported yet.");
     }
 
     @Override
@@ -73,7 +150,9 @@ public class IndexServer implements P2PTransfer, Runnable {
         //throw new UnsupportedOperationException("Not supported yet.");
 
         //print on server console
+        System.out.println(" ");
         System.out.println("Received: " + cmd[0]);
+        System.out.print(">>>");
         linewriter.println(cmd[0]);
         //DataOutputStream out = new DataOutputStream(os);
         //out.writeBytes(cmd);
@@ -96,14 +175,7 @@ public class IndexServer implements P2PTransfer, Runnable {
             System.exit(1);
         }
 
-        //Start up serversocket listening block, until return this.socket
-        try {
-            socket = null;
-            this.socket = ss.accept();
-        } catch (IOException e) {
-            System.err.println("Accept failed during Startup.");
-            System.exit(1);
-        }
+
 
     }
 
@@ -134,11 +206,16 @@ public class IndexServer implements P2PTransfer, Runnable {
     @Override
     public void run() {
 
+        while (RUNNING) {
 
-        //this.startup();
-
-        //while (RUNNING) {
-
+            //Start up server listening block, until return this.socket
+            try {
+                //socket = null;
+                this.socket = ss.accept();
+            } catch (IOException e) {
+                System.err.println("Accept failed during Startup.");
+                System.exit(1);
+            }
 
             //cmd line communication connection with client
             try {
@@ -157,9 +234,23 @@ public class IndexServer implements P2PTransfer, Runnable {
             } catch (IOException ex) {
                 Logger.getLogger(IndexServer.class.getName()).log(Level.SEVERE, null, ex);
             }
+
+            //Send to client ACK
+            linewriter.println("ACK");
+
+            //Process command
             cmd = rawcmd.split("\\s");
+            int cmdSize = cmd.length;
             if (cmd[0].equals("registry")) {
+
                 //Do registry
+                int peerid = Integer.parseInt(cmd[1]);
+                String[] filenames = Arrays.copyOfRange(cmd, 2, cmdSize - 1);
+                long returnReg = this.registry(peerid, filenames);
+
+                //Send to client work DONE
+                linewriter.println(returnReg);
+
             } else if (cmd[0].equals("search")) {
                 //Do search
             } else if (cmd[0].equals("ping")) {
@@ -169,8 +260,7 @@ public class IndexServer implements P2PTransfer, Runnable {
                 System.err.println("Command " + cmd[0] + "is not supported!");
             }
 
-
-/*
+            //Clean up finished connection
             try {
                 linewriter.close();
                 linereader.close();
@@ -181,39 +271,25 @@ public class IndexServer implements P2PTransfer, Runnable {
                 Logger.getLogger(IndexServer.class.getName()).log(Level.SEVERE, null, ex);
                 System.err.println("Couldn't close linereader!");
             }
-
-
-            //Renew the server listening block
-            socket = null;
-            try {
-                this.socket = ss.accept();
-            } catch (IOException ex) {
-                Logger.getLogger(IndexServer.class.getName()).log(Level.SEVERE, null, ex);
-            }
-
-*/
-
-
-        
-
-
-
-
+        }
     }
 
     public static void main(String[] args) {
 
 
+        //Set up indexserver 1
+        IndexServer is1 = new IndexServer();
+        is1.startup();
+        new Thread(is1).start();
 
-
-        boolean listening = true;
-        while (listening) {
-
-            IndexServer is1 = new IndexServer();
-            is1.startup();
-            new Thread(is1).start();
-            is1.exit();
+        //Server Console Shell
+        while (true) {
+            System.out.print(">>>");
+            Scanner userScanner = new Scanner(System.in);
+            String userInputRaw = userScanner.nextLine();
+            System.out.println("Echo: " + userInputRaw);
         }
+
 
     }
 }
