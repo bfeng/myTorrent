@@ -25,6 +25,16 @@ public class IndexServerTestCase {
 
     @BeforeClass
     public static void setUpClass() {
+        try {
+            Socket sock = new Socket("localhost", 5700);
+            sock.close();
+        } catch (UnknownHostException ex) {
+            Logger.getLogger(IndexServerTestCase.class.getName()).log(Level.SEVERE, null, ex);
+            fail("To make a test, please start up IndexServer at localhost.");
+        } catch (IOException ex) {
+            Logger.getLogger(IndexServerTestCase.class.getName()).log(Level.SEVERE, null, ex);
+            fail("Cannot find listening IndexServer! Please check the server port number.");
+        }
     }
 
     @AfterClass
@@ -47,11 +57,10 @@ public class IndexServerTestCase {
                 PrintWriter out = new PrintWriter(new OutputStreamWriter(sock.getOutputStream()));
                 BufferedReader in = new BufferedReader(new InputStreamReader(sock.getInputStream()));
 
-
-                out.println(Integer.toString(i));
+                out.println("ping");
                 out.flush();
 
-                assertEquals(Integer.toString(i), in.readLine());
+                assertEquals("ping", in.readLine());
 
                 in.close();
                 out.close();
@@ -62,27 +71,5 @@ public class IndexServerTestCase {
                 fail(ex.getMessage());
             }
         }
-        
-        /*
-        try {
-            Socket sock = new Socket("localhost", 5700);
-            PrintWriter out = new PrintWriter(new OutputStreamWriter(sock.getOutputStream()));
-            BufferedReader in = new BufferedReader(new InputStreamReader(sock.getInputStream()));
-
-            out.println("ping2");
-            out.flush();
-
-            assertEquals("ping2", in.readLine());
-
-            in.close();
-            out.close();
-            sock.close();
-
-        } catch (Exception ex) {
-            Logger.getLogger(IndexServerTestCase.class.getName()).log(Level.SEVERE, null, ex);
-            fail(ex.getMessage());
-        }      
-         * 
-         */
     }
 }
