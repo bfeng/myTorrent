@@ -23,9 +23,14 @@
  */
 package mytorrent.p2p;
 
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
+
 /**
  *
- * @author bfeng5
+ * @author Bo Feng
+ * @version 1.0
  */
 public class FileHash {
 
@@ -49,5 +54,61 @@ public class FileHash {
         public void setFilename(String filename) {
             this.filename = filename;
         }
+    }
+    
+    private Map<String, Entry> hash;
+    
+    public FileHash() {
+        this.hash = new HashMap<String, Entry>();
+    }
+    
+    public synchronized void addEntry(Entry entry) {
+        String key = String.format("%s:%s", entry.peerId, entry.filename);
+        this.hash.put(key, entry);
+    }
+    
+    /**
+     * 
+     * @return all entries maintained in the hash map
+     */
+    public synchronized Entry[] search() {
+        return (Entry[]) this.hash.values().toArray();
+    }
+    
+    /**
+     * Find out all entries that have the peerId
+     * @param peerId
+     * @return 
+     */
+    public synchronized Entry[] search(int peerId) {
+        ArrayList<Entry> result = new ArrayList<Entry>();
+        
+        for(String key:this.hash.keySet()) {
+            String peerIdString = key.split(":", 2)[0];
+            if(peerIdString.equals(String.valueOf(peerId))) {
+                result.add(this.hash.get(key));
+            }
+        }
+        
+        return (Entry[]) result.toArray();
+    }
+    
+    /**
+     * Find out all entries that have the filename.
+     * It also supports partial sequence matching.
+     * @param filename
+     * @return 
+     */
+    public synchronized Entry[] search(String filename) {
+        ArrayList<Entry> result = new ArrayList<Entry>();
+        
+        for(String key:this.hash.keySet()) {
+            String filenameString = key.split(":", 2)[1];
+            if(filenameString.contains(filename)) {
+                result.add(this.hash.get(key));
+            }
+        }
+        
+        return (Entry[]) result.toArray();
     }
 }
