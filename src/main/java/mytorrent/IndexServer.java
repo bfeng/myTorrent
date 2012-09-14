@@ -32,6 +32,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.ObjectOutputStream;
 import java.io.OutputStream;
 import java.net.ServerSocket;
 import java.net.Socket;
@@ -293,9 +294,13 @@ public class IndexServer implements P2PTransfer, Runnable {
                 //Do search
                 String filename1 = cmd[1];
                 Entry[] ReturnEntry = this.search(filename1);
-
-                //Send to client Entry
-
+                try {
+                    //Send to client Entry
+                    ObjectOutputStream oos = new ObjectOutputStream(socket.getOutputStream());
+                    oos.writeObject(ReturnEntry);
+                } catch (IOException ex) {
+                    Logger.getLogger(IndexServer.class.getName()).log(Level.SEVERE, null, ex);
+                }
 
 
             } else if (cmd[0].equals("ping")) {
