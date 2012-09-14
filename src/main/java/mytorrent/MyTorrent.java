@@ -23,6 +23,11 @@
  */
 package mytorrent;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.Scanner;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import mytorrent.gui.BannerManager;
 import mytorrent.gui.CommandParser;
 
@@ -42,10 +47,23 @@ public class MyTorrent {
         /* BannerManager.clearConsole();*/
         BannerManager.printBanner();
 
+        //Ask user for peer port"
+        InputStream sysin = System.in;
+        System.out.print("\nPlease input port number >>>");
+        Scanner portScanner = new Scanner(sysin);
+        String portInputRaw = portScanner.nextLine();
+        //portScanner.close();
+          
+         
+        
+        //create a peer and thispeer.server thread;
+        Peer thispeer = new Peer(Integer.parseInt(portInputRaw));
+        thispeer.startup();
 
 
         //while(true);
-        while (true) {
+        boolean Running = true;
+        while (Running) {
             BannerManager.printCursor();
 
 
@@ -54,9 +72,6 @@ public class MyTorrent {
             if (userinput[0].toLowerCase().startsWith("reg")) {
                 /* Register */
                 System.out.println("This is the Register part!");
-                System.out.println(i.Counter());
-                System.out.println(userinput[2]);
-                System.out.println(userinput[3]);
                 continue;
             } else if (userinput[0].toLowerCase().startsWith("sea")) {
                 /* Search */
@@ -67,11 +82,18 @@ public class MyTorrent {
                 System.out.println("This is the obtain part!");
                 continue;
 
+            } else if (userinput[0].toLowerCase().equals("exit"))  {
+                //Turn off peer
+                thispeer.exit();
+                //Turn off CommandParser: not neccessary here.
+                //Exit while and end main()
             } else {
                 System.out.println("Command not recognized!");
                 continue;
             }
 
+            //Enter here only if > Exit while and end main()
+            Running = false;
         }
 
     }
