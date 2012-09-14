@@ -82,8 +82,8 @@ public class IndexServerTestCase {
             
             
             //clean up
-            is.close();
-            os.close();
+            //is.close();
+            //os.close();
             sock.close();
 
         } catch (Exception ex) {

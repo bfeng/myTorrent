@@ -57,8 +57,8 @@ public class IndexServer implements P2PTransfer, Runnable {
     private static final int port = 5700;
     private Socket socket;             //need cleanup
     //raw data streams
-    private InputStream is;
-    private OutputStream os;
+    //private InputStream is;
+    //private OutputStream os;
     //Line reader and writer used to communicate mainly in run()
     //private BufferedReader linereader; //need cleanup
     //private PrintWriter linewriter;    //need cleanup
@@ -207,16 +207,16 @@ public class IndexServer implements P2PTransfer, Runnable {
 
         //clean up
         /*try {
-        linereader.close();
-        } catch (IOException ex) {
-        Logger.getLogger(IndexServer.class.getName()).log(Level.SEVERE, null, ex);
-        }
-        linewriter.close();
-        try {
-        socket.close();
-        } catch (IOException ex) {
-        Logger.getLogger(IndexServer.class.getName()).log(Level.SEVERE, null, ex);
-        }
+         linereader.close();
+         } catch (IOException ex) {
+         Logger.getLogger(IndexServer.class.getName()).log(Level.SEVERE, null, ex);
+         }
+         linewriter.close();
+         try {
+         socket.close();
+         } catch (IOException ex) {
+         Logger.getLogger(IndexServer.class.getName()).log(Level.SEVERE, null, ex);
+         }
          * 
          */
 
@@ -225,31 +225,40 @@ public class IndexServer implements P2PTransfer, Runnable {
     @Override
     public void run() {
 
+        InputStream is = null;
+        OutputStream os = null;
+
+        P2PProtocol pp = new P2PProtocol();
+        P2PProtocol.Message inputs = null;
         //Waiting for 
         try {
             is = socket.getInputStream();
             os = socket.getOutputStream();
+            System.out.println("ready to processInput 1111111111111");
+            //waiting for input
+            inputs = pp.processInput(socket.getInputStream());
+            System.out.println("return from processInput");
+
         } catch (IOException e) {
             System.err.println("Couldn't get I/O for the connection to: " + socket.getInetAddress().getHostAddress());
             System.exit(1);
         }
 
-        //waiting for input
-        P2PProtocol pp = new P2PProtocol();
-        P2PProtocol.Message input = pp.processInput(is);
-        P2PProtocol.Command inputcmd = input.getCmd();
+
+
+        P2PProtocol.Command inputcmd = inputs.getCmd();
+        System.out.println("parse cmd, into the branches");
         //internal test
-        /*if (inputcmd == P2PProtocol.Command.PIG) {
+        if (inputcmd == P2PProtocol.Command.PIG) {
             System.out.println("OK received cmd PIG");
         }
-         * 
-         */
+
 
 
         //Process command and then open input.GetObject
         if (inputcmd == Command.REG) {
             //Do registry
-            Entry[] RegEntry = (Entry[]) input.getBody();
+            Entry[] RegEntry = (Entry[]) inputs.getBody();
             int peerid = (int) RegEntry[0].getPeerId();
             int arraysize = RegEntry.length;
             String[] filenames = new String[arraysize];
@@ -261,28 +270,46 @@ public class IndexServer implements P2PTransfer, Runnable {
             //Send to client work DONE
             //P2PProtocol ppout = new P2PProtocol();
             Message output = pp.new Message(Command.OK, returnReg);
-            pp.preparedOutput(os, output);
+            try {
+                pp.preparedOutput(socket.getOutputStream(), output);
+            } catch (IOException ex) {
+                Logger.getLogger(IndexServer.class.getName()).log(Level.SEVERE, null, ex);
+            }
 
         } else if (inputcmd == Command.SCH) {
             //Do search
 
-            String filename1 = (String) input.getBody();
+            String filename1 = (String) inputs.getBody();
             Entry[] ReturnEntry = this.search(filename1);
 
             //Send to client back
             //P2PProtocol ppout = new P2PProtocol();
             Message output = pp.new Message(Command.OK, ReturnEntry);
-            pp.preparedOutput(os, output);
+            try {
+                pp.preparedOutput(socket.getOutputStream(), output);
+            } catch (IOException ex) {
+                Logger.getLogger(IndexServer.class.getName()).log(Level.SEVERE, null, ex);
+            }
 
 
 
         } else if (inputcmd == Command.PIG) {
             //Do ping
+            System.out.println("calling ping()");
             boolean ping = this.ping();
+
             //Send to client back
             //P2PProtocol ppout = new P2PProtocol();
+
             P2PProtocol.Message output = pp.new Message(Command.OK, ping);
-            pp.preparedOutput(os, output);
+
+            try {
+                System.out.println("ready to prepareOutput OK");
+                pp.preparedOutput(socket.getOutputStream(), output);
+            } catch (IOException ex) {
+                Logger.getLogger(IndexServer.class.getName()).log(Level.SEVERE, null, ex);
+            }
+            System.out.println("message sent run finished");
 
         } else {
             P2PProtocol.Message output = pp.new Message(Command.ERR, "Command is not supported!");
@@ -301,7 +328,6 @@ public class IndexServer implements P2PTransfer, Runnable {
             Logger.getLogger(IndexServer.class.getName()).log(Level.SEVERE, null, ex);
             System.err.println("Couldn't close linereader!");
         }
-
     }
 
     public static void main(String[] args) {
@@ -315,8 +341,11 @@ public class IndexServer implements P2PTransfer, Runnable {
         boolean listening = true;
         try {
             ServerSocket ss = new ServerSocket(port);
+            System.out.println("### serversocket start");
             while (listening) {
+                System.out.println("### into the while");
                 new Thread(new IndexServer(ss.accept())).start();
+                System.out.println("### server thread start");
             }
             ss.close();
         } catch (IOException e) {

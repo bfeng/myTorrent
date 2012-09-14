@@ -3,7 +3,6 @@ package mytorrent.p2p;
 import com.google.gson.Gson;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
-import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
@@ -76,7 +75,7 @@ public class P2PProtocol {
     }
 
     public void preparedOutput(OutputStream os, Message src) {
-        try {
+       try {
             BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(os));
             Gson gson = new Gson();
             gson.toJson(src, bw);
