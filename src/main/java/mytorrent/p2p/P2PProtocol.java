@@ -56,6 +56,12 @@ public class P2PProtocol {
         public void setBody(Object body) {
             this.body = body;
         }
+        
+        @Override
+        public String toString() {
+            Gson gson = new Gson();
+            return gson.toJson(this, Message.class);
+        }
     }
 
     public Message processInput(InputStream in) {
@@ -74,8 +80,8 @@ public class P2PProtocol {
             BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(os));
             Gson gson = new Gson();
             gson.toJson(src, bw);
-            bw.close();
-        } catch (IOException ex) {
+            bw.flush();
+        } catch (Exception ex) {
             Logger.getLogger(P2PProtocol.class.getName()).log(Level.SEVERE, null, ex);
         }
     }

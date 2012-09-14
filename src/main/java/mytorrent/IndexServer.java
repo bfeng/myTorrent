@@ -285,7 +285,8 @@ public class IndexServer implements P2PTransfer, Runnable {
             pp.preparedOutput(os, output);
 
         } else {
-            System.err.println("Command is not supported!");
+            P2PProtocol.Message output = pp.new Message(Command.ERR, "Command is not supported!");
+            pp.preparedOutput(os, output);
         }
 
 
@@ -295,7 +296,7 @@ public class IndexServer implements P2PTransfer, Runnable {
             //linereader.close();
             os.close();
             is.close();
-            socket.close();
+//            socket.close();
         } catch (IOException ex) {
             Logger.getLogger(IndexServer.class.getName()).log(Level.SEVERE, null, ex);
             System.err.println("Couldn't close linereader!");
@@ -306,7 +307,7 @@ public class IndexServer implements P2PTransfer, Runnable {
     public static void main(String[] args) {
 
         //Set up Shell
-        new Thread(new IndexServerShell()).start();
+//        new Thread(new IndexServerShell()).start();
 
         //Startup Server-ServerSocket;
         //server startup with client socket returned

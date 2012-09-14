@@ -34,6 +34,7 @@ import mytorrent.gui.CommandParser;
 /**
  *
  * @author Bo Feng
+ * @author Sizhou Wang
  * @version 1.0
  */
 public class MyTorrent {

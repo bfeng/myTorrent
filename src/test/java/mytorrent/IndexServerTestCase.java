@@ -32,16 +32,16 @@ public class IndexServerTestCase {
 
     @BeforeClass
     public static void setUpClass() {
-        try {
-            Socket sock = new Socket("localhost", 5700);
-            sock.close();
-        } catch (UnknownHostException ex) {
-            Logger.getLogger(IndexServerTestCase.class.getName()).log(Level.SEVERE, null, ex);
-            fail("To make a test, please start up IndexServer at localhost.");
-        } catch (IOException ex) {
-            Logger.getLogger(IndexServerTestCase.class.getName()).log(Level.SEVERE, null, ex);
-            fail("Cannot find listening IndexServer! Please check the server port number.");
-        }
+//        try {
+//            Socket sock = new Socket("localhost", 5700);
+//            sock.close();
+//        } catch (UnknownHostException ex) {
+//            Logger.getLogger(IndexServerTestCase.class.getName()).log(Level.SEVERE, null, ex);
+//            fail("To make a test, please start up IndexServer at localhost.");
+//        } catch (IOException ex) {
+//            Logger.getLogger(IndexServerTestCase.class.getName()).log(Level.SEVERE, null, ex);
+//            fail("Cannot find listening IndexServer! Please check the server port number.");
+//        }
     }
 
     @AfterClass
@@ -65,10 +65,12 @@ public class IndexServerTestCase {
             InputStream is = sock.getInputStream();
             OutputStream os = sock.getOutputStream();
             //Send Out Put
-            boolean [] ping = null;
+            boolean ping = true;
             P2PProtocol pp = new P2PProtocol();
             P2PProtocol.Message out = pp.new Message(P2PProtocol.Command.PIG, ping);
             pp.preparedOutput(os, out);
+            sock.shutdownOutput();
+            
             //Wait for ping-OK back
             P2PProtocol.Message in = pp.processInput(is);
             
@@ -76,6 +78,7 @@ public class IndexServerTestCase {
             //out.println("ping");
             //out.flush();
             assertEquals(P2PProtocol.Command.OK, in.getCmd());
+            assertEquals(true, (Boolean)in.getBody());
             
             
             //clean up
