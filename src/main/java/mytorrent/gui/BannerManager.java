@@ -65,10 +65,10 @@ public class BannerManager {
     }
 
     public static void printBanner() {
-
-        System.out.println("This is the banner part!");
-        System.out.println("This is the banner part!");
-        System.out.println("This is the banner part!");
+        System.out.println("Input Direction:");
+        System.out.println("(1) Registry: registry ");
+        System.out.println("(2) Search: search filename");
+        System.out.println("(3) Obtain: in progress ...");
 
 
     }
