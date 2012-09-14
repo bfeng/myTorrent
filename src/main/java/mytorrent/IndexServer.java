@@ -182,18 +182,18 @@ public class IndexServer implements P2PTransfer, Runnable {
 
     @Override
     public boolean ping() {
-        throw new UnsupportedOperationException("Not supported yet.");
-        /*
+        //throw new UnsupportedOperationException("Not supported yet.");
+
         //print on server console
         System.out.println(" ");
-        System.out.println("Received: " + cmd[0]);
+        System.out.println("Received: PIG");
         System.out.print(">>>");
-        linewriter.println(cmd[0]);
+        //linewriter.println(cmd[0]);
         //DataOutputStream out = new DataOutputStream(os);
         //out.writeBytes(cmd);
         return true;
-         * 
-         */
+
+
     }
 
     @Override
@@ -235,26 +235,33 @@ public class IndexServer implements P2PTransfer, Runnable {
         }
 
         //waiting for input
-        P2PProtocol ppin = new P2PProtocol();
-        Message input = ppin.processInput(is);
-        Command inputcmd = input.getCmd();
+        P2PProtocol pp = new P2PProtocol();
+        P2PProtocol.Message input = pp.processInput(is);
+        P2PProtocol.Command inputcmd = input.getCmd();
+        //internal test
+        /*if (inputcmd == P2PProtocol.Command.PIG) {
+            System.out.println("OK received cmd PIG");
+        }
+         * 
+         */
+
 
         //Process command and then open input.GetObject
         if (inputcmd == Command.REG) {
             //Do registry
-            Entry[] RegEntry = (Entry[])input.getBody();
+            Entry[] RegEntry = (Entry[]) input.getBody();
             int peerid = (int) RegEntry[0].getPeerId();
             int arraysize = RegEntry.length;
             String[] filenames = new String[arraysize];
-            for (int i = arraysize;i>0;i--){
+            for (int i = arraysize; i > 0; i--) {
                 filenames[i] = RegEntry[i].getFilename();
             }
             long returnReg = this.registry(peerid, filenames);
 
             //Send to client work DONE
-            P2PProtocol ppout = new P2PProtocol();
-            Message output = ppout.new Message(Command.OK, returnReg);
-            ppout.preparedOutput(os, output);
+            //P2PProtocol ppout = new P2PProtocol();
+            Message output = pp.new Message(Command.OK, returnReg);
+            pp.preparedOutput(os, output);
 
         } else if (inputcmd == Command.SCH) {
             //Do search
@@ -263,20 +270,24 @@ public class IndexServer implements P2PTransfer, Runnable {
             Entry[] ReturnEntry = this.search(filename1);
 
             //Send to client back
-            P2PProtocol ppout = new P2PProtocol();
-            Message output = ppout.new Message(Command.OK, ReturnEntry);
-            ppout.preparedOutput(os, output);
+            //P2PProtocol ppout = new P2PProtocol();
+            Message output = pp.new Message(Command.OK, ReturnEntry);
+            pp.preparedOutput(os, output);
 
 
 
-        } /*else if (cmd[0].equals("ping")) {
-        //Do ping
-        this.ping();
-        }  else {
-        System.err.println("Command " + cmd[0] + "is not supported!");
+        } else if (inputcmd == Command.PIG) {
+            //Do ping
+            boolean ping = this.ping();
+            //Send to client back
+            //P2PProtocol ppout = new P2PProtocol();
+            P2PProtocol.Message output = pp.new Message(Command.OK, ping);
+            pp.preparedOutput(os, output);
+
+        } else {
+            System.err.println("Command is not supported!");
         }
-         * 
-         */
+
 
         //Clean up finished connection
         try {

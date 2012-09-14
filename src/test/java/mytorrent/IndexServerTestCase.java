@@ -2,13 +2,18 @@ package mytorrent;
 
 import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
 import java.net.Socket;
 import java.net.UnknownHostException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import mytorrent.p2p.P2PProtocol;
+import mytorrent.p2p.P2PProtocol.Command;
+import mytorrent.p2p.P2PProtocol.Message;
 import org.junit.After;
 import org.junit.AfterClass;
 import static org.junit.Assert.*;
@@ -55,16 +60,27 @@ public class IndexServerTestCase {
     public void testPing() {
         try {
             Socket sock = new Socket("localhost", 5700);
-            PrintWriter out = new PrintWriter(new OutputStreamWriter(sock.getOutputStream()));
-            BufferedReader in = new BufferedReader(new InputStreamReader(sock.getInputStream()));
-
-            out.println("ping");
-            out.flush();
-
-            assertEquals("ping", in.readLine());
-
-            in.close();
-            out.close();
+            //PrintWriter out = new PrintWriter(new OutputStreamWriter(sock.getOutputStream()));
+            //BufferedReader in = new BufferedReader(new InputStreamReader(sock.getInputStream()));
+            InputStream is = sock.getInputStream();
+            OutputStream os = sock.getOutputStream();
+            //Send Out Put
+            boolean [] ping = null;
+            P2PProtocol pp = new P2PProtocol();
+            P2PProtocol.Message out = pp.new Message(P2PProtocol.Command.PIG, ping);
+            pp.preparedOutput(os, out);
+            //Wait for ping-OK back
+            P2PProtocol.Message in = pp.processInput(is);
+            
+            
+            //out.println("ping");
+            //out.flush();
+            assertEquals(P2PProtocol.Command.OK, in.getCmd());
+            
+            
+            //clean up
+            is.close();
+            os.close();
             sock.close();
 
         } catch (Exception ex) {
