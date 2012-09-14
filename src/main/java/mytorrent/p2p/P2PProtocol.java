@@ -76,14 +76,13 @@ public class P2PProtocol {
     }
 
     public void preparedOutput(OutputStream os, Message src) {
-        BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(os));
-        Gson gson = new Gson();
-        gson.toJson(src, bw);
         try {
+            BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(os));
+            Gson gson = new Gson();
+            gson.toJson(src, bw);
             bw.close();
         } catch (IOException ex) {
             Logger.getLogger(P2PProtocol.class.getName()).log(Level.SEVERE, null, ex);
-            System.err.println("Error during preparedOutput!");
         }
     }
 }

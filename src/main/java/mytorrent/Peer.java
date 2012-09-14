@@ -96,20 +96,15 @@ public class Peer implements P2PTransfer, P2PClient {
         long result = -1L;
         try {
             socket = new Socket(this.indexServerIP, this.indexServerPort);
-            Writer w = new BufferedWriter(new OutputStreamWriter(socket.getOutputStream()));
 
             P2PProtocol protocol = new P2PProtocol();
-            P2PProtocol.Message messageOut;
-            messageOut = protocol.new Message(P2PProtocol.Command.REG, files);
-
-            Gson gsonOut = new Gson();
-            String json = gsonOut.toJson(messageOut);
-            w.write(json);
-            w.flush();
+            P2PProtocol.Message messageOut = protocol.new Message(P2PProtocol.Command.REG, files);
+            protocol.preparedOutput(socket.getOutputStream(), messageOut);
 
             P2PProtocol.Message messageIn = protocol.processInput(socket.getInputStream());
-            if(messageIn.getCmd().equals(P2PProtocol.Command.OK)) {
-                result = (Long)messageIn.getBody();
+            if (messageIn.getCmd().equals(P2PProtocol.Command.OK)) {
+                result = (Long) messageIn.getBody();
+                this.peerId = result;
             }
         } catch (UnknownHostException ex) {
             Logger.getLogger(Peer.class.getName()).log(Level.SEVERE, null, ex);
@@ -121,7 +116,24 @@ public class Peer implements P2PTransfer, P2PClient {
 
     @Override
     public FileHash.Entry[] search(String filename) {
-        return null;
+        FileHash.Entry[] result = null;
+        try {
+            socket = new Socket(this.indexServerIP, this.indexServerPort);
+
+            P2PProtocol protocol = new P2PProtocol();
+            P2PProtocol.Message messageOut = protocol.new Message(P2PProtocol.Command.REG, filename);
+            protocol.preparedOutput(socket.getOutputStream(), messageOut);
+
+            P2PProtocol.Message messageIn = protocol.processInput(socket.getInputStream());
+            if (messageIn.getCmd().equals(P2PProtocol.Command.OK)) {
+                result = (FileHash.Entry[]) messageIn.getBody();
+            }
+        } catch (UnknownHostException ex) {
+            Logger.getLogger(Peer.class.getName()).log(Level.SEVERE, null, ex);
+        } catch (IOException ex) {
+            Logger.getLogger(Peer.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        return result;
     }
 
     @Override
