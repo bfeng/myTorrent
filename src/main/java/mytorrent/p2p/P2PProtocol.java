@@ -2,9 +2,12 @@ package mytorrent.p2p;
 
 import com.google.gson.Gson;
 import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
+import java.io.OutputStreamWriter;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -31,8 +34,32 @@ public class P2PProtocol {
         public Message() {
         }
 
-        private Message(Command cmd, Object body) {
+        public Message(Command cmd, Object body) {
             this.cmd = cmd;
+            this.body = body;
+        }
+
+        public Command GetCommand() {
+            return this.cmd;
+        }
+
+        public Object GetObject() {
+            return this.body;
+        }
+
+        public Command getCmd() {
+            return cmd;
+        }
+
+        public void setCmd(Command cmd) {
+            this.cmd = cmd;
+        }
+
+        public Object getBody() {
+            return body;
+        }
+
+        public void setBody(Object body) {
             this.body = body;
         }
     }
@@ -48,7 +75,14 @@ public class P2PProtocol {
         }
     }
 
-    public Message preparedOutput(OutputStream os) {
-        throw new UnsupportedOperationException("Not supported yet.");
+    public void preparedOutput(OutputStream os, Message src) {
+        try {
+            BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(os));
+            Gson gson = new Gson();
+            gson.toJson(src, bw);
+            bw.close();
+        } catch (IOException ex) {
+            Logger.getLogger(P2PProtocol.class.getName()).log(Level.SEVERE, null, ex);
+        }
     }
 }
