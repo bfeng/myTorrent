@@ -9,6 +9,20 @@
 
     <name>myTorrent</name>
     <url>http://maven.apache.org</url>
+    <licenses>
+        <license>
+            <name>MIT License</name>
+            <url>http://www.opensource.org/licenses/mit-license.php</url>
+        </license>
+    </licenses>
+    <developers>
+        <developer>
+            <id>bfeng</id>
+        </developer>
+        <developer>
+            <id>Chrysanthemumer</id>
+        </developer>
+    </developers>
     <build>
         <plugins>
             <plugin>
