@@ -27,6 +27,16 @@ public class IndexServerTestCase {
 
     @BeforeClass
     public static void setUpClass() {
+        try {
+            Socket sock = new Socket("localhost", 5700);
+            sock.close();
+        } catch (UnknownHostException ex) {
+            Logger.getLogger(IndexServerTestCase.class.getName()).log(Level.SEVERE, null, ex);
+            fail("To make a test, please start up IndexServer at localhost.");
+        } catch (IOException ex) {
+            Logger.getLogger(IndexServerTestCase.class.getName()).log(Level.SEVERE, null, ex);
+            fail("Cannot find listening IndexServer! Please check the server port number.");
+        }
     }
 
     @AfterClass
