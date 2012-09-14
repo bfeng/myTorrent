@@ -65,10 +65,10 @@ public class IndexServerTestCase {
             InputStream is = sock.getInputStream();
             OutputStream os = sock.getOutputStream();
             //Send Out Put
-            boolean [] ping = null;
+            boolean ping = true;
             P2PProtocol pp = new P2PProtocol();
-            P2PProtocol.Message out = pp.new Message(P2PProtocol.Command.PIG, ping);
-            pp.preparedOutput(os, out);
+            P2PProtocol.Message outputs = pp.new Message(P2PProtocol.Command.PIG, ping);
+            pp.preparedOutput(os, outputs);
             //Wait for ping-OK back
             P2PProtocol.Message in = pp.processInput(is);
             
@@ -79,8 +79,8 @@ public class IndexServerTestCase {
             
             
             //clean up
-            is.close();
-            os.close();
+            //is.close();
+            //os.close();
             sock.close();
 
         } catch (Exception ex) {
