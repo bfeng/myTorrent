@@ -23,6 +23,7 @@ public class P2PProtocol {
         REG,
         SCH,
         ERR,
+        PIG,
         OK
     }
 
