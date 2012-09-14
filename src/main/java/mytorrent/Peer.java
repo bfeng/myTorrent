@@ -28,6 +28,8 @@ import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.UnknownHostException;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import mytorrent.p2p.FileHash;
@@ -91,9 +93,17 @@ public class Peer implements P2PTransfer, P2PClient {
         long result = -1L;
         try {
             socket = new Socket(this.indexServerIP, this.indexServerPort);
-
             P2PProtocol protocol = new P2PProtocol();
-            P2PProtocol.Message messageOut = protocol.new Message(P2PProtocol.Command.REG, files);
+
+            Map<String, Object> parameters = new HashMap<String, Object>();
+            if (peerId < 0) {
+                parameters.put("peerId", "null");
+            } else {
+                parameters.put("peerId", peerId);
+            }
+            parameters.put("files", files);
+            
+            P2PProtocol.Message messageOut = protocol.new Message(P2PProtocol.Command.REG, parameters);
             protocol.preparedOutput(socket.getOutputStream(), messageOut);
 
             P2PProtocol.Message messageIn = protocol.processInput(socket.getInputStream());
@@ -116,7 +126,7 @@ public class Peer implements P2PTransfer, P2PClient {
             socket = new Socket(this.indexServerIP, this.indexServerPort);
 
             P2PProtocol protocol = new P2PProtocol();
-            P2PProtocol.Message messageOut = protocol.new Message(P2PProtocol.Command.REG, filename);
+            P2PProtocol.Message messageOut = protocol.new Message(P2PProtocol.Command.SCH, filename);
             protocol.preparedOutput(socket.getOutputStream(), messageOut);
 
             P2PProtocol.Message messageIn = protocol.processInput(socket.getInputStream());
