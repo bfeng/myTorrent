@@ -55,8 +55,8 @@ public class PeerTestCase {
     }
     
     @Test
-    public void test1() {
-        
-        
+    public void testRegister() {
+        long result = peer1.registry(-1, null);
+        assertEquals(result, -1);
     }
 }

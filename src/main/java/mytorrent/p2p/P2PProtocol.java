@@ -31,8 +31,24 @@ public class P2PProtocol {
         public Message() {
         }
 
-        private Message(Command cmd, Object body) {
+        public Message(Command cmd, Object body) {
             this.cmd = cmd;
+            this.body = body;
+        }
+
+        public Command getCmd() {
+            return cmd;
+        }
+
+        public void setCmd(Command cmd) {
+            this.cmd = cmd;
+        }
+
+        public Object getBody() {
+            return body;
+        }
+
+        public void setBody(Object body) {
             this.body = body;
         }
     }
