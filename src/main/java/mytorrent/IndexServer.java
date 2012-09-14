@@ -49,6 +49,7 @@ import mytorrent.p2p.P2PTransfer;
 /**
  *
  * @author Bo Feng
+ * @author Sizhou Wang
  * @version 1.0
  */
 public class IndexServer implements P2PTransfer, Runnable {
@@ -236,12 +237,12 @@ public class IndexServer implements P2PTransfer, Runnable {
         //waiting for input
         P2PProtocol ppin = new P2PProtocol();
         Message input = ppin.processInput(is);
-        Command inputcmd = input.GetCommand();
+        Command inputcmd = input.getCmd();
 
         //Process command and then open input.GetObject
         if (inputcmd == Command.REG) {
             //Do registry
-            Entry[] RegEntry = (Entry[])input.GetObject();
+            Entry[] RegEntry = (Entry[])input.getBody();
             int peerid = (int) RegEntry[0].getPeerId();
             int arraysize = RegEntry.length;
             String[] filenames = new String[arraysize];
@@ -258,7 +259,7 @@ public class IndexServer implements P2PTransfer, Runnable {
         } else if (inputcmd == Command.SCH) {
             //Do search
 
-            String filename1 = (String) input.GetObject();
+            String filename1 = (String) input.getBody();
             Entry[] ReturnEntry = this.search(filename1);
 
             //Send to client back

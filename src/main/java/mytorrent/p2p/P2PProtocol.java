@@ -39,14 +39,6 @@ public class P2PProtocol {
             this.body = body;
         }
 
-        public Command GetCommand() {
-            return this.cmd;
-        }
-
-        public Object GetObject() {
-            return this.body;
-        }
-
         public Command getCmd() {
             return cmd;
         }
