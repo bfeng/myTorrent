@@ -23,13 +23,8 @@
  */
 package mytorrent;
 
-import com.google.gson.Gson;
-import com.google.gson.stream.JsonWriter;
-import java.io.BufferedWriter;
 import java.io.File;
 import java.io.IOException;
-import java.io.OutputStreamWriter;
-import java.io.Writer;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.UnknownHostException;
