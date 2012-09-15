@@ -196,7 +196,6 @@ public class Peer implements P2PTransfer, P2PClient {
     @Override
     public void obtain(String filename) {
         try {
-            // Todo:
             // Search file entries
             FileHash.Entry[] entries = this.search(filename);
             // Lookup peer's address
