@@ -131,6 +131,7 @@ public class Peer implements P2PTransfer, P2PClient {
             } else {
                 parameters.put("peerId", peerId);
             }
+            parameters.put("port", port);
             parameters.put("files", files);
 
             P2PProtocol.Message messageOut = protocol.new Message(P2PProtocol.Command.REG, parameters);
