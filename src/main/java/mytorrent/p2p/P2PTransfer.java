@@ -34,6 +34,8 @@ public interface P2PTransfer {
 
     public FileHash.Entry[] search(String filename);
     
+    public Address lookup(int peerId);
+    
     public boolean ping();
     
     public void startup();

@@ -28,15 +28,20 @@ import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.UnknownHostException;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import mytorrent.p2p.Address;
 import mytorrent.p2p.FileHash;
 import mytorrent.p2p.P2PClient;
 import mytorrent.p2p.P2PProtocol;
 import mytorrent.p2p.P2PSender;
 import mytorrent.p2p.P2PTransfer;
+import org.apache.commons.io.FileUtils;
 
 /**
  *
@@ -79,6 +84,22 @@ public class Peer implements P2PTransfer, P2PClient {
     }
 
     /**
+     * Get all the filenames in the shared folder. It does not support
+     * recursively looking up now.
+     *
+     * @return
+     */
+    private String[] getSharedFiles() {
+        File shared = new File("shared");
+        Iterator<File> iter = FileUtils.iterateFiles(shared, null, false);
+        List<String> fileNames = new ArrayList<String>();
+        while (iter.hasNext()) {
+            fileNames.add(iter.next().getName());
+        }
+        return (String[]) fileNames.toArray(new String[fileNames.size()]);
+    }
+
+    /**
      * There are two cases to use this method: 1) if it is the first time for
      * the peer to register, the peerId is 0; 2) if the peer wants to
      * re-register due to some files changing, the peerId should be the id
@@ -102,7 +123,7 @@ public class Peer implements P2PTransfer, P2PClient {
                 parameters.put("peerId", peerId);
             }
             parameters.put("files", files);
-            
+
             P2PProtocol.Message messageOut = protocol.new Message(P2PProtocol.Command.REG, parameters);
             protocol.preparedOutput(socket.getOutputStream(), messageOut);
 
@@ -132,6 +153,28 @@ public class Peer implements P2PTransfer, P2PClient {
             P2PProtocol.Message messageIn = protocol.processInput(socket.getInputStream());
             if (messageIn.getCmd().equals(P2PProtocol.Command.OK)) {
                 result = (FileHash.Entry[]) messageIn.getBody();
+            }
+        } catch (UnknownHostException ex) {
+            Logger.getLogger(Peer.class.getName()).log(Level.SEVERE, null, ex);
+        } catch (IOException ex) {
+            Logger.getLogger(Peer.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        return result;
+    }
+
+    @Override
+    public Address lookup(int peerId) {
+        Address result = null;
+        try {
+            socket = new Socket(this.indexServerIP, this.indexServerPort);
+
+            P2PProtocol protocol = new P2PProtocol();
+            P2PProtocol.Message messageOut = protocol.new Message(P2PProtocol.Command.LOK, peerId);
+            protocol.preparedOutput(socket.getOutputStream(), messageOut);
+
+            P2PProtocol.Message messageIn = protocol.processInput(socket.getInputStream());
+            if (messageIn.getCmd().equals(P2PProtocol.Command.OK)) {
+                result = (Address) messageIn.getBody();
             }
         } catch (UnknownHostException ex) {
             Logger.getLogger(Peer.class.getName()).log(Level.SEVERE, null, ex);
