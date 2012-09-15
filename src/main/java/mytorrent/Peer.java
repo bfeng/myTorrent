@@ -51,7 +51,7 @@ import org.apache.commons.io.FileUtils;
 public class Peer implements P2PTransfer, P2PClient {
 
     private final int port;
-    private final Server server;
+    private final FileDownloadServer server;
     private final String indexServerIP;
     private final int indexServerPort;
     private long peerId;
@@ -77,7 +77,7 @@ public class Peer implements P2PTransfer, P2PClient {
      */
     public Peer(int port, String indexServerIP, int indexServerPort) {
         this.port = port;
-        this.server = new Server(this.port);
+        this.server = new FileDownloadServer(this.port);
         this.server.setDaemon(true);
         this.indexServerIP = indexServerIP;
         this.indexServerPort = indexServerPort;
@@ -186,6 +186,11 @@ public class Peer implements P2PTransfer, P2PClient {
 
     @Override
     public File obtain(String filename) {
+        
+        // Todo:
+        // Search file entries
+        // Lookup peer's address
+        // download the file from the peer
         return null;
     }
 
@@ -208,13 +213,13 @@ public class Peer implements P2PTransfer, P2PClient {
      * This server is only used for downloading files between peers. If the peer
      * needs to talk with IndexServer, use other built-in methods.
      */
-    public class Server extends Thread {
+    public class FileDownloadServer extends Thread {
 
         private final int port;
         private boolean running;
         private ServerSocket listener;
 
-        private Server(int port) {
+        private FileDownloadServer(int port) {
             this.port = port;
         }
 
