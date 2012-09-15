@@ -40,6 +40,7 @@ import java.util.Arrays;
 import java.util.Scanner;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import mytorrent.p2p.Address;
 import mytorrent.p2p.FileHash.Entry;
 import mytorrent.p2p.P2PProtocol;
 import mytorrent.p2p.P2PProtocol.Command;
@@ -56,16 +57,6 @@ public class IndexServer implements P2PTransfer, Runnable {
 
     private static final int port = 5700;
     private Socket socket;             //need cleanup
-    //raw data streams
-    //private InputStream is;
-    //private OutputStream os;
-    //Line reader and writer used to communicate mainly in run()
-    //private BufferedReader linereader; //need cleanup
-    //private PrintWriter linewriter;    //need cleanup
-    //private String rawcmd;
-    //private String[] cmd;
-    //Status flags
-    //private boolean RUNNING = true;
 
     public IndexServer(Socket socket) {
         this.socket = socket;
@@ -204,22 +195,6 @@ public class IndexServer implements P2PTransfer, Runnable {
     @Override
     public void exit() {
         throw new UnsupportedOperationException("Not supported yet.");
-
-        //clean up
-        /*try {
-         linereader.close();
-         } catch (IOException ex) {
-         Logger.getLogger(IndexServer.class.getName()).log(Level.SEVERE, null, ex);
-         }
-         linewriter.close();
-         try {
-         socket.close();
-         } catch (IOException ex) {
-         Logger.getLogger(IndexServer.class.getName()).log(Level.SEVERE, null, ex);
-         }
-         * 
-         */
-
     }
 
     @Override
@@ -319,25 +294,14 @@ public class IndexServer implements P2PTransfer, Runnable {
 
         //Clean up finished connection
         try {
-            //linewriter.close();
-            //linereader.close();
             os.close();
             is.close();
-//            socket.close();
         } catch (IOException ex) {
             Logger.getLogger(IndexServer.class.getName()).log(Level.SEVERE, null, ex);
-            System.err.println("Couldn't close linereader!");
         }
     }
 
     public static void main(String[] args) {
-
-        //Set up Shell
-//        new Thread(new IndexServerShell()).start();
-
-        //Startup Server-ServerSocket;
-        //server startup with client socket returned
-        //Start up serversocket
         boolean listening = true;
         try {
             ServerSocket ss = new ServerSocket(port);
@@ -353,18 +317,9 @@ public class IndexServer implements P2PTransfer, Runnable {
             System.exit(1);
         }
     }
-}
-
-class IndexServerShell implements Runnable {
 
     @Override
-    public void run() {
-        //Server Console Shell
-        while (true) {
-            System.out.print(">>>");
-            Scanner userScanner = new Scanner(System.in);
-            String userInputRaw = userScanner.nextLine();
-            System.out.println("Echo: " + userInputRaw);
-        }
+    public Address lookup(int peerId) {
+        throw new UnsupportedOperationException("Not supported yet.");
     }
 }
