@@ -39,6 +39,7 @@ import mytorrent.p2p.Address;
 import mytorrent.p2p.FileHash;
 import mytorrent.p2p.P2PClient;
 import mytorrent.p2p.P2PProtocol;
+import mytorrent.p2p.P2PReceiver;
 import mytorrent.p2p.P2PSender;
 import mytorrent.p2p.P2PTransfer;
 import org.apache.commons.io.FileUtils;
@@ -83,6 +84,14 @@ public class Peer implements P2PTransfer, P2PClient {
         this.indexServerPort = indexServerPort;
     }
 
+    public long getPeerId() {
+        return peerId;
+    }
+
+    public void setPeerId(long peerId) {
+        this.peerId = peerId;
+    }
+
     /**
      * Get all the filenames in the shared folder. It does not support
      * recursively looking up now.
@@ -110,7 +119,7 @@ public class Peer implements P2PTransfer, P2PClient {
      * @return peerId
      */
     @Override
-    public long registry(int peerId, String[] files) {
+    public long registry(long peerId, String[] files) {
         long result = -1L;
         try {
             socket = new Socket(this.indexServerIP, this.indexServerPort);
@@ -163,7 +172,7 @@ public class Peer implements P2PTransfer, P2PClient {
     }
 
     @Override
-    public Address lookup(int peerId) {
+    public Address lookup(long peerId) {
         Address result = null;
         try {
             socket = new Socket(this.indexServerIP, this.indexServerPort);
@@ -185,13 +194,26 @@ public class Peer implements P2PTransfer, P2PClient {
     }
 
     @Override
-    public File obtain(String filename) {
-        
-        // Todo:
-        // Search file entries
-        // Lookup peer's address
-        // download the file from the peer
-        return null;
+    public void obtain(String filename) {
+        try {
+            // Todo:
+            // Search file entries
+            FileHash.Entry[] entries = this.search(filename);
+            // Lookup peer's address
+            if(entries.length<0) {
+                return;
+            }
+            long remotePeerId = entries[0].getPeerId();
+            Address peerAddress = this.lookup(remotePeerId);
+            // download the file from the peer
+            Socket sock = new Socket(peerAddress.getHost(), peerAddress.getPort());
+            P2PReceiver receiver = new P2PReceiver(sock, filename);
+            receiver.start();
+        } catch (UnknownHostException ex) {
+            Logger.getLogger(Peer.class.getName()).log(Level.SEVERE, null, ex);
+        } catch (IOException ex) {
+            Logger.getLogger(Peer.class.getName()).log(Level.SEVERE, null, ex);
+        }
     }
 
     @Override

@@ -63,7 +63,7 @@ public class IndexServer implements P2PTransfer, Runnable {
     }
 
     @Override
-    public long registry(int peerId, String[] files) {
+    public long registry(long peerId, String[] files) {
         //throw new UnsupportedOperationException("Not supported yet.");
 
         //Neccessary Information
@@ -319,7 +319,7 @@ public class IndexServer implements P2PTransfer, Runnable {
     }
 
     @Override
-    public Address lookup(int peerId) {
+    public Address lookup(long peerId) {
         throw new UnsupportedOperationException("Not supported yet.");
     }
 }

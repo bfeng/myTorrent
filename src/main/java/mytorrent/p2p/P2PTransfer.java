@@ -30,11 +30,11 @@ package mytorrent.p2p;
  */
 public interface P2PTransfer {
 
-    public long registry(int peerId, String[] files);
+    public long registry(long peerId, String[] files);
 
     public FileHash.Entry[] search(String filename);
     
-    public Address lookup(int peerId);
+    public Address lookup(long peerId);
     
     public boolean ping();
     
