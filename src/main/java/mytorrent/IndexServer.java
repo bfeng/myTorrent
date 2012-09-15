@@ -37,10 +37,12 @@ import java.io.OutputStream;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.Scanner;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import mytorrent.p2p.Address;
+import mytorrent.p2p.FileHash;
 import mytorrent.p2p.FileHash.Entry;
 import mytorrent.p2p.P2PProtocol;
 import mytorrent.p2p.P2PProtocol.Command;
@@ -57,131 +59,78 @@ public class IndexServer implements P2PTransfer, Runnable {
 
     private static final int port = 5700;
     private Socket socket;             //need cleanup
+    private static HashMap<Long, Address> AddressTable;
+    private static Address TheAddress;
+    private static FileHash filehashdepot;
 
     public IndexServer(Socket socket) {
         this.socket = socket;
+        IndexServer.AddressTable = new HashMap<Long, Address>();
+        IndexServer.filehashdepot = new FileHash();
+        IndexServer.TheAddress = null;
+    }
+
+    //Static Field Accesser
+    //#
+    //AddressTable Accesser
+    private static Address LOKAddressTable(long peerId) {
+        TheAddress = null;
+        if (AddressTable.containsKey(peerId)) {
+            TheAddress = AddressTable.get(peerId);
+        }
+        return TheAddress;
+    }
+
+    private static void RegisterAddressTable(long peerId, Address peerAddress) {
+        AddressTable.put(peerId, peerAddress);
     }
 
     @Override
     public long registry(long peerId, String[] files) {
         //throw new UnsupportedOperationException("Not supported yet.");
+        //registry register all files respect to peerId onto filehashdeport;
+        //It does need to call FileHash methods and this. static methods
+        //input: long peerId 
+        //       String[]files
+        //return: long returnReg (Not useful. It should be error indicator or just peerId rewind)
 
-        //Neccessary Information
-        String peer = "" + peerId;
-        int arraysize = files.length;
-
-        //Loop for the times with respect to the number of files
-        int i = 0;
-        String ThisFileName;
-        String ThisFileRegName;
-        boolean exists;
-        boolean peerexists;
-        PrintWriter pw;
-        Scanner sn;
-        String theline;
-        long returnvalue = 1;
-        while (i < arraysize) {
-
-            ThisFileName = files[i];
-            ThisFileRegName = ThisFileName + "xx";
-
-            exists = (new File(ThisFileRegName)).exists();
-            pw = null;
-            sn = null;
-
-            if (!exists) {
-                try {
-                    pw = new PrintWriter(new FileWriter(new File(ThisFileRegName)));
-                    pw.println(peer);
-                    pw.close();
-                } catch (IOException ex) {
-                    Logger.getLogger(IndexServer.class.getName()).log(Level.SEVERE, null, ex);
-                    returnvalue = 1;
-                }
-
-            } else {
-                try {
-                    sn = new Scanner(new FileReader(ThisFileRegName));
-                    //Loop for peer in each line in the file (Scanner)
-                    peerexists = false;
-                    while ((sn.hasNextLine()) && !peerexists) {
-                        theline = sn.nextLine();
-                        if (theline.startsWith(peer)) {
-                            peerexists = true;
-                        }
-                    }
-                    sn.close();
-                    if (!peerexists) {
-                        try {
-                            pw = new PrintWriter(new FileWriter(new File(ThisFileRegName), true));
-                            pw.println(peer);
-                            pw.close();
-                        } catch (IOException ex) {
-                            Logger.getLogger(IndexServer.class.getName()).log(Level.SEVERE, null, ex);
-                            returnvalue = 2;
-                        }
-
-                    }
-                } catch (FileNotFoundException ex) {
-                    Logger.getLogger(IndexServer.class.getName()).log(Level.SEVERE, null, ex);
-                    returnvalue = 3;
-                }
-
-            }
-            //proceed to the next file
-            i++;
+        //##
+        //REG-First
+        //Delete all existing files for this peerId even if there is none
+        filehashdepot.removeall(peerId);
+        //##
+        //REG-Second
+        //Reconstruct all files for this peerId
+        FileHash tmpFileHash = new FileHash();
+        for (String item : files) {
+            filehashdepot.addEntry(tmpFileHash.new Entry(peerId, item));
         }
-        //returnvalue
-        returnvalue = 0;
+        return peerId;
 
-        return returnvalue;
     }
 
     @Override
     public Entry[] search(String filename) {
         //throw new UnsupportedOperationException("Not supported yet.");\
+        //##
+        //Search and return Entry use existing mechod
+        return filehashdepot.search(filename);
 
-        Entry[] returnEntry = null;
-        boolean exists = (new File(filename)).exists();
-        if (exists) {
-            try {
-                Scanner sn = new Scanner(new FileReader(filename));
-                //Count line number
-                int i = 0;
-                while (sn.hasNextLine()) {
-                    sn.next();
-                    i++;
-                }
-                sn.close();
-                sn = new Scanner(new FileReader(filename));
-                String[] Peers = new String[i];
-                //Entry stuff
-                returnEntry = new Entry[i];
-                long templong;
-                for (int k = i; k > 0; k--) {
-                    templong = Long.parseLong(Peers[k - 1]);
-                    returnEntry[k - 1].setPeerId(templong);
-                    returnEntry[k - 1].setFilename(filename);
-                }
-            } catch (FileNotFoundException ex) {
-                Logger.getLogger(IndexServer.class.getName()).log(Level.SEVERE, null, ex);
-            }
-        }
-        return returnEntry;
+    }
 
+    @Override
+    public Address lookup(long peerId) {
+        //throw new UnsupportedOperationException("Not supported yet.");
+        return LOKAddressTable(peerId);
     }
 
     @Override
     public boolean ping() {
         //throw new UnsupportedOperationException("Not supported yet.");
-
         //print on server console
         System.out.println(" ");
         System.out.println("Received: PIG");
-        System.out.print(">>>");
-        //linewriter.println(cmd[0]);
-        //DataOutputStream out = new DataOutputStream(os);
-        //out.writeBytes(cmd);
+        //System.out.print(">>>");
         return true;
 
 
@@ -202,49 +151,57 @@ public class IndexServer implements P2PTransfer, Runnable {
 
         InputStream is = null;
         OutputStream os = null;
-
         P2PProtocol pp = new P2PProtocol();
         P2PProtocol.Message inputs = null;
         //Waiting for 
         try {
             is = socket.getInputStream();
             os = socket.getOutputStream();
-            System.out.println("ready to processInput 1111111111111");
             //waiting for input
             inputs = pp.processInput(socket.getInputStream());
-            System.out.println("return from processInput");
-
         } catch (IOException e) {
             System.err.println("Couldn't get I/O for the connection to: " + socket.getInetAddress().getHostAddress());
             System.exit(1);
         }
-
-
-
         P2PProtocol.Command inputcmd = inputs.getCmd();
-        System.out.println("parse cmd, into the branches");
-        //internal test
-        if (inputcmd == P2PProtocol.Command.PIG) {
-            System.out.println("OK received cmd PIG");
-        }
-
-
 
         //Process command and then open input.GetObject
         if (inputcmd == Command.REG) {
             //Do registry
-            Entry[] RegEntry = (Entry[]) inputs.getBody();
-            int peerid = (int) RegEntry[0].getPeerId();
-            int arraysize = RegEntry.length;
-            String[] filenames = new String[arraysize];
-            for (int i = arraysize; i > 0; i--) {
-                filenames[i] = RegEntry[i].getFilename();
+            //Incomming Message for REG contains a body of Map<String, Object>:
+            // (1)"peerId" : String "null" or peerId;
+            // (2)"port" : int port;
+            // (3)"files" : String[]files;
+            //###
+            //First, register peerId options:
+            // (peerId == "null"): register a long newpeerId in the AddressTable<Long, Address>;
+            // (peerId != "null"): skip this step;
+            HashMap<String, Object> inputMessagebody = (HashMap<String, Object>) inputs.getBody();
+            long newpeerId = 0;
+            if (inputMessagebody.get("peerId") == "null") {
+                //generate a number that doesn't exist in the AddressTable
+                newpeerId = 10001;
+                while (LOKAddressTable(newpeerId) != null) {
+                    newpeerId++;
+                }
+                //generate newpeerAddress
+                Address newpeerAddress = new Address();
+                newpeerAddress.setHost(socket.getInetAddress().getHostAddress());
+                newpeerAddress.setPort(socket.getLocalPort());
+                //register AddressTable with the newpeerId now
+                RegisterAddressTable(newpeerId, newpeerAddress);
+            } else {
+                newpeerId = (Long) inputMessagebody.get("peerId");
             }
-            long returnReg = this.registry(peerid, filenames);
-
-            //Send to client work DONE
-            //P2PProtocol ppout = new P2PProtocol();
-            Message output = pp.new Message(Command.OK, returnReg);
+            //###
+            //Second parse the files[] and call registry() method to continue
+            long returnReg = this.registry(newpeerId, (String[]) inputMessagebody.get("files"));
+            //###
+            //Third handle return Message
+            // (1) peer expect to see Command.OK
+            // (2) peer expect to see newpeerId;
+            returnReg = newpeerId; //This line is not neccessary
+            P2PProtocol.Message output = pp.new Message(Command.OK, returnReg);
             try {
                 pp.preparedOutput(socket.getOutputStream(), output);
             } catch (IOException ex) {
@@ -253,13 +210,15 @@ public class IndexServer implements P2PTransfer, Runnable {
 
         } else if (inputcmd == Command.SCH) {
             //Do search
+            //Incomming Message for SCH contains only one String filename;
+            //And expect an Entry[] containing all files
+            //###
+            //First call search() method using filename
+            FileHash.Entry[] ReturnEntry = this.search((String) inputs.getBody());
 
-            String filename1 = (String) inputs.getBody();
-            Entry[] ReturnEntry = this.search(filename1);
-
-            //Send to client back
-            //P2PProtocol ppout = new P2PProtocol();
-            Message output = pp.new Message(Command.OK, ReturnEntry);
+            //###
+            //Second handle return Entry[]
+            P2PProtocol.Message output = pp.new Message(Command.OK, ReturnEntry);
             try {
                 pp.preparedOutput(socket.getOutputStream(), output);
             } catch (IOException ex) {
@@ -270,28 +229,29 @@ public class IndexServer implements P2PTransfer, Runnable {
 
         } else if (inputcmd == Command.PIG) {
             //Do ping
-            System.out.println("calling ping()");
             boolean ping = this.ping();
-
-            //Send to client back
-            //P2PProtocol ppout = new P2PProtocol();
-
             P2PProtocol.Message output = pp.new Message(Command.OK, ping);
-
             try {
-                System.out.println("ready to prepareOutput OK");
                 pp.preparedOutput(socket.getOutputStream(), output);
             } catch (IOException ex) {
                 Logger.getLogger(IndexServer.class.getName()).log(Level.SEVERE, null, ex);
             }
-            System.out.println("message sent run finished");
+
+        } else if (inputcmd == Command.LOK) {
+            //Do lookup
+            //Incomming Message for LOK contains only long peerId
+            //Expecting Command.OK and Address with respect to the peerId
+            P2PProtocol.Message output = pp.new Message(Command.OK, this.lookup((Long)inputs.getBody()));
+            try {
+                pp.preparedOutput(socket.getOutputStream(), output);
+            } catch (IOException ex) {
+                Logger.getLogger(IndexServer.class.getName()).log(Level.SEVERE, null, ex);
+            }
 
         } else {
             P2PProtocol.Message output = pp.new Message(Command.ERR, "Command is not supported!");
             pp.preparedOutput(os, output);
         }
-
-
         //Clean up finished connection
         try {
             os.close();
@@ -305,21 +265,13 @@ public class IndexServer implements P2PTransfer, Runnable {
         boolean listening = true;
         try {
             ServerSocket ss = new ServerSocket(port);
-            System.out.println("### serversocket start");
             while (listening) {
-                System.out.println("### into the while");
                 new Thread(new IndexServer(ss.accept())).start();
-                System.out.println("### server thread start");
             }
             ss.close();
         } catch (IOException e) {
             System.err.println("Could not listen on port: " + port + ".");
             System.exit(1);
         }
-    }
-
-    @Override
-    public Address lookup(long peerId) {
-        throw new UnsupportedOperationException("Not supported yet.");
     }
 }

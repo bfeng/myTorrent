@@ -130,6 +130,21 @@ public class FileHash {
 
         return toArray(result);
     }
+    //#
+    //Remove all entry with respect to a specific peerId.
+    //This method is mainly used in IndexServer REG static updating as is:
+    //       this.hash.remove(peerId);
+    //input peerId
+    //return void
+    public synchronized void removeall(long peerId) {
+ 
+        for (String key : this.hash.keySet()) {
+            String peerIdString = key.split(":", 2)[0];
+            if (peerIdString.equals(String.valueOf(peerId))) {
+                this.hash.remove(key);
+            }
+        }
+    }
 
     private Entry[] toArray(Collection<Entry> result) {
         return (Entry[]) result.toArray(new Entry[result.size()]);
