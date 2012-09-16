@@ -20,7 +20,6 @@ public class CommandParser /* implements Runnable */ {
     private Scanner userScanner;
     private String userInputRaw;
     private String[] userInput;
-    private int inputLength;
     public static String[] userHistory = new String[256];
 
     //
@@ -30,10 +29,8 @@ public class CommandParser /* implements Runnable */ {
     //(1)Accumulate command counter by 1;
     //(2)Invoke user input and parse the input string into string array;
     public CommandParser() {
-
         Counter++;
         index = Counter;
-
     }
 
     //
@@ -43,14 +40,9 @@ public class CommandParser /* implements Runnable */ {
 
         //get input from user, multiple inputs or single
         //parse the input args
-
         userScanner = new Scanner(System.in);
-
         userInputRaw = userScanner.nextLine();
         userInput = userInputRaw.split("\\s");
-
-        //register user input length
-        inputLength = userInput.length;
 
         //register user input history to static
         if (index <= 256) {
@@ -60,13 +52,11 @@ public class CommandParser /* implements Runnable */ {
             //back up to file
             throw new UnsupportedOperationException("Not supported yet.");
         }
-
         //return type
         return userInput;
-
     }
 
-    public int Counter() {
+    public static int Counter() {
         return Counter;
     }
 }

@@ -30,6 +30,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import mytorrent.gui.BannerManager;
 import mytorrent.gui.CommandParser;
+import mytorrent.p2p.FileHash;
 
 /**
  *
@@ -54,9 +55,9 @@ public class MyTorrent {
         Scanner portScanner = new Scanner(sysin);
         String portInputRaw = portScanner.nextLine();
         //portScanner.close();
-          
-         
-        
+
+
+
         //create a peer and thispeer.server thread;
         Peer thispeer = new Peer(Integer.parseInt(portInputRaw));
         thispeer.startup();
@@ -66,35 +67,59 @@ public class MyTorrent {
         boolean Running = true;
         while (Running) {
             BannerManager.printCursor();
-
-
-            CommandParser i = new CommandParser();
-            String[] userinput = i.run();
+            String[] userinput = new CommandParser().run();
             if (userinput[0].toLowerCase().startsWith("reg")) {
-                /* Register */
+                /* Registry */
                 System.out.println("This is the Register part!");
-                continue;
+                //Userinput: registry
+                //MyTorrent input: long thispeerId String[]filesofthis
+                //#
+                //First prepare inputs:
+                //#
+                //Second call registry and handle return value
+                thispeer.setPeerId(thispeer.registry(thispeer.getPeerId(), thispeer.getSharedFiles()));
+
             } else if (userinput[0].toLowerCase().startsWith("sea")) {
                 /* Search */
                 System.out.println("This is the Search part!");
-                continue;
+                //Userinput: search Afilename
+                //MyTorrent input: String Afilename
+                //#
+                //First prepare inputs
+                //#
+                //Second call search and print return value
+                BannerManager.printSearchReturns(thispeer.search(userinput[1]));
+                
             } else if (userinput[0].toLowerCase().startsWith("obt")) {
                 /* Obtain */
-                System.out.println("This is the obtain part!");
-                continue;
+                System.out.println("This is the Obtain part!");
+                thispeer.obtain(userinput[1]);
 
-            } else if (userinput[0].toLowerCase().equals("exit"))  {
+
+            } else if (userinput[0].toLowerCase().startsWith("look")) {
+                /* Lookup */
+                System.out.println("This is the Lookup part!");
+                //Userinput: lookup ApeerId
+                //MyTorrent input: long ApeerId
+                //#
+                //First prepare inputs
+                //#
+                //Second call lookup()
+                BannerManager.printLookupReturns(thispeer.lookup(Long.getLong(userinput[1])), Long.getLong(userinput[1]));
+
+
+            } else if (userinput[0].toLowerCase().equals("exit")) {
                 //Turn off peer
                 thispeer.exit();
                 //Turn off CommandParser: not neccessary here.
                 //Exit while and end main()
+                //Enter here only if > Exit while and end main()
+                Running = false;
             } else {
                 System.out.println("Command not recognized!");
-                continue;
+
             }
 
-            //Enter here only if > Exit while and end main()
-            Running = false;
         }
 
     }

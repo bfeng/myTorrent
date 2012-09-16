@@ -67,6 +67,7 @@ public class Peer implements P2PTransfer, P2PClient {
      */
     public Peer(int port) {
         this(port, "localhost", 5700);
+        this.peerId = -1;
     }
 
     /**
@@ -82,6 +83,7 @@ public class Peer implements P2PTransfer, P2PClient {
         this.server.setDaemon(true);
         this.indexServerIP = indexServerIP;
         this.indexServerPort = indexServerPort;
+        this.peerId = -1;
     }
 
     public long getPeerId() {
@@ -98,7 +100,7 @@ public class Peer implements P2PTransfer, P2PClient {
      *
      * @return
      */
-    private String[] getSharedFiles() {
+    public String[] getSharedFiles() {
         File shared = new File("shared");
         Iterator<File> iter = FileUtils.iterateFiles(shared, null, false);
         List<String> fileNames = new ArrayList<String>();
