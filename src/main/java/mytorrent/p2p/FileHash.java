@@ -136,7 +136,7 @@ public class FileHash {
     //       this.hash.remove(peerId);
     //input peerId
     //return void
-    public synchronized void removeall(long peerId) {
+    public synchronized void removeAll(long peerId) {
  
         for (String key : this.hash.keySet()) {
             String peerIdString = key.split(":", 2)[0];

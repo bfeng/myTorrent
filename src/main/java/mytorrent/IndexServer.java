@@ -97,13 +97,12 @@ public class IndexServer implements P2PTransfer, Runnable {
         //##
         //REG-First
         //Delete all existing files for this peerId even if there is none
-        filehashdepot.removeall(peerId);
+        filehashdepot.removeAll(peerId);
         //##
         //REG-Second
         //Reconstruct all files for this peerId
-        FileHash tmpFileHash = new FileHash();
         for (String item : files) {
-            filehashdepot.addEntry(tmpFileHash.new Entry(peerId, item));
+            filehashdepot.addEntry(filehashdepot.new Entry(peerId, item));
         }
         return peerId;
 
