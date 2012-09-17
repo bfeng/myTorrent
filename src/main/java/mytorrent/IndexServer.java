@@ -38,6 +38,7 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.Map;
 import java.util.Scanner;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -93,7 +94,7 @@ public class IndexServer implements P2PTransfer, Runnable {
         //input: long peerId 
         //       String[]files
         //return: long returnReg (Not useful. It should be error indicator or just peerId rewind)
-
+        System.out.println("Received: REG");
         //##
         //REG-First
         //Delete all existing files for this peerId even if there is none
@@ -132,7 +133,6 @@ public class IndexServer implements P2PTransfer, Runnable {
         System.out.println("Received: PIG");
         //System.out.print(">>>");
         return true;
-
 
     }
 
@@ -176,6 +176,7 @@ public class IndexServer implements P2PTransfer, Runnable {
             //First, register peerId options:
             // (peerId == "null"): register a long newpeerId in the AddressTable<Long, Address>;
             // (peerId != "null"): skip this step;
+            //@SuppressWarnings("all")
             HashMap<String, Object> inputMessagebody = (HashMap<String, Object>) inputs.getBody();
             long newpeerId = 0;
             if (inputMessagebody.get("peerId") == "null") {
@@ -265,6 +266,7 @@ public class IndexServer implements P2PTransfer, Runnable {
         boolean listening = true;
         try {
             ServerSocket ss = new ServerSocket(port);
+            System.out.println("Index Server is Running.");
             while (listening) {
                 new Thread(new IndexServer(ss.accept())).start();
             }
