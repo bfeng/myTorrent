@@ -1,5 +1,6 @@
 package mytorrent;
 
+import mytorrent.p2p.FileHash;
 import org.junit.After;
 import org.junit.AfterClass;
 import static org.junit.Assert.*;
@@ -57,5 +58,17 @@ public class PeerTestCase {
     public void testRegister() {
         long result = peer1.registry(-1, null);
         assertEquals(result, -1);
+    }
+    
+    @Test
+    public void testSearch() {
+        String[] files = {"test1","test2"};
+        long peer1_id = peer1.registry(-1, files);
+        
+        FileHash.Entry[] entries = peer2.search("test1");
+        assertEquals(entries.length, 1);
+        
+        assertEquals(entries[0].getPeerId(), peer1_id);
+        assertEquals(entries[0].getFilename(), "test1");
     }
 }
