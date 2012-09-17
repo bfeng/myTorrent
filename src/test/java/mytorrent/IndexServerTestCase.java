@@ -10,6 +10,7 @@ import java.io.PrintWriter;
 import java.net.Socket;
 import java.net.UnknownHostException;
 import java.util.HashMap;
+import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import mytorrent.p2p.P2PProtocol;
@@ -105,7 +106,7 @@ public class IndexServerTestCase {
             //Second make input files
             // 1. peerId
             // 2. Message (REG, 
-            HashMap<String, Object> parameters = new HashMap<String, Object>();
+            Map<String, Object> parameters = new HashMap<String, Object>();
             parameters.put("peerId", "null");
             String[] files = {"file1.txt", "file2.JPEG", "file3.xml"};
             //parameters.put("port", port);
@@ -115,13 +116,13 @@ public class IndexServerTestCase {
             P2PProtocol protocol = new P2PProtocol();
             P2PProtocol.Message messageOut = protocol.new Message(P2PProtocol.Command.REG, parameters);
             protocol.preparedOutput(os, messageOut);
-                        sock.shutdownOutput();
+            sock.shutdownOutput();
             //#
             //Forth assert return value
             P2PProtocol.Message messageIn = protocol.processInput(is);
-            assertEquals(messageIn.getCmd(),P2PProtocol.Command.OK);
+            assertEquals(messageIn.getCmd(), P2PProtocol.Command.OK);
             sock.close();
-            }     catch (Exception ex) {
+        } catch (Exception ex) {
             Logger.getLogger(IndexServerTestCase.class.getName()).log(Level.SEVERE, null, ex);
             fail(ex.getMessage());
         }
@@ -131,9 +132,6 @@ public class IndexServerTestCase {
     @Test
     public void testSearch() {
         //#
-        
-        
-        
     }
 
     @Test
