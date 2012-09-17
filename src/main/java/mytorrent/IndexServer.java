@@ -166,7 +166,7 @@ public class IndexServer implements P2PTransfer, Runnable {
             is = socket.getInputStream();
             os = socket.getOutputStream();
             //waiting for input
-            inputs = pp.processInput(socket.getInputStream());
+            inputs = pp.processInput(is);
         } catch (IOException e) {
             System.err.println("Couldn't get I/O for the connection to: " + socket.getInetAddress().getHostAddress());
             System.exit(1);
@@ -260,6 +260,11 @@ public class IndexServer implements P2PTransfer, Runnable {
         } else {
             P2PProtocol.Message output = pp.new Message(Command.ERR, "Command is not supported!");
             pp.preparedOutput(os, output);
+            try {
+                socket.shutdownOutput();
+            } catch (IOException ex) {
+                Logger.getLogger(IndexServer.class.getName()).log(Level.SEVERE, null, ex);
+            }
         }
         //Clean up finished connection
         try {
