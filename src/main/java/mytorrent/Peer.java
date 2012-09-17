@@ -138,10 +138,11 @@ public class Peer implements P2PTransfer, P2PClient {
 
             P2PProtocol.Message messageOut = protocol.new Message(P2PProtocol.Command.REG, parameters);
             protocol.preparedOutput(socket.getOutputStream(), messageOut);
+            socket.shutdownOutput();
 
             P2PProtocol.Message messageIn = protocol.processInput(socket.getInputStream());
             if (messageIn.getCmd().equals(P2PProtocol.Command.OK)) {
-                result = (Long) messageIn.getBody();
+                result = new Double((Double)messageIn.getBody()).longValue();
                 this.peerId = result;
             }
         } catch (UnknownHostException ex) {
@@ -161,6 +162,7 @@ public class Peer implements P2PTransfer, P2PClient {
             P2PProtocol protocol = new P2PProtocol();
             P2PProtocol.Message messageOut = protocol.new Message(P2PProtocol.Command.SCH, filename);
             protocol.preparedOutput(socket.getOutputStream(), messageOut);
+            socket.shutdownOutput();
 
             P2PProtocol.Message messageIn = protocol.processInput(socket.getInputStream());
             if (messageIn.getCmd().equals(P2PProtocol.Command.OK)) {
@@ -183,6 +185,7 @@ public class Peer implements P2PTransfer, P2PClient {
             P2PProtocol protocol = new P2PProtocol();
             P2PProtocol.Message messageOut = protocol.new Message(P2PProtocol.Command.LOK, peerId);
             protocol.preparedOutput(socket.getOutputStream(), messageOut);
+            socket.shutdownOutput();
 
             P2PProtocol.Message messageIn = protocol.processInput(socket.getInputStream());
             if (messageIn.getCmd().equals(P2PProtocol.Command.OK)) {

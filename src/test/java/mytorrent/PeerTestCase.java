@@ -57,5 +57,10 @@ public class PeerTestCase {
     public void testRegister() {
         long result = peer1.registry(-1, null);
         assertEquals(result, -1);
+        
+        String[] files = {"file1", "file2"};
+        long id = peer1.registry(result, files);
+        
+        assertEquals(result, id);
     }
 }
