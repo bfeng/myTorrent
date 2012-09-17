@@ -86,11 +86,14 @@ public class IndexServer implements P2PTransfer, Runnable {
     private static void RegisterAddressTable(long peerId, Address peerAddress) {
         AddressTable.put(peerId, peerAddress);
     }
-    
+
     private long registry(long peerId, List<String> filesArrayList) {
-        String[] files = new String[filesArrayList.size()];
-        for(int i = 0;i<files.length;i++) {
-            files[i] = filesArrayList.get(i);
+        String[] files = null;
+        if (filesArrayList != null) {
+            files = new String[filesArrayList.size()];
+            for (int i = 0; i < files.length; i++) {
+                files[i] = filesArrayList.get(i);
+            }
         }
         return this.registry(peerId, files);
     }
@@ -104,6 +107,9 @@ public class IndexServer implements P2PTransfer, Runnable {
         //       String[]files
         //return: long returnReg (Not useful. It should be error indicator or just peerId rewind)
         System.out.println("Received: REG");
+        if(files==null) {
+            return -1L;
+        }
         //##
         //REG-First
         //Delete all existing files for this peerId even if there is none
@@ -200,7 +206,7 @@ public class IndexServer implements P2PTransfer, Runnable {
                 //register AddressTable with the newpeerId now
                 RegisterAddressTable(newpeerId, newpeerAddress);
             } else {
-                newpeerId = Long.valueOf((String)inputMessagebody.get("peerId")).longValue();
+                newpeerId = Long.valueOf((String) inputMessagebody.get("peerId")).longValue();
             }
             //###
             //Second parse the files[] and call registry() method to continue
@@ -250,7 +256,7 @@ public class IndexServer implements P2PTransfer, Runnable {
             //Do lookup
             //Incomming Message for LOK contains only long peerId
             //Expecting Command.OK and Address with respect to the peerId
-            P2PProtocol.Message output = pp.new Message(Command.OK, this.lookup((Long)inputs.getBody()));
+            P2PProtocol.Message output = pp.new Message(Command.OK, this.lookup((Long) inputs.getBody()));
             try {
                 pp.preparedOutput(socket.getOutputStream(), output);
             } catch (IOException ex) {
