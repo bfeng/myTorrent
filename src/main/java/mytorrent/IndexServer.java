@@ -38,6 +38,8 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.Scanner;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -84,6 +86,14 @@ public class IndexServer implements P2PTransfer, Runnable {
     private static void RegisterAddressTable(long peerId, Address peerAddress) {
         AddressTable.put(peerId, peerAddress);
     }
+    
+    private long registry(long peerId, List<String> filesArrayList) {
+        String[] files = new String[filesArrayList.size()];
+        for(int i = 0;i<files.length;i++) {
+            files[i] = filesArrayList.get(i);
+        }
+        return this.registry(peerId, files);
+    }
 
     @Override
     public long registry(long peerId, String[] files) {
@@ -93,7 +103,7 @@ public class IndexServer implements P2PTransfer, Runnable {
         //input: long peerId 
         //       String[]files
         //return: long returnReg (Not useful. It should be error indicator or just peerId rewind)
-
+        System.out.println("Received: REG");
         //##
         //REG-First
         //Delete all existing files for this peerId even if there is none
@@ -131,7 +141,6 @@ public class IndexServer implements P2PTransfer, Runnable {
         System.out.println("Received: PIG");
         //System.out.print(">>>");
         return true;
-
 
     }
 
@@ -175,9 +184,10 @@ public class IndexServer implements P2PTransfer, Runnable {
             //First, register peerId options:
             // (peerId == "null"): register a long newpeerId in the AddressTable<Long, Address>;
             // (peerId != "null"): skip this step;
-            HashMap<String, Object> inputMessagebody = (HashMap<String, Object>) inputs.getBody();
+            //@SuppressWarnings("all")
+            Map<String, Object> inputMessagebody = (Map<String, Object>) inputs.getBody();
             long newpeerId = 0;
-            if (inputMessagebody.get("peerId") == "null") {
+            if ("null".equals(inputMessagebody.get("peerId"))) {
                 //generate a number that doesn't exist in the AddressTable
                 newpeerId = 10001;
                 while (LOKAddressTable(newpeerId) != null) {
@@ -190,11 +200,11 @@ public class IndexServer implements P2PTransfer, Runnable {
                 //register AddressTable with the newpeerId now
                 RegisterAddressTable(newpeerId, newpeerAddress);
             } else {
-                newpeerId = (Long) inputMessagebody.get("peerId");
+                newpeerId = Long.valueOf((String)inputMessagebody.get("peerId")).longValue();
             }
             //###
             //Second parse the files[] and call registry() method to continue
-            long returnReg = this.registry(newpeerId, (String[]) inputMessagebody.get("files"));
+            long returnReg = this.registry(newpeerId, (List<String>) inputMessagebody.get("files"));
             //###
             //Third handle return Message
             // (1) peer expect to see Command.OK
@@ -264,6 +274,7 @@ public class IndexServer implements P2PTransfer, Runnable {
         boolean listening = true;
         try {
             ServerSocket ss = new ServerSocket(port);
+            System.out.println("Index Server is Running.");
             while (listening) {
                 new Thread(new IndexServer(ss.accept())).start();
             }
