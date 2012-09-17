@@ -142,7 +142,7 @@ public class Peer implements P2PTransfer, P2PClient {
 
             P2PProtocol.Message messageIn = protocol.processInput(socket.getInputStream());
             if (messageIn.getCmd().equals(P2PProtocol.Command.OK)) {
-                result = new Double((Double)messageIn.getBody()).longValue();
+                result = Math.round((Double)messageIn.getBody());
                 this.peerId = result;
             }
         } catch (UnknownHostException ex) {
