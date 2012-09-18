@@ -23,24 +23,14 @@
  */
 package mytorrent;
 
-import java.io.BufferedReader;
-import java.io.FileNotFoundException;
-import java.io.FileReader;
-import java.io.FileWriter;
-import java.io.PrintWriter;
-import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.ObjectOutputStream;
 import java.io.OutputStream;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Scanner;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import mytorrent.p2p.Address;
@@ -87,15 +77,15 @@ public class IndexServer implements P2PTransfer, Runnable {
         AddressTable.put(peerId, peerAddress);
     }
 
-    private long registry(long peerId, List<String> filesArrayList) {
-        String[] files = null;
-        if (filesArrayList != null) {
-            files = new String[filesArrayList.size()];
-            for (int i = 0; i < files.length; i++) {
-                files[i] = filesArrayList.get(i);
+    private String[] list2Array(List arrayList) {
+        String[] results = null;
+        if (arrayList != null) {
+            results = new String[arrayList.size()];
+            for(int i=0;i<arrayList.size();i++) {
+                results[i] = arrayList.get(i).toString();
             }
         }
-        return this.registry(peerId, files);
+        return results;
     }
 
     @Override
@@ -107,9 +97,6 @@ public class IndexServer implements P2PTransfer, Runnable {
         //       String[]files
         //return: long returnReg (Not useful. It should be error indicator or just peerId rewind)
         System.out.println("Received: REG");
-        if(files==null) {
-            return -1L;
-        }
         //##
         //REG-First
         //Delete all existing files for this peerId even if there is none
@@ -117,8 +104,10 @@ public class IndexServer implements P2PTransfer, Runnable {
         //##
         //REG-Second
         //Reconstruct all files for this peerId
-        for (String item : files) {
-            filehashdepot.addEntry(filehashdepot.new Entry(peerId, item));
+        if (files != null) {
+            for (String item : files) {
+                filehashdepot.addEntry(filehashdepot.new Entry(peerId, item));
+            }
         }
         return peerId;
 
@@ -162,7 +151,6 @@ public class IndexServer implements P2PTransfer, Runnable {
 
     @Override
     public void run() {
-
         InputStream is = null;
         OutputStream os = null;
         P2PProtocol pp = new P2PProtocol();
@@ -173,111 +161,87 @@ public class IndexServer implements P2PTransfer, Runnable {
             os = socket.getOutputStream();
             //waiting for input
             inputs = pp.processInput(is);
-        } catch (IOException e) {
-            System.err.println("Couldn't get I/O for the connection to: " + socket.getInetAddress().getHostAddress());
-            System.exit(1);
-        }
-        P2PProtocol.Command inputcmd = inputs.getCmd();
-
-        //Process command and then open input.GetObject
-        if (inputcmd == Command.REG) {
-            //Do registry
-            //Incomming Message for REG contains a body of Map<String, Object>:
-            // (1)"peerId" : String "null" or peerId;
-            // (2)"port" : int port;
-            // (3)"files" : String[]files;
-            //###
-            //First, register peerId options:
-            // (peerId == "null"): register a long newpeerId in the AddressTable<Long, Address>;
-            // (peerId != "null"): skip this step;
-            //@SuppressWarnings("all")
-            Map<String, Object> inputMessagebody = (Map<String, Object>) inputs.getBody();
-            long newpeerId = 0;
-            if ("null".equals(inputMessagebody.get("peerId"))) {
-                //generate a number that doesn't exist in the AddressTable
-                newpeerId = 10001;
-                while (LOKAddressTable(newpeerId) != null) {
-                    newpeerId++;
+            P2PProtocol.Command inputcmd = inputs.getCmd();
+            //Process command and then open input.GetObject
+            if (inputcmd == Command.REG) {
+                //Do registry
+                //Incomming Message for REG contains a body of Map<String, Object>:
+                // (1)"peerId" : String "null" or peerId;
+                // (2)"port" : int port;
+                // (3)"files" : String[]files;
+                //###
+                //First, register peerId options:
+                // (peerId == "null"): register a long newpeerId in the AddressTable<Long, Address>;
+                // (peerId != "null"): skip this step;
+                //@SuppressWarnings("all")
+                Map<String, Object> inputMessagebody = (Map<String, Object>) inputs.getBody();
+                long newpeerId = 0;
+                if ("null".equals(inputMessagebody.get("peerId"))) {
+                    //generate a number that doesn't exist in the AddressTable
+                    newpeerId = 10001;
+                    while (LOKAddressTable(newpeerId) != null) {
+                        newpeerId++;
+                    }
+                    //generate newpeerAddress
+                    Address newpeerAddress = new Address();
+                    newpeerAddress.setHost(socket.getInetAddress().getHostAddress());
+                    newpeerAddress.setPort(socket.getLocalPort());
+                    //register AddressTable with the newpeerId now
+                    RegisterAddressTable(newpeerId, newpeerAddress);
+                } else {
+                    newpeerId = Math.round((Double) inputMessagebody.get("peerId"));
                 }
-                //generate newpeerAddress
-                Address newpeerAddress = new Address();
-                newpeerAddress.setHost(socket.getInetAddress().getHostAddress());
-                newpeerAddress.setPort(socket.getLocalPort());
-                //register AddressTable with the newpeerId now
-                RegisterAddressTable(newpeerId, newpeerAddress);
+                //###
+                //Second parse the files[] and call registry() method to continue
+                List files = (List)inputMessagebody.get("files");
+                long returnReg = this.registry(newpeerId, this.list2Array(files));
+                //###
+                //Third handle return Message
+                // (1) peer expect to see Command.OK
+                // (2) peer expect to see newpeerId;
+//            returnReg = newpeerId; //This line is not neccessary
+                P2PProtocol.Message output = pp.new Message(Command.OK, returnReg);
+                pp.preparedOutput(socket.getOutputStream(), output);
+            } else if (inputcmd == Command.SCH) {
+                //Do search
+                //Incomming Message for SCH contains only one String filename;
+                //And expect an Entry[] containing all files
+                //###
+                //First call search() method using filename
+                FileHash.Entry[] ReturnEntry = this.search((String) inputs.getBody());
+
+                //###
+                //Second handle return Entry[]
+                P2PProtocol.Message output = pp.new Message(Command.OK, ReturnEntry);
+                pp.preparedOutput(socket.getOutputStream(), output);
+            } else if (inputcmd == Command.PIG) {
+                //Do ping
+                boolean ping = this.ping();
+                P2PProtocol.Message output = pp.new Message(Command.OK, ping);
+                pp.preparedOutput(socket.getOutputStream(), output);
+            } else if (inputcmd == Command.LOK) {
+                //Do lookup
+                //Incomming Message for LOK contains only long peerId
+                //Expecting Command.OK and Address with respect to the peerId
+                P2PProtocol.Message output = pp.new Message(Command.OK, this.lookup((Long) inputs.getBody()));
+                pp.preparedOutput(socket.getOutputStream(), output);
             } else {
-                newpeerId = Long.valueOf((String) inputMessagebody.get("peerId")).longValue();
+                P2PProtocol.Message output = pp.new Message(Command.ERR, "Command is not supported!");
+                pp.preparedOutput(os, output);
             }
-            //###
-            //Second parse the files[] and call registry() method to continue
-            long returnReg = this.registry(newpeerId, (List<String>) inputMessagebody.get("files"));
-            //###
-            //Third handle return Message
-            // (1) peer expect to see Command.OK
-            // (2) peer expect to see newpeerId;
-            returnReg = newpeerId; //This line is not neccessary
-            P2PProtocol.Message output = pp.new Message(Command.OK, returnReg);
-            try {
-                pp.preparedOutput(socket.getOutputStream(), output);
-            } catch (IOException ex) {
-                Logger.getLogger(IndexServer.class.getName()).log(Level.SEVERE, null, ex);
-            }
-
-        } else if (inputcmd == Command.SCH) {
-            //Do search
-            //Incomming Message for SCH contains only one String filename;
-            //And expect an Entry[] containing all files
-            //###
-            //First call search() method using filename
-            FileHash.Entry[] ReturnEntry = this.search((String) inputs.getBody());
-
-            //###
-            //Second handle return Entry[]
-            P2PProtocol.Message output = pp.new Message(Command.OK, ReturnEntry);
-            try {
-                pp.preparedOutput(socket.getOutputStream(), output);
-            } catch (IOException ex) {
-                Logger.getLogger(IndexServer.class.getName()).log(Level.SEVERE, null, ex);
-            }
-
-
-
-        } else if (inputcmd == Command.PIG) {
-            //Do ping
-            boolean ping = this.ping();
-            P2PProtocol.Message output = pp.new Message(Command.OK, ping);
-            try {
-                pp.preparedOutput(socket.getOutputStream(), output);
-            } catch (IOException ex) {
-                Logger.getLogger(IndexServer.class.getName()).log(Level.SEVERE, null, ex);
-            }
-
-        } else if (inputcmd == Command.LOK) {
-            //Do lookup
-            //Incomming Message for LOK contains only long peerId
-            //Expecting Command.OK and Address with respect to the peerId
-            P2PProtocol.Message output = pp.new Message(Command.OK, this.lookup((Long) inputs.getBody()));
-            try {
-                pp.preparedOutput(socket.getOutputStream(), output);
-            } catch (IOException ex) {
-                Logger.getLogger(IndexServer.class.getName()).log(Level.SEVERE, null, ex);
-            }
-
-        } else {
-            P2PProtocol.Message output = pp.new Message(Command.ERR, "Command is not supported!");
-            pp.preparedOutput(os, output);
-            try {
-                socket.shutdownOutput();
-            } catch (IOException ex) {
-                Logger.getLogger(IndexServer.class.getName()).log(Level.SEVERE, null, ex);
-            }
-        }
-        //Clean up finished connection
-        try {
-            os.close();
-            is.close();
         } catch (IOException ex) {
             Logger.getLogger(IndexServer.class.getName()).log(Level.SEVERE, null, ex);
+            P2PProtocol.Message output = pp.new Message(Command.ERR, ex.getMessage());
+            pp.preparedOutput(os, output);
+        } finally {
+            try {
+                //Clean up finished connection
+                socket.shutdownOutput();
+                os.close();
+                is.close();
+            } catch (IOException ex) {
+                Logger.getLogger(IndexServer.class.getName()).log(Level.SEVERE, null, ex);
+            }
         }
     }
 

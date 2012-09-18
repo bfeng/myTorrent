@@ -37,6 +37,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import mytorrent.p2p.Address;
 import mytorrent.p2p.FileHash;
+import mytorrent.p2p.FileHash.Entry;
 import mytorrent.p2p.P2PClient;
 import mytorrent.p2p.P2PProtocol;
 import mytorrent.p2p.P2PReceiver;
@@ -153,6 +154,10 @@ public class Peer implements P2PTransfer, P2PClient {
         return result;
     }
 
+    private FileHash.Entry[] list2Array(List list) {
+        return (Entry[]) list.toArray(new Entry[0]);
+    }
+    
     @Override
     public FileHash.Entry[] search(String filename) {
         FileHash.Entry[] result = null;
@@ -166,7 +171,7 @@ public class Peer implements P2PTransfer, P2PClient {
 
             P2PProtocol.Message messageIn = protocol.processInput(socket.getInputStream());
             if (messageIn.getCmd().equals(P2PProtocol.Command.OK)) {
-                result = (FileHash.Entry[]) messageIn.getBody();
+                result = this.list2Array((List) messageIn.getBody());
             }
         } catch (UnknownHostException ex) {
             Logger.getLogger(Peer.class.getName()).log(Level.SEVERE, null, ex);
