@@ -246,7 +246,6 @@ public class IndexServerTestCase {
     public void testLookup() {
         //#
         //First, based on previous @Test {testRegistry, testSearch) the server has registered 10001 and 10002. Lookup 10001 first
-        Address result = null;
         try {
             Socket sock = new Socket("localhost", 5700);
 
@@ -273,5 +272,30 @@ public class IndexServerTestCase {
 
     @Test
     public void testUnknownCommand() {
+        //#
+        //Send out OK and expect ERR
+        try {
+            Socket sock = new Socket("localhost", 5700);
+
+            P2PProtocol protocol = new P2PProtocol();
+            P2PProtocol.Message messageOut = protocol.new Message(P2PProtocol.Command.OK, 12345);
+            protocol.preparedOutput(sock.getOutputStream(), messageOut);
+            sock.shutdownOutput();
+
+            P2PProtocol.Message messageIn = protocol.processInput(sock.getInputStream());
+            assertEquals(messageIn.getCmd(), P2PProtocol.Command.ERR);
+            //The Address class is transfered to StringMap
+            
+            
+            assertEquals(messageIn.getBody(),"Command is not supported!");
+
+            
+        } catch (UnknownHostException ex) {
+            Logger.getLogger(Peer.class.getName()).log(Level.SEVERE, null, ex);
+        } catch (IOException ex) {
+            Logger.getLogger(Peer.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        
+        
     }
 }
