@@ -51,14 +51,12 @@ public class IndexServer implements P2PTransfer, Runnable {
 
     private static final int port = 5700;
     private Socket socket;             //need cleanup
-    private static HashMap<Long, Address> AddressTable;
+    private static HashMap<Long, Address> AddressTable = new HashMap<Long, Address>();;
     private static Address TheAddress;
-    private static FileHash filehashdepot;
+    private static FileHash filehashdepot= new FileHash();;
 
     public IndexServer(Socket socket) {
         this.socket = socket;
-        IndexServer.AddressTable = new HashMap<Long, Address>();
-        IndexServer.filehashdepot = new FileHash();
         IndexServer.TheAddress = null;
     }
 
@@ -81,7 +79,7 @@ public class IndexServer implements P2PTransfer, Runnable {
         String[] results = null;
         if (arrayList != null) {
             results = new String[arrayList.size()];
-            for(int i=0;i<arrayList.size();i++) {
+            for (int i = 0; i < arrayList.size(); i++) {
                 results[i] = arrayList.get(i).toString();
             }
         }
@@ -118,6 +116,7 @@ public class IndexServer implements P2PTransfer, Runnable {
         //throw new UnsupportedOperationException("Not supported yet.");\
         //##
         //Search and return Entry use existing mechod
+        System.out.println("Received: SCH");
         return filehashdepot.search(filename);
 
     }
@@ -125,6 +124,7 @@ public class IndexServer implements P2PTransfer, Runnable {
     @Override
     public Address lookup(long peerId) {
         //throw new UnsupportedOperationException("Not supported yet.");
+        System.out.println("Received: LOK");
         return LOKAddressTable(peerId);
     }
 
@@ -132,7 +132,6 @@ public class IndexServer implements P2PTransfer, Runnable {
     public boolean ping() {
         //throw new UnsupportedOperationException("Not supported yet.");
         //print on server console
-        System.out.println(" ");
         System.out.println("Received: PIG");
         //System.out.print(">>>");
         return true;
@@ -185,7 +184,7 @@ public class IndexServer implements P2PTransfer, Runnable {
                     //generate newpeerAddress
                     Address newpeerAddress = new Address();
                     newpeerAddress.setHost(socket.getInetAddress().getHostAddress());
-                    newpeerAddress.setPort(socket.getLocalPort());
+                    newpeerAddress.setPort(socket.getPort());
                     //register AddressTable with the newpeerId now
                     RegisterAddressTable(newpeerId, newpeerAddress);
                 } else {
@@ -193,7 +192,7 @@ public class IndexServer implements P2PTransfer, Runnable {
                 }
                 //###
                 //Second parse the files[] and call registry() method to continue
-                List files = (List)inputMessagebody.get("files");
+                List files = (List) inputMessagebody.get("files");
                 long returnReg = this.registry(newpeerId, this.list2Array(files));
                 //###
                 //Third handle return Message

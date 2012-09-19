@@ -1,5 +1,6 @@
 package mytorrent;
 
+import com.google.gson.internal.StringMap;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
@@ -10,9 +11,12 @@ import java.io.PrintWriter;
 import java.net.Socket;
 import java.net.UnknownHostException;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import mytorrent.p2p.FileHash;
+import mytorrent.p2p.FileHash.Entry;
 import mytorrent.p2p.P2PProtocol;
 import mytorrent.p2p.P2PProtocol.Command;
 import mytorrent.p2p.P2PProtocol.Message;
@@ -132,6 +136,109 @@ public class IndexServerTestCase {
     @Test
     public void testSearch() {
         //#
+        //First, based on testRegistry, we want at least 2 peers has registered indexserver
+        try {
+            Socket sock = new Socket("localhost", 5700);
+            InputStream is = sock.getInputStream();
+            OutputStream os = sock.getOutputStream();
+
+            Map<String, Object> parameters = new HashMap<String, Object>();
+            parameters.put("peerId", "null");
+            String[] files = {"file1.txt", "file2.JPEG", "file4.cc"};
+
+            parameters.put("files", files);
+
+            P2PProtocol protocol = new P2PProtocol();
+            P2PProtocol.Message messageOut = protocol.new Message(P2PProtocol.Command.REG, parameters);
+            protocol.preparedOutput(os, messageOut);
+            sock.shutdownOutput();
+            P2PProtocol.Message messageIn = protocol.processInput(is);
+            assertEquals(messageIn.getCmd(), P2PProtocol.Command.OK);
+            sock.close();
+        } catch (Exception ex) {
+            Logger.getLogger(IndexServerTestCase.class.getName()).log(Level.SEVERE, null, ex);
+            fail(ex.getMessage());
+        }
+        //#
+        //Second, search file1.txt
+        //##
+        //(1) server shall return OK
+        //(2) file1.txt shall have two entries
+        try {
+            Socket sock = new Socket("localhost", 5700);
+
+            P2PProtocol protocol = new P2PProtocol();
+            P2PProtocol.Message messageOut = protocol.new Message(P2PProtocol.Command.SCH, "file1.txt");
+            protocol.preparedOutput(sock.getOutputStream(), messageOut);
+            sock.shutdownOutput();
+
+            P2PProtocol.Message messageIn = protocol.processInput(sock.getInputStream());
+            assertEquals(messageIn.getCmd(), P2PProtocol.Command.OK);
+            //!!
+            //The following method will NEVER work:
+            //FileHash.Entry[] schResult = (FileHash.Entry[]) ((List<Entry>) messageIn.getBody()).toArray(new FileHash.Entry[((List<Entry>) messageIn.getBody()).size()]);
+            //FileHash.Entry[] schResult = (FileHash.Entry[]) ((List) messageIn.getBody()).toArray(new FileHash.Entry[0]);
+            //!!
+            //'Entry' returned from Message has been transferred, by fromJson, to ArrayList<com.google.gson.internal.StringMap>
+            //We have to use these StringMaps to reconstruct our Entry[] if necessary;
+            //Gson type cast
+            List tempList = (List) messageIn.getBody();
+            int tempsize = tempList.size();
+            StringMap[] schResult = new StringMap[tempsize];
+            tempList.toArray(schResult);
+
+
+
+            //FileHash.Entry[] schResult = (FileHash.Entry[]) ((List<Entry>) messageIn.getBody()).toArray(new FileHash.Entry[((List<Entry>) messageIn.getBody()).size()]);
+            int correctvalue = 2;
+            assertEquals(schResult[0].get("filename"), "file1.txt");
+            assertEquals(schResult.length, correctvalue);
+
+
+        } catch (UnknownHostException ex) {
+            Logger.getLogger(Peer.class.getName()).log(Level.SEVERE, null, ex);
+        } catch (IOException ex) {
+            Logger.getLogger(Peer.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        //#
+        //Third, search file4.c
+        //##
+        //(1) server shall return OK
+        //(2) file4.cc shall have only one entry
+        try {
+            Socket sock = new Socket("localhost", 5700);
+
+            P2PProtocol protocol = new P2PProtocol();
+            P2PProtocol.Message messageOut = protocol.new Message(P2PProtocol.Command.SCH, "file4.cc");
+            protocol.preparedOutput(sock.getOutputStream(), messageOut);
+            sock.shutdownOutput();
+
+            P2PProtocol.Message messageIn = protocol.processInput(sock.getInputStream());
+            assertEquals(messageIn.getCmd(), P2PProtocol.Command.OK);
+            //!!
+            //The following method will NEVER work:
+            //FileHash.Entry[] schResult = (FileHash.Entry[]) ((List<Entry>) messageIn.getBody()).toArray(new FileHash.Entry[((List<Entry>) messageIn.getBody()).size()]);
+            //FileHash.Entry[] schResult = (FileHash.Entry[]) ((List) messageIn.getBody()).toArray(new FileHash.Entry[0]);
+            //!!
+            //'Entry' returned from Message has been transferred, by fromJson, to ArrayList<com.google.gson.internal.StringMap>
+            //We have to use these StringMaps to reconstruct our Entry[] if necessary;
+            //Gson type cast
+            List tempList = (List) messageIn.getBody();
+            int tempsize = tempList.size();
+            StringMap[] schResult = new StringMap[tempsize];
+            tempList.toArray(schResult);
+
+            int correctvalue = 1;
+            assertEquals(schResult[0].get("filename"), "file4.cc");
+            assertEquals(schResult.length, correctvalue);
+
+
+        } catch (UnknownHostException ex) {
+            Logger.getLogger(Peer.class.getName()).log(Level.SEVERE, null, ex);
+        } catch (IOException ex) {
+            Logger.getLogger(Peer.class.getName()).log(Level.SEVERE, null, ex);
+        }
+
     }
 
     @Test
