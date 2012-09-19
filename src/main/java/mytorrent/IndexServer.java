@@ -222,7 +222,8 @@ public class IndexServer implements P2PTransfer, Runnable {
                 //Do lookup
                 //Incomming Message for LOK contains only long peerId
                 //Expecting Command.OK and Address with respect to the peerId
-                P2PProtocol.Message output = pp.new Message(Command.OK, this.lookup((Long) inputs.getBody()));
+                long peerIdtoLOK = Math.round((Double)inputs.getBody());
+                P2PProtocol.Message output = pp.new Message(Command.OK, this.lookup(peerIdtoLOK));
                 pp.preparedOutput(socket.getOutputStream(), output);
             } else {
                 P2PProtocol.Message output = pp.new Message(Command.ERR, "Command is not supported!");

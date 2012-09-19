@@ -15,6 +15,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import mytorrent.p2p.Address;
 import mytorrent.p2p.FileHash;
 import mytorrent.p2p.FileHash.Entry;
 import mytorrent.p2p.P2PProtocol;
@@ -243,6 +244,31 @@ public class IndexServerTestCase {
 
     @Test
     public void testLookup() {
+        //#
+        //First, based on previous @Test {testRegistry, testSearch) the server has registered 10001 and 10002. Lookup 10001 first
+        Address result = null;
+        try {
+            Socket sock = new Socket("localhost", 5700);
+
+            P2PProtocol protocol = new P2PProtocol();
+            P2PProtocol.Message messageOut = protocol.new Message(P2PProtocol.Command.LOK, 10001);
+            protocol.preparedOutput(sock.getOutputStream(), messageOut);
+            sock.shutdownOutput();
+
+            P2PProtocol.Message messageIn = protocol.processInput(sock.getInputStream());
+            assertEquals(messageIn.getCmd(), P2PProtocol.Command.OK);
+            //The Address class is transfered to StringMap
+            StringMap lookResult = (StringMap) messageIn.getBody();
+            
+            assertEquals(lookResult.get("host"),"127.0.0.1");
+
+            
+        } catch (UnknownHostException ex) {
+            Logger.getLogger(Peer.class.getName()).log(Level.SEVERE, null, ex);
+        } catch (IOException ex) {
+            Logger.getLogger(Peer.class.getName()).log(Level.SEVERE, null, ex);
+        }
+
     }
 
     @Test
