@@ -23,6 +23,7 @@
  */
 package mytorrent;
 
+import com.google.gson.internal.StringMap;
 import java.io.File;
 import java.io.IOException;
 import java.net.ServerSocket;
@@ -155,7 +156,13 @@ public class Peer implements P2PTransfer, P2PClient {
     }
 
     private FileHash.Entry[] list2Array(List list) {
-        return (Entry[]) list.toArray(new Entry[0]);
+        FileHash fh = new FileHash();
+        Entry[] results = new Entry[list.size()];
+        for(int i=0;i<list.size();i++) {
+            StringMap sm = (StringMap)list.get(i);
+            results[i] = fh.new Entry(Math.round((Double)sm.get("peerId")), (String)sm.get("filename"));
+    }
+        return results;
     }
     
     @Override
