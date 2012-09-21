@@ -184,7 +184,9 @@ public class IndexServer implements P2PTransfer, Runnable {
                     //generate newpeerAddress
                     Address newpeerAddress = new Address();
                     newpeerAddress.setHost(socket.getInetAddress().getHostAddress());
-                    newpeerAddress.setPort(socket.getPort());
+                    double newclientportD = (Double)inputMessagebody.get("port");
+                    int newclientport = (int)newclientportD;
+                    newpeerAddress.setPort(newclientport);
                     //register AddressTable with the newpeerId now
                     RegisterAddressTable(newpeerId, newpeerAddress);
                 } else {
