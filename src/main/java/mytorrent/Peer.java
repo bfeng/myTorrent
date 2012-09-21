@@ -161,10 +161,10 @@ public class Peer implements P2PTransfer, P2PClient {
         for(int i=0;i<list.size();i++) {
             StringMap sm = (StringMap)list.get(i);
             results[i] = fh.new Entry(Math.round((Double)sm.get("peerId")), (String)sm.get("filename"));
-    }
+        }
         return results;
     }
-    
+
     @Override
     public FileHash.Entry[] search(String filename) {
         FileHash.Entry[] result = null;
@@ -190,7 +190,7 @@ public class Peer implements P2PTransfer, P2PClient {
 
     @Override
     public Address lookup(long peerId) {
-        Address result = null;
+        Address result = new Address();
         try {
             socket = new Socket(this.indexServerIP, this.indexServerPort);
 
@@ -201,7 +201,14 @@ public class Peer implements P2PTransfer, P2PClient {
 
             P2PProtocol.Message messageIn = protocol.processInput(socket.getInputStream());
             if (messageIn.getCmd().equals(P2PProtocol.Command.OK)) {
-                result = (Address) messageIn.getBody();
+                //Create a Address object from StringMap
+                StringMap lookResult = (StringMap) messageIn.getBody();
+                double portNb = (Double) lookResult.get("port");
+                result.setPort((int) portNb);
+                String lookHost = (String) lookResult.get("host");
+                result.setHost(lookHost);
+
+                //result = (Address) messageIn.getBody();
             }
         } catch (UnknownHostException ex) {
             Logger.getLogger(Peer.class.getName()).log(Level.SEVERE, null, ex);

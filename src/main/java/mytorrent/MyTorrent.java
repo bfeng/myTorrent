@@ -23,6 +23,7 @@
  */
 package mytorrent;
 
+import com.google.gson.internal.StringMap;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Scanner;
@@ -30,6 +31,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import mytorrent.gui.BannerManager;
 import mytorrent.gui.CommandParser;
+import mytorrent.p2p.Address;
 import mytorrent.p2p.FileHash;
 
 /**
@@ -105,7 +107,9 @@ public class MyTorrent {
                 //First prepare inputs
                 //#
                 //Second call lookup()
-                BannerManager.printLookupReturns(thispeer.lookup(Long.getLong(userinput[1])), Long.getLong(userinput[1]));
+                long lookpeerId = Long.valueOf(userinput[1]);
+                Address lookupreturns = thispeer.lookup(lookpeerId);
+                BannerManager.printLookupReturns(lookupreturns, lookpeerId);
 
 
             } else if (userinput[0].toLowerCase().equals("exit")) {
