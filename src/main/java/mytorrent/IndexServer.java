@@ -249,7 +249,8 @@ public class IndexServer implements P2PTransfer, Runnable {
         boolean listening = true;
         try {
             ServerSocket ss = new ServerSocket(port);
-            System.out.println("Index Server is Running.");
+            System.out.println("Index Server is Running...");
+            System.out.println("on port 5700");
             while (listening) {
                 new Thread(new IndexServer(ss.accept())).start();
             }

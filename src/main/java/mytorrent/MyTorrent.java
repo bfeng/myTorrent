@@ -47,24 +47,54 @@ public class MyTorrent {
      */
     public static void main(String[] args) {
 
+        //define thispeer
+        Peer thispeer = null;
         //Print banner
-        /* BannerManager.clearConsole();*/
-        BannerManager.printBanner();
-
-        //Ask user for peer port"
-        InputStream sysin = System.in;
-        System.out.print("\nPlease input port number >>>");
-        Scanner portScanner = new Scanner(sysin);
-        String portInputRaw = portScanner.nextLine();
-        //portScanner.close();
+        BannerManager.Banner();
 
 
+        //Ask user for usage specification
+        //1 for regular use: input peer(int clientPort, String serveraddress, int serverport);
+        //2 for test use: input peer(int clientport);
+        BannerManager.printUsage();
 
-        //create a peer and thispeer.server thread;
-        Peer thispeer = new Peer(Integer.parseInt(portInputRaw));
-        thispeer.startup();
+        boolean inusagechoice = true;
+        while (inusagechoice) {
+            InputStream sysin = System.in;
+            Scanner portScanner = new Scanner(sysin);
+            String usagechoice = portScanner.nextLine();
+
+            if (usagechoice.equals("1")) {
+                inusagechoice = false;
+                System.out.print("\nPlease input IndexServer IP Address >");
+                String IndexServerAddress = portScanner.nextLine();
+                System.out.print("\nPlease input IndexServer port number >");
+                int IndexServerPort = Integer.parseInt(portScanner.nextLine());
+                System.out.print("\nPlease input this client port number >");
+                int thispeerport = Integer.parseInt(portScanner.nextLine());
+                //start peer
+                thispeer = new Peer(thispeerport, IndexServerAddress, IndexServerPort);
+                thispeer.startup();
+                System.out.println("Client is Running.");
+
+            } else if (usagechoice.equals("2")) {
+                inusagechoice = false;
+                //Ask user for peer port"
+                System.out.print("\nIndexServer is set to localhost on port 5700");
+                System.out.print("\nPlease input this client port number >");
+                String portInputRaw = portScanner.nextLine();
+                //portScanner.close();
+                //create a peer and thispeer.server thread;
+                thispeer = new Peer(Integer.parseInt(portInputRaw));
+                thispeer.startup();
+                System.out.println("\nClient is Running...\n");
+            } else {
+                System.out.print("\nPlease input 1 or 2.");
+            }
+        }
 
 
+        BannerManager.printClientInstruction();
         //while(true);
         boolean Running = true;
         while (Running) {
@@ -91,7 +121,7 @@ public class MyTorrent {
                 //#
                 //Second call search and print return value
                 BannerManager.printSearchReturns(thispeer.search(userinput[1]));
-                
+
             } else if (userinput[0].toLowerCase().startsWith("obt")) {
                 /* Obtain */
                 System.out.println("This is the Obtain part!");
@@ -119,7 +149,10 @@ public class MyTorrent {
                 //Exit while and end main()
                 //Enter here only if > Exit while and end main()
                 Running = false;
-            } else {
+            } else if (userinput[0].toLowerCase().equals("help")) {
+                BannerManager.printHelp();
+          
+            }else {
                 System.out.println("Command not recognized!");
 
             }
