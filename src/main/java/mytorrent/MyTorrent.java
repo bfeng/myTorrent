@@ -102,7 +102,7 @@ public class MyTorrent {
             String[] userinput = new CommandParser().run();
             if (userinput[0].toLowerCase().startsWith("reg")) {
                 /* Registry */
-                System.out.println("This is the Register part!");
+                System.out.println("  - Register Finished ! -");
                 //Userinput: registry
                 //MyTorrent input: long thispeerId String[]filesofthis
                 //#
@@ -113,7 +113,7 @@ public class MyTorrent {
 
             } else if (userinput[0].toLowerCase().startsWith("sea")) {
                 /* Search */
-                System.out.println("This is the Search part!");
+                //System.out.println("This is the Search part!");
                 //Userinput: search Afilename
                 //MyTorrent input: String Afilename
                 //#
@@ -124,13 +124,13 @@ public class MyTorrent {
 
             } else if (userinput[0].toLowerCase().startsWith("obt")) {
                 /* Obtain */
-                System.out.println("This is the Obtain part!");
+                System.out.println("  - File Obtained ! -");
                 thispeer.obtain(userinput[1]);
 
 
             } else if (userinput[0].toLowerCase().startsWith("look")) {
                 /* Lookup */
-                System.out.println("This is the Lookup part!");
+                System.out.println("  - Lookup Result ! -");
                 //Userinput: lookup ApeerId
                 //MyTorrent input: long ApeerId
                 //#
@@ -144,6 +144,7 @@ public class MyTorrent {
 
             } else if (userinput[0].toLowerCase().equals("exit")) {
                 //Turn off peer
+                System.out.println("  - Client Terminated ! -");
                 thispeer.exit();
                 //Turn off CommandParser: not neccessary here.
                 //Exit while and end main()

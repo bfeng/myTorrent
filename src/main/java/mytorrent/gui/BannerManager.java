@@ -52,15 +52,15 @@ public class BannerManager {
     }
 
     public static void printSearchReturns(FileHash.Entry[] entrytoprint) {
-        System.out.println("Result: " + entrytoprint.length + " found in the network");
+        System.out.println("  - Search Result: " + entrytoprint.length + " found in the network");
         for (FileHash.Entry item : entrytoprint) {
-            System.out.println(item.getFilename() + " at PeerID: " + item.getPeerId());
+            System.out.println("    " + item.getFilename() + " at PeerID: " + item.getPeerId());
         }
     }
 
     public static void printLookupReturns(Address addresstoprint, long peerId) {
-        System.out.println("Host: " + addresstoprint.getHost());
-        System.out.println("Port: " + addresstoprint.getPort());
+        System.out.println("    Host: " + addresstoprint.getHost());
+        System.out.println("    Port: " + addresstoprint.getPort());
 
     }
 
