@@ -67,7 +67,7 @@ public class P2PSender extends Thread {
     public void run() {
         try {
             long numOfBytes = FileUtils.copyFile(new File("shared/" + filename), os);
-            System.out.println(numOfBytes);
+            Logger.getLogger(P2PSender.class.getName()).log(Level.SEVERE, filename, numOfBytes);
             socket.shutdownOutput();
         } catch (IOException ex) {
             Logger.getLogger(P2PSender.class.getName()).log(Level.SEVERE, filename, ex);
