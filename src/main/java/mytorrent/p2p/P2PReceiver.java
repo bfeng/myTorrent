@@ -50,6 +50,7 @@ public class P2PReceiver extends Thread {
         try {
             InputStream in = socket.getInputStream();
             FileUtils.copyInputStreamToFile(in, new File("shared/" + filename));
+            in.close();
         } catch (IOException ex) {
             Logger.getLogger(P2PReceiver.class.getName()).log(Level.SEVERE, null, ex);
         }

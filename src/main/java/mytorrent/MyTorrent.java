@@ -81,7 +81,7 @@ public class MyTorrent {
                 inusagechoice = false;
                 //Ask user for peer port"
                 System.out.print("\nIndexServer is set to localhost on port 5700");
-                System.out.print("\nPlease input this client port number >");
+                System.out.print("\nPlease input t`his client port number >");
                 String portInputRaw = portScanner.nextLine();
                 //portScanner.close();
                 //create a peer and thispeer.server thread;
