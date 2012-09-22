@@ -40,22 +40,26 @@ public class P2PReceiver extends Thread {
 
     private String filename;
     private Socket socket;
+    private OutputStream os;
+    private InputStream is;
 
     public P2PReceiver(Socket socket, String filename) throws IOException {
         this.socket = socket;
         this.filename = filename;
-        
-        OutputStream os = socket.getOutputStream();
+
+        this.os = socket.getOutputStream();
+        this.is = socket.getInputStream();
+
         os.write(this.filename.getBytes());
+        os.flush();
         socket.shutdownOutput();
     }
 
     @Override
     public void run() {
         try {
-            InputStream in = socket.getInputStream();
-            FileUtils.copyInputStreamToFile(in, new File("shared/" + filename));
-            in.close();
+            FileUtils.copyInputStreamToFile(is, new File("received/" + filename));
+            socket.close();
         } catch (IOException ex) {
             Logger.getLogger(P2PReceiver.class.getName()).log(Level.SEVERE, null, ex);
         }

@@ -1,6 +1,10 @@
 package mytorrent;
 
+import java.net.Socket;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import mytorrent.p2p.FileHash;
+import mytorrent.p2p.P2PReceiver;
 import org.junit.After;
 import org.junit.AfterClass;
 import static org.junit.Assert.*;
@@ -52,27 +56,36 @@ public class PeerTestCase {
 
     @Test
     public void testDownload() {
+        testPeerServerStatus();
+        try {
+            Socket sock = new Socket("localhost", 5712);
+            P2PReceiver receiver = new P2PReceiver(sock, "test.txt");
+            receiver.start();
+        } catch (Exception ex) {
+            Logger.getLogger(PeerTestCase.class.getName()).log(Level.SEVERE, null, ex);
+            fail(ex.getMessage());
+        }
     }
-    
+
     @Test
     public void testRegister() {
         long result = peer1.registry(-1, null);
         assertNotSame(result, -1L);
-        
+
         String[] files = {"file1", "file2"};
         long id = peer1.registry(result, files);
-        
+
         assertEquals(result, id);
     }
-    
+
     @Test
     public void testSearch() {
-        String[] files = {"test1","test2"};
+        String[] files = {"test1", "test2"};
         long peer1_id = peer1.registry(-1, files);
-        
+
         FileHash.Entry[] entries = peer2.search("test1");
         assertEquals(entries.length, 1);
-        
+
         assertEquals(entries[0].getPeerId(), peer1_id);
         assertEquals(entries[0].getFilename(), "test1");
     }

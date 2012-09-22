@@ -144,7 +144,7 @@ public class Peer implements P2PTransfer, P2PClient {
 
             P2PProtocol.Message messageIn = protocol.processInput(socket.getInputStream());
             if (messageIn.getCmd().equals(P2PProtocol.Command.OK)) {
-                result = Math.round((Double)messageIn.getBody());
+                result = Math.round((Double) messageIn.getBody());
                 this.peerId = result;
             }
         } catch (UnknownHostException ex) {
@@ -158,9 +158,9 @@ public class Peer implements P2PTransfer, P2PClient {
     private FileHash.Entry[] list2Array(List list) {
         FileHash fh = new FileHash();
         Entry[] results = new Entry[list.size()];
-        for(int i=0;i<list.size();i++) {
-            StringMap sm = (StringMap)list.get(i);
-            results[i] = fh.new Entry(Math.round((Double)sm.get("peerId")), (String)sm.get("filename"));
+        for (int i = 0; i < list.size(); i++) {
+            StringMap sm = (StringMap) list.get(i);
+            results[i] = fh.new Entry(Math.round((Double) sm.get("peerId")), (String) sm.get("filename"));
         }
         return results;
     }
@@ -224,18 +224,29 @@ public class Peer implements P2PTransfer, P2PClient {
             // Search file entries
             FileHash.Entry[] entries = this.search(filename);
             // Lookup peer's address
-            if(entries.length<0) {
+            if (entries.length < 0) {
                 return;
             }
-            long remotePeerId = entries[0].getPeerId();
+            long remotePeerId = -1;
+            
+            for(int i=0;i<entries.length;i++) {
+                if(entries[0].getPeerId()!=this.peerId) {
+                    remotePeerId = entries[0].getPeerId();
+                    // found one, break the loop
+                    break;
+                }
+            }
+            
+            if(remotePeerId == -1) {
+                return;
+            }
+            
             Address peerAddress = this.lookup(remotePeerId);
             // download the file from the peer
             Socket sock = new Socket(peerAddress.getHost(), peerAddress.getPort());
             P2PReceiver receiver = new P2PReceiver(sock, filename);
             receiver.start();
-        } catch (UnknownHostException ex) {
-            Logger.getLogger(Peer.class.getName()).log(Level.SEVERE, null, ex);
-        } catch (IOException ex) {
+        } catch (Exception ex) {
             Logger.getLogger(Peer.class.getName()).log(Level.SEVERE, null, ex);
         }
     }

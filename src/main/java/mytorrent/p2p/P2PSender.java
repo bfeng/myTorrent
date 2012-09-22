@@ -40,21 +40,22 @@ public class P2PSender extends Thread {
 
     private String filename;
     private Socket socket;
+    private OutputStream os;
+    private InputStream is;
 
     public P2PSender(Socket sock) throws IOException {
         this.socket = sock;
 
-        System.out.println("I recieved");
-        InputStream in = socket.getInputStream();
+
+        this.os = socket.getOutputStream();
+        this.is = socket.getInputStream();
+
         byte[] buf = new byte[256];
         StringBuilder sb = new StringBuilder();
-        while((in.read(buf)!=-1)) { // todo: check if the filename is too long
+        while ((is.read(buf) != -1)) { // todo: check if the filename is too long
             sb.append(new String(buf));
         }
         this.filename = sb.toString();
-        in.close();
-        
-        System.out.println(this.filename);
     }
 
     public P2PSender(Socket socket, String filename) {
@@ -65,11 +66,9 @@ public class P2PSender extends Thread {
     @Override
     public void run() {
         try {
-            OutputStream os = socket.getOutputStream();
             long numOfBytes = FileUtils.copyFile(new File("shared/" + filename), os);
             System.out.println(numOfBytes);
             socket.shutdownOutput();
-            os.close();
         } catch (IOException ex) {
             Logger.getLogger(P2PSender.class.getName()).log(Level.SEVERE, filename, ex);
         }
