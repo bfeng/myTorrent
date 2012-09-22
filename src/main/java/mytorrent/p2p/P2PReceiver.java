@@ -26,6 +26,7 @@ package mytorrent.p2p;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.net.Socket;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -40,9 +41,13 @@ public class P2PReceiver extends Thread {
     private String filename;
     private Socket socket;
 
-    public P2PReceiver(Socket socket, String filename) {
+    public P2PReceiver(Socket socket, String filename) throws IOException {
         this.socket = socket;
         this.filename = filename;
+        
+        OutputStream os = socket.getOutputStream();
+        os.write(this.filename.getBytes());
+        socket.shutdownOutput();
     }
 
     @Override
