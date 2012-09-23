@@ -38,7 +38,7 @@ public class P2PProtocol {
         public Message(Command cmd, Object body) {
             this.cmd = cmd;
             this.body = body;
-        }
+        } 
 
         public Command getCmd() {
             return cmd;

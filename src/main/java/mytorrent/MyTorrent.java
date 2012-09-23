@@ -109,7 +109,7 @@ public class MyTorrent {
                 //First prepare inputs:
                 //#
                 //Second call registry and handle return value
-                thispeer.setPeerId(thispeer.registry(thispeer.getPeerId(), thispeer.getSharedFiles()));
+                thispeer.registry(thispeer.getPeerId(), thispeer.getSharedFiles());
 
             } else if (userinput[0].toLowerCase().startsWith("sea")) {
                 /* Search */
