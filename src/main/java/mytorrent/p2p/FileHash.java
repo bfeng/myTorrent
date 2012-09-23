@@ -25,8 +25,8 @@ package mytorrent.p2p;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  *
@@ -68,11 +68,37 @@ public class FileHash {
         public String toString() {
             return String.format("%s:%s", peerId, filename);
         }
+
+        @Override
+        public int hashCode() {
+            int hash = 3;
+            hash = 71 * hash + (int) (this.peerId ^ (this.peerId >>> 32));
+            hash = 71 * hash + (this.filename != null ? this.filename.hashCode() : 0);
+            return hash;
+        }
+
+        @Override
+        public boolean equals(Object obj) {
+            if (obj == null) {
+                return false;
+            }
+            if (getClass() != obj.getClass()) {
+                return false;
+            }
+            final Entry other = (Entry) obj;
+            if (this.peerId != other.peerId) {
+                return false;
+            }
+            if ((this.filename == null) ? (other.filename != null) : !this.filename.equals(other.filename)) {
+                return false;
+            }
+            return true;
+        }
     }
     private Map<String, Entry> hash;
 
     public FileHash() {
-        this.hash = new HashMap<String, Entry>();
+        this.hash = new ConcurrentHashMap<String, Entry>();
     }
 
     public synchronized void addEntry(Entry entry) {

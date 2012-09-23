@@ -55,6 +55,26 @@ public class FileHashTest {
     @After
     public void tearDown() {
     }
+    
+    /**
+     * This assertion ignores the ordering of arrays.
+     * @param expected
+     * @param result 
+     */
+    private void assertArrayEntry(Entry[] expected, Entry[] result) {
+        assertEquals(expected.length, result.length);
+        
+        for(Entry r:result) {
+            boolean found = false;
+            for(Entry e:expected) {
+                if(r.equals(e)) {
+                    found = true;
+                    break;
+                }
+            }
+            assertTrue(found);
+        }
+    }
 
     /**
      * Test of addEntry and getEntry method, of class FileHash.
@@ -85,7 +105,7 @@ public class FileHashTest {
         instance.addEntry(entry3);
         Entry[] expResult = {entry1, entry2, entry3};
         Entry[] result = instance.search();
-        assertArrayEquals(expResult, result);
+        assertArrayEntry(expResult, result);
     }
 
     /**
@@ -103,7 +123,7 @@ public class FileHashTest {
         instance.addEntry(entry3);
         Entry[] expResult = {entry1, entry2};
         Entry[] result = instance.search(100);
-        assertArrayEquals(expResult, result);
+        assertArrayEntry(expResult, result);
     }
 
     /**
@@ -119,8 +139,32 @@ public class FileHashTest {
         instance.addEntry(entry1);
         instance.addEntry(entry2);
         instance.addEntry(entry3);
-        Entry[] expResult = {entry1, entry3};
+        Entry[] expResult = {entry3, entry1};
         Entry[] result = instance.search("test1");
-        assertArrayEquals(expResult, result);
+        assertArrayEntry(expResult, result);
+    }
+
+    @Test
+    public void testConcurrentModify() {
+        System.out.println("concurrent modify");
+        try {
+            FileHash instance = new FileHash();
+            Entry entry1 = instance.new Entry(100, "test1");
+            Entry entry2 = instance.new Entry(100, "test2");
+            Entry entry3 = instance.new Entry(200, "test1");
+
+            instance.addEntry(entry1);
+            instance.addEntry(entry2);
+            instance.addEntry(entry3);
+
+            instance.removeAll(100);
+
+
+            Entry[] expResult = {entry3};
+            Entry[] result = instance.search("test1");
+            assertArrayEntry(expResult, result);
+        } catch (Exception ex) {
+            fail(ex.getMessage());
+        }
     }
 }
