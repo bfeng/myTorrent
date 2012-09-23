@@ -113,8 +113,9 @@ public class IndexServerTestCase {
             // 2. Message (REG, 
             Map<String, Object> parameters = new HashMap<String, Object>();
             parameters.put("peerId", "null");
+            parameters.put("port", 1234);
             String[] files = {"file1.txt", "file2.JPEG", "file3.xml"};
-            //parameters.put("port", port);
+
             parameters.put("files", files);
             //#
             //Third send output
@@ -145,6 +146,7 @@ public class IndexServerTestCase {
 
             Map<String, Object> parameters = new HashMap<String, Object>();
             parameters.put("peerId", "null");
+            parameters.put("port", 1234);
             String[] files = {"file1.txt", "file2.JPEG", "file4.cc"};
 
             parameters.put("files", files);
@@ -258,10 +260,10 @@ public class IndexServerTestCase {
             assertEquals(messageIn.getCmd(), P2PProtocol.Command.OK);
             //The Address class is transfered to StringMap
             StringMap lookResult = (StringMap) messageIn.getBody();
-            
-            assertEquals(lookResult.get("host"),"127.0.0.1");
 
-            
+            assertEquals(lookResult.get("host"), "127.0.0.1");
+
+
         } catch (UnknownHostException ex) {
             Logger.getLogger(Peer.class.getName()).log(Level.SEVERE, null, ex);
         } catch (IOException ex) {
@@ -285,17 +287,17 @@ public class IndexServerTestCase {
             P2PProtocol.Message messageIn = protocol.processInput(sock.getInputStream());
             assertEquals(messageIn.getCmd(), P2PProtocol.Command.ERR);
             //The Address class is transfered to StringMap
-            
-            
-            assertEquals(messageIn.getBody(),"Command is not supported!");
 
-            
+
+            assertEquals(messageIn.getBody(), "Command is not supported!");
+
+
         } catch (UnknownHostException ex) {
             Logger.getLogger(Peer.class.getName()).log(Level.SEVERE, null, ex);
         } catch (IOException ex) {
             Logger.getLogger(Peer.class.getName()).log(Level.SEVERE, null, ex);
         }
-        
-        
+
+
     }
 }
