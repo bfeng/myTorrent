@@ -28,6 +28,7 @@ import java.io.File;
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.net.SocketException;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -329,17 +330,22 @@ public class Peer implements P2PTransfer, P2PClient {
 
         @Override
         public void run() {
+            this.running = true;
             try {
-                this.running = true;
                 listener = new ServerSocket(port);
                 while (running) {
-                    Socket sock = listener.accept();
-                    P2PSender sender = new P2PSender(sock);
-                    sender.start();
+                    try {
+                        Socket sock = listener.accept();
+                        P2PSender sender = new P2PSender(sock);
+                        sender.start();
+                    } catch (SocketException socketException) {
+                    }
                 }
             } catch (IOException ex) {
-                Logger.getLogger(MyTorrent.class.getName()).log(Level.SEVERE, null, ex);
+                Logger.getLogger(Peer.class.getName()).log(Level.SEVERE, null, ex);
+                this.running = false;
             }
+
         }
 
         public void close() {
