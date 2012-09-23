@@ -45,6 +45,13 @@ import mytorrent.p2p.P2PReceiver;
 import mytorrent.p2p.P2PSender;
 import mytorrent.p2p.P2PTransfer;
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.vfs2.FileChangeEvent;
+import org.apache.commons.vfs2.FileListener;
+import org.apache.commons.vfs2.FileObject;
+import org.apache.commons.vfs2.FileSystemException;
+import org.apache.commons.vfs2.FileSystemManager;
+import org.apache.commons.vfs2.VFS;
+import org.apache.commons.vfs2.impl.DefaultFileMonitor;
 
 /**
  *
@@ -228,19 +235,19 @@ public class Peer implements P2PTransfer, P2PClient {
                 return;
             }
             long remotePeerId = -1;
-            
-            for(int i=0;i<entries.length;i++) {
-                if(entries[0].getPeerId()!=this.peerId) {
+
+            for (int i = 0; i < entries.length; i++) {
+                if (entries[0].getPeerId() != this.peerId) {
                     remotePeerId = entries[0].getPeerId();
                     // found one, break the loop
                     break;
                 }
             }
-            
-            if(remotePeerId == -1) {
+
+            if (remotePeerId == -1) {
                 return;
             }
-            
+
             Address peerAddress = this.lookup(remotePeerId);
             // download the file from the peer
             Socket sock = new Socket(peerAddress.getHost(), peerAddress.getPort());
@@ -253,7 +260,41 @@ public class Peer implements P2PTransfer, P2PClient {
 
     @Override
     public void startup() {
-        this.server.start();
+        try {
+            this.server.start();
+
+            FileSystemManager fsManager = VFS.getManager();
+
+
+            FileObject listendir = fsManager.resolveFile(new File("shared/").getAbsolutePath());
+
+
+            DefaultFileMonitor fm = new DefaultFileMonitor(new FileListener() {
+                private synchronized void updateRegister() {
+                    registry(peerId, getSharedFiles());
+                }
+
+                @Override
+                public void fileCreated(FileChangeEvent fce) throws Exception {
+                    this.updateRegister();
+                }
+
+                @Override
+                public void fileDeleted(FileChangeEvent fce) throws Exception {
+                    this.updateRegister();
+                }
+
+                @Override
+                public void fileChanged(FileChangeEvent fce) throws Exception {
+                    this.updateRegister();
+                }
+            });
+            fm.setRecursive(false);
+            fm.addFile(listendir);
+            fm.start();
+        } catch (FileSystemException ex) {
+            Logger.getLogger(Peer.class.getName()).log(Level.SEVERE, null, ex);
+        }
     }
 
     @Override
