@@ -119,6 +119,13 @@ public class Peer implements P2PTransfer, P2PClient {
         return (String[]) fileNames.toArray(new String[fileNames.size()]);
     }
 
+    private boolean checkMessage(P2PProtocol.Message in) {
+        if (in != null && in.getCmd() != null & in.getCmd().equals(P2PProtocol.Command.OK)) {
+            return true;
+        }
+        return false;
+    }
+
     /**
      * There are two cases to use this method: 1) if it is the first time for
      * the peer to register, the peerId is 0; 2) if the peer wants to
@@ -150,7 +157,7 @@ public class Peer implements P2PTransfer, P2PClient {
             socket.shutdownOutput();
 
             P2PProtocol.Message messageIn = protocol.processInput(socket.getInputStream());
-            if (messageIn.getCmd().equals(P2PProtocol.Command.OK)) {
+            if (checkMessage(messageIn)) {
                 result = Math.round((Double) messageIn.getBody());
                 this.peerId = result;
             }
@@ -184,7 +191,7 @@ public class Peer implements P2PTransfer, P2PClient {
             socket.shutdownOutput();
 
             P2PProtocol.Message messageIn = protocol.processInput(socket.getInputStream());
-            if (messageIn.getCmd().equals(P2PProtocol.Command.OK)) {
+            if (checkMessage(messageIn)) {
                 result = this.list2Array((List) messageIn.getBody());
             }
         } catch (UnknownHostException ex) {
@@ -197,7 +204,7 @@ public class Peer implements P2PTransfer, P2PClient {
 
     @Override
     public Address lookup(long peerId) {
-        Address result = new Address();
+        Address result = null;
         try {
             socket = new Socket(this.indexServerIP, this.indexServerPort);
 
@@ -207,15 +214,14 @@ public class Peer implements P2PTransfer, P2PClient {
             socket.shutdownOutput();
 
             P2PProtocol.Message messageIn = protocol.processInput(socket.getInputStream());
-            if (messageIn.getCmd().equals(P2PProtocol.Command.OK)) {
+            if (checkMessage(messageIn)) {
                 //Create a Address object from StringMap
+                result = new Address();
                 StringMap lookResult = (StringMap) messageIn.getBody();
                 double portNb = (Double) lookResult.get("port");
                 result.setPort((int) portNb);
                 String lookHost = (String) lookResult.get("host");
                 result.setHost(lookHost);
-
-                //result = (Address) messageIn.getBody();
             }
         } catch (UnknownHostException ex) {
             Logger.getLogger(Peer.class.getName()).log(Level.SEVERE, null, ex);

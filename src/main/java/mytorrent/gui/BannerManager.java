@@ -30,7 +30,7 @@ public class BannerManager {
         System.out.println("* * * * * * * * * * * * * * * * * *");
         System.out.println("*   Welcome to CS550 Project <1>  *");
         System.out.println("*                                 *");
-        System.out.println("* Author:      Bo Feng: Axxxxxxxx *");
+        System.out.println("* Author:      Bo Feng: A20273356 *");
         System.out.println("*          Sizhou Wang: A20249772 *");
         System.out.println("* * * * * * * * * * * * * * * * * *");
 
@@ -48,7 +48,7 @@ public class BannerManager {
     }
 
     public static void printCursor() {
-        System.out.print("Cursor>>");
+        System.out.print("$ >>");
     }
 
     public static void printSearchReturns(FileHash.Entry[] entrytoprint) {
