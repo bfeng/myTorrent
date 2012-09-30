@@ -26,19 +26,19 @@ package mytorrent.p2p;
 /**
  *
  * @author Bo Feng
- * @version 1.0
+ * @version 2.0
  */
 public interface P2PTransfer {
 
-    public long registry(long peerId, String[] files);
+    public void query();
 
-    public FileHash.Entry[] search(String filename);
-    
-    public Address lookup(long peerId);
-    
+    public void hitquery();
+
+    public void obtain(String filename);
+
     public boolean ping();
-    
+
     public void startup();
-    
+
     public void exit();
 }

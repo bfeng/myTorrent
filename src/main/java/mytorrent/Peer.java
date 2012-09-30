@@ -23,28 +23,19 @@
  */
 package mytorrent;
 
-import com.google.gson.internal.StringMap;
 import java.io.File;
-import java.io.IOException;
-import java.net.ServerSocket;
-import java.net.Socket;
-import java.net.SocketException;
-import java.net.UnknownHostException;
+import java.io.FileNotFoundException;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import mytorrent.p2p.Address;
-import mytorrent.p2p.FileHash;
-import mytorrent.p2p.FileHash.Entry;
-import mytorrent.p2p.P2PClient;
+import mytorrent.p2p.Configuration;
 import mytorrent.p2p.P2PProtocol;
-import mytorrent.p2p.P2PReceiver;
-import mytorrent.p2p.P2PSender;
 import mytorrent.p2p.P2PTransfer;
+import mytorrent.p2p.PeerAddress;
+import mytorrent.peer.FileServer;
+import mytorrent.peer.IndexServer;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.vfs2.FileChangeEvent;
 import org.apache.commons.vfs2.FileListener;
@@ -57,51 +48,46 @@ import org.apache.commons.vfs2.impl.DefaultFileMonitor;
 /**
  *
  * @author Bo Feng
- * @version 1.0
+ * @version 2.0
  */
-public class Peer implements P2PTransfer, P2PClient {
+public class Peer implements P2PTransfer {
 
-    private final int port;
-    private final FileDownloadServer server;
-    private final String indexServerIP;
-    private final int indexServerPort;
-    private long peerId;
-    private Socket socket = null;
+    private final FileServer fileServer;
+    private final IndexServer indexServer;
+    private final PeerAddress[] neighbors;
+    private final PeerAddress hostAddress;
 
     /**
-     * This is the constructor of Peer. If there is no IP and port of
-     * IndexServer specified, it will use "localhost" and 5700 as the default
-     * parameters.
+     * This is the constructor of Peer.
      *
-     * @param port
+     * @param fileServerPort
      */
-    public Peer(int port) {
-        this(port, "localhost", 5700);
-        this.peerId = -1;
+    public Peer() throws FileNotFoundException {
+        this("config.yaml");
     }
 
     /**
      * This is the full constructor of Peer.
      *
-     * @param port
-     * @param indexServerIP
-     * @param indexServerPort
+     * @param filepath
      */
-    public Peer(int port, String indexServerIP, int indexServerPort) {
-        this.port = port;
-        this.server = new FileDownloadServer(this.port);
-        this.server.setDaemon(true);
-        this.indexServerIP = indexServerIP;
-        this.indexServerPort = indexServerPort;
-        this.peerId = -1;
+    public Peer(String filepath) throws FileNotFoundException {
+
+        Configuration config = Configuration.load(filepath);
+
+        this.hostAddress = config.getHostAddress();
+
+        this.fileServer = new FileServer(this.hostAddress.getFileServerPort());
+        this.fileServer.setDaemon(true);
+
+        this.indexServer = new IndexServer(this.hostAddress.getIndexServerPort());
+        this.indexServer.setDaemon(true);
+
+        this.neighbors = config.getNeighbors();
     }
 
     public long getPeerId() {
-        return peerId;
-    }
-
-    public void setPeerId(long peerId) {
-        this.peerId = peerId;
+        return this.hostAddress.getPeerID();
     }
 
     /**
@@ -110,7 +96,7 @@ public class Peer implements P2PTransfer, P2PClient {
      *
      * @return
      */
-    public String[] getSharedFiles() {
+    private String[] getSharedFiles() {
         File shared = new File("shared");
         Iterator<File> iter = FileUtils.iterateFiles(shared, null, false);
         List<String> fileNames = new ArrayList<String>();
@@ -127,173 +113,36 @@ public class Peer implements P2PTransfer, P2PClient {
         return false;
     }
 
-    /**
-     * There are two cases to use this method: 1) if it is the first time for
-     * the peer to register, the peerId is 0; 2) if the peer wants to
-     * re-register due to some files changing, the peerId should be the id
-     * returned from IndexServer.
-     *
-     * @param peerId
-     * @param files
-     * @return peerId
-     */
-    @Override
-    public long registry(long peerId, String[] files) {
-        long result = -1L;
-        try {
-            socket = new Socket(this.indexServerIP, this.indexServerPort);
-            P2PProtocol protocol = new P2PProtocol();
-
-            Map<String, Object> parameters = new HashMap<String, Object>();
-            if (peerId < 0) {
-                parameters.put("peerId", "null");
-            } else {
-                parameters.put("peerId", peerId);
-            }
-            parameters.put("port", port);
-            parameters.put("files", files);
-
-            P2PProtocol.Message messageOut = protocol.new Message(P2PProtocol.Command.REG, parameters);
-            protocol.preparedOutput(socket.getOutputStream(), messageOut);
-            socket.shutdownOutput();
-
-            P2PProtocol.Message messageIn = protocol.processInput(socket.getInputStream());
-            if (checkMessage(messageIn)) {
-                result = Math.round((Double) messageIn.getBody());
-                this.peerId = result;
-            }
-        } catch (UnknownHostException ex) {
-            Logger.getLogger(Peer.class.getName()).log(Level.SEVERE, null, ex);
-        } catch (IOException ex) {
-            Logger.getLogger(Peer.class.getName()).log(Level.SEVERE, null, ex);
-        }
-        return result;
-    }
-
-    private FileHash.Entry[] list2Array(List list) {
-        FileHash fh = new FileHash();
-        Entry[] results = new Entry[list.size()];
-        for (int i = 0; i < list.size(); i++) {
-            StringMap sm = (StringMap) list.get(i);
-            results[i] = fh.new Entry(Math.round((Double) sm.get("peerId")), (String) sm.get("filename"));
-        }
-        return results;
-    }
-
-    @Override
-    public FileHash.Entry[] search(String filename) {
-        FileHash.Entry[] result = null;
-        try {
-            socket = new Socket(this.indexServerIP, this.indexServerPort);
-
-            P2PProtocol protocol = new P2PProtocol();
-            P2PProtocol.Message messageOut = protocol.new Message(P2PProtocol.Command.SCH, filename);
-            protocol.preparedOutput(socket.getOutputStream(), messageOut);
-            socket.shutdownOutput();
-
-            P2PProtocol.Message messageIn = protocol.processInput(socket.getInputStream());
-            if (checkMessage(messageIn)) {
-                result = this.list2Array((List) messageIn.getBody());
-            }
-        } catch (UnknownHostException ex) {
-            Logger.getLogger(Peer.class.getName()).log(Level.SEVERE, null, ex);
-        } catch (IOException ex) {
-            Logger.getLogger(Peer.class.getName()).log(Level.SEVERE, null, ex);
-        }
-        return result;
-    }
-
-    @Override
-    public Address lookup(long peerId) {
-        Address result = null;
-        try {
-            socket = new Socket(this.indexServerIP, this.indexServerPort);
-
-            P2PProtocol protocol = new P2PProtocol();
-            P2PProtocol.Message messageOut = protocol.new Message(P2PProtocol.Command.LOK, peerId);
-            protocol.preparedOutput(socket.getOutputStream(), messageOut);
-            socket.shutdownOutput();
-
-            P2PProtocol.Message messageIn = protocol.processInput(socket.getInputStream());
-            if (checkMessage(messageIn)) {
-                //Create a Address object from StringMap
-                result = new Address();
-                StringMap lookResult = (StringMap) messageIn.getBody();
-                double portNb = (Double) lookResult.get("port");
-                result.setPort((int) portNb);
-                String lookHost = (String) lookResult.get("host");
-                result.setHost(lookHost);
-            }
-        } catch (UnknownHostException ex) {
-            Logger.getLogger(Peer.class.getName()).log(Level.SEVERE, null, ex);
-        } catch (IOException ex) {
-            Logger.getLogger(Peer.class.getName()).log(Level.SEVERE, null, ex);
-        }
-        return result;
-    }
-
     @Override
     public void obtain(String filename) {
-        try {
-            // Search file entries
-            FileHash.Entry[] entries = this.search(filename);
-            // Lookup peer's address
-            if (entries.length < 0) {
-                return;
-            }
-            long remotePeerId = -1;
-
-            for (int i = 0; i < entries.length; i++) {
-                if (entries[0].getPeerId() != this.peerId) {
-                    remotePeerId = entries[0].getPeerId();
-                    // found one, break the loop
-                    break;
-                }
-            }
-
-            if (remotePeerId == -1) {
-                return;
-            }
-
-            Address peerAddress = this.lookup(remotePeerId);
-            // download the file from the peer
-            Socket sock = new Socket(peerAddress.getHost(), peerAddress.getPort());
-            P2PReceiver receiver = new P2PReceiver(sock, filename);
-            receiver.start();
-        } catch (Exception ex) {
-            Logger.getLogger(Peer.class.getName()).log(Level.SEVERE, null, ex);
-        }
     }
 
     @Override
     public void startup() {
         try {
-            this.server.start();
+            this.fileServer.start();
 
             FileSystemManager fsManager = VFS.getManager();
-
-
             FileObject listendir = fsManager.resolveFile(new File("shared/").getAbsolutePath());
-
-
             DefaultFileMonitor fm = new DefaultFileMonitor(new FileListener() {
-                private synchronized void updateRegister() {
-                    registry(peerId, getSharedFiles());
+                private synchronized void update() {
+                    // update its filehash
+                    //, so that the query by neighbors could update
                 }
 
                 @Override
                 public void fileCreated(FileChangeEvent fce) throws Exception {
-                    this.updateRegister();
+                    this.update();
                 }
 
                 @Override
                 public void fileDeleted(FileChangeEvent fce) throws Exception {
-                    this.updateRegister();
+                    this.update();
                 }
 
                 @Override
                 public void fileChanged(FileChangeEvent fce) throws Exception {
-                    this.updateRegister();
+                    this.update();
                 }
             });
             fm.setRecursive(false);
@@ -306,57 +155,25 @@ public class Peer implements P2PTransfer, P2PClient {
 
     @Override
     public void exit() {
-        this.server.close();
+        this.fileServer.close();
     }
 
     @Override
     public boolean ping() {
-        return this.server.isAlive() && this.server.isDaemon();
+        return this.fileServer.isAlive() && this.fileServer.isDaemon();
     }
 
-    /**
-     * This server is only used for downloading files between peers. If the peer
-     * needs to talk with IndexServer, use other built-in methods.
-     */
-    public class FileDownloadServer extends Thread {
+    @Override
+    public void query() {
+        throw new UnsupportedOperationException("Not supported yet.");
 
-        private final int port;
-        private boolean running;
-        private ServerSocket listener;
+        // query its neighbors
+    }
 
-        private FileDownloadServer(int port) {
-            this.port = port;
-        }
+    @Override
+    public void hitquery() {
+        throw new UnsupportedOperationException("Not supported yet.");
 
-        @Override
-        public void run() {
-            this.running = true;
-            try {
-                listener = new ServerSocket(port);
-                while (running) {
-                    try {
-                        Socket sock = listener.accept();
-                        P2PSender sender = new P2PSender(sock);
-                        sender.start();
-                    } catch (SocketException socketException) {
-                    }
-                }
-            } catch (IOException ex) {
-                Logger.getLogger(Peer.class.getName()).log(Level.SEVERE, null, ex);
-                this.running = false;
-            }
-
-        }
-
-        public void close() {
-            this.running = false;
-            if (this.listener != null) {
-                try {
-                    this.listener.close();
-                } catch (IOException ex) {
-                    Logger.getLogger(Peer.class.getName()).log(Level.SEVERE, null, ex);
-                }
-            }
-        }
+        // return query to its neighbors
     }
 }

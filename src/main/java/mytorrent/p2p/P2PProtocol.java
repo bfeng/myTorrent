@@ -19,11 +19,11 @@ public class P2PProtocol {
 
     public enum Command {
 
-        REG,
-        SCH,
-        LOK,
+        MISS,
+        HIT,
         ERR,
-        PIG,
+        PING,
+        PONG,
         OK
     }
 
@@ -38,7 +38,7 @@ public class P2PProtocol {
         public Message(Command cmd, Object body) {
             this.cmd = cmd;
             this.body = body;
-        } 
+        }
 
         public Command getCmd() {
             return cmd;
@@ -55,7 +55,7 @@ public class P2PProtocol {
         public void setBody(Object body) {
             this.body = body;
         }
-        
+
         @Override
         public String toString() {
             Gson gson = new Gson();
@@ -75,7 +75,7 @@ public class P2PProtocol {
     }
 
     public void preparedOutput(OutputStream os, Message src) {
-       try {
+        try {
             BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(os));
             Gson gson = new Gson();
             gson.toJson(src, bw);

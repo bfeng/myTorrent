@@ -1,10 +1,6 @@
-/*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
- */
 package mytorrent.gui;
 
-import mytorrent.p2p.Address;
+import mytorrent.p2p.PeerAddress;
 import mytorrent.p2p.FileHash;
 
 /**
@@ -58,9 +54,9 @@ public class BannerManager {
         }
     }
 
-    public static void printLookupReturns(Address addresstoprint, long peerId) {
-        System.out.println("    Host: " + addresstoprint.getHost());
-        System.out.println("    Port: " + addresstoprint.getPort());
+    public static void printLookupReturns(PeerAddress addresstoprint, long peerId) {
+        System.out.println("    Host: " + addresstoprint.getPeerHost());
+        System.out.println("    Port: " + addresstoprint.getFileServerPort());
 
     }
 
