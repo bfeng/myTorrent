@@ -121,7 +121,7 @@ public class Peer implements P2PTransfer, P2PClient {
     }
 
     private boolean checkMessage(P2PProtocol.Message in) {
-        if (in != null && in.getCmd() != null & in.getCmd().equals(P2PProtocol.Command.OK)) {
+        if (in != null && in.getCmd() != null && in.getCmd().equals(P2PProtocol.Command.OK)) {
             return true;
         }
         return false;

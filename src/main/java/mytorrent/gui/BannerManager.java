@@ -16,7 +16,7 @@ public class BannerManager {
     //
     //Fields
     //
-    //  
+    //
     //Methods
     //
     public static void clearConsole() {
@@ -48,7 +48,7 @@ public class BannerManager {
     }
 
     public static void printCursor() {
-        System.out.print("$ >>");
+        System.out.print("myTorrent >>");
     }
 
     public static void printSearchReturns(FileHash.Entry[] entrytoprint) {
