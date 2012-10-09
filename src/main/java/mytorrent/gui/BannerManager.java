@@ -12,7 +12,7 @@ public class BannerManager {
     //
     //Fields
     //
-    //
+    //  
     //Methods
     //
     public static void clearConsole() {
@@ -24,7 +24,7 @@ public class BannerManager {
 
     public static void Banner() {
         System.out.println("* * * * * * * * * * * * * * * * * *");
-        System.out.println("*   Welcome to CS550 Project <1>  *");
+        System.out.println("*   Welcome to CS550 Project <2>  *");
         System.out.println("*                                 *");
         System.out.println("* Author:      Bo Feng: A20273356 *");
         System.out.println("*          Sizhou Wang: A20249772 *");
@@ -44,7 +44,7 @@ public class BannerManager {
     }
 
     public static void printCursor() {
-        System.out.print("myTorrent >>");
+        System.out.print("$ >>");
     }
 
     public static void printSearchReturns(FileHash.Entry[] entrytoprint) {
