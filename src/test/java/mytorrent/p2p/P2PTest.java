@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright 2012 Bo.
+ * Copyright 2012 bfeng.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -23,40 +23,110 @@
  */
 package mytorrent.p2p;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.io.PipedInputStream;
+import java.io.PipedOutputStream;
+import mytorrent.p2p.P2PProtocol.Command;
+import mytorrent.p2p.P2PProtocol.HitMessage;
+import mytorrent.p2p.P2PProtocol.Message;
+import mytorrent.p2p.P2PProtocol.QueryMessage;
+import mytorrent.p2p.P2PProtocol.Result;
 import org.junit.After;
-import org.junit.AfterClass;
-import org.junit.Before;
-import org.junit.BeforeClass;
-import org.junit.Test;
 import static org.junit.Assert.*;
+import org.junit.Before;
+import org.junit.Test;
 
 /**
  *
- * @author Bo Feng
+ * @author bfeng
  */
 public class P2PTest {
-    
+
+    private InputStream in;
+    private OutputStream out;
+    private P2PProtocol protocol;
+
     public P2PTest() {
     }
-    
-    @BeforeClass
-    public static void setUpClass() {
-    }
-    
-    @AfterClass
-    public static void tearDownClass() {
-    }
-    
+
     @Before
     public void setUp() {
+        try {
+            //here I'm using a pipeline to mimic the network.
+            in = new PipedInputStream();
+            out = new PipedOutputStream((PipedInputStream) in);
+
+            protocol = new P2PProtocol();
+        } catch (IOException ex) {
+            fail(ex.getMessage());
+        }
     }
-    
+
     @After
     public void tearDown() {
+        try {
+            if (out != null) {
+                out.close();
+            }
+            if (in != null) {
+                in.close();
+            }
+        } catch (IOException ex) {
+            fail(ex.getMessage());
+        }
     }
-    // TODO add test methods here.
-    // The methods must be annotated with annotation @Test. For example:
-    //
-    // @Test
-    // public void hello() {}
+
+    @Test
+    public void test_Transfer_QueryMessage() {
+        final long peerId = 101;
+        final long messageId = 100;
+        new Thread(
+                new Runnable() {
+                    @Override
+                    public void run() {
+                        QueryMessage qm = protocol.new QueryMessage(peerId, messageId, 3);
+                        Message msgOut = protocol.new Message(qm);
+                        protocol.processOutput(out, msgOut);
+                    }
+                }).start();
+        Message msgIn = protocol.processInput(in);
+        assertNotNull(msgIn);
+        assertEquals(Command.QUERYMSG, msgIn.getCmd());
+        QueryMessage gotQuery = msgIn.getQueryMessage();
+        assertNotNull(gotQuery);
+        assertEquals(peerId, gotQuery.getPeerID());
+        assertEquals(messageId, gotQuery.getMessageID());
+    }
+
+    @Test
+    public void test_Transfer_HitMessage() {
+        final long peerId = 101;
+        final long messageId = 100;
+        new Thread(
+                new Runnable() {
+                    @Override
+                    public void run() {
+                        // suppose I got a query message
+                        QueryMessage qm = protocol.new QueryMessage(peerId, messageId, 3);
+                        HitMessage hm = protocol.new HitMessage(qm);
+
+                        // suppose I can't find the requested file.
+                        hm.miss();
+
+                        Message msgOut = protocol.new Message(hm);
+                        protocol.processOutput(out, msgOut);
+                    }
+                }).start();
+        Message msgIn = protocol.processInput(in);
+        assertNotNull(msgIn);
+        assertEquals(msgIn.getCmd(), Command.HITMSG);
+        HitMessage gotHit = msgIn.getHitMessage();
+        assertNotNull(gotHit);
+        assertEquals(peerId, gotHit.getPeerID());
+        assertEquals(messageId, gotHit.getMessageID());
+
+        assertEquals(Result.MISS, gotHit.getResult());
+    }
 }
