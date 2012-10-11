@@ -36,6 +36,7 @@ import mytorrent.p2p.P2PProtocol.HitMessage;
 import mytorrent.p2p.P2PProtocol.Message;
 import mytorrent.p2p.P2PProtocol.QueryMessage;
 import mytorrent.p2p.PeerAddress;
+import mytorrent.p2p.PeerHash;
 
 /**
  *
@@ -48,7 +49,8 @@ public class IndexServer extends Thread {
     private final PeerAddress host;
     private boolean running;
     private ServerSocket listener;
-    private static FileHash hash = new FileHash();
+    private static FileHash fileHash = new FileHash();
+    private static PeerHash peerHash = new PeerHash();
 
     public IndexServer(PeerAddress host, PeerAddress[] neighbors) {
         this.host = host;
