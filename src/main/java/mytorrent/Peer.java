@@ -55,7 +55,7 @@ public class Peer implements P2PTransfer {
     private final FileServer fileServer;
     private final IndexServer indexServer;
     private final PeerAddress[] neighbors;
-    private final PeerAddress hostAddress;
+    private final PeerAddress host;
 
     /**
      * This is the constructor of Peer.
@@ -72,22 +72,20 @@ public class Peer implements P2PTransfer {
      * @param filepath
      */
     public Peer(String filepath) throws FileNotFoundException {
-
         Configuration config = Configuration.load(filepath);
 
-        this.hostAddress = config.getHostAddress();
+        this.host = config.getHostAddress();
+        this.neighbors = config.getNeighbors();
 
-        this.fileServer = new FileServer(this.hostAddress.getFileServerPort());
+        this.fileServer = new FileServer(this.host.getFileServerPort());
         this.fileServer.setDaemon(true);
 
-        this.indexServer = new IndexServer(this.hostAddress.getIndexServerPort());
+        this.indexServer = new IndexServer(this.host, this.neighbors);
         this.indexServer.setDaemon(true);
-
-        this.neighbors = config.getNeighbors();
     }
 
     public long getPeerId() {
-        return this.hostAddress.getPeerID();
+        return this.host.getPeerID();
     }
 
     /**
@@ -106,13 +104,6 @@ public class Peer implements P2PTransfer {
         return (String[]) fileNames.toArray(new String[fileNames.size()]);
     }
 
-    private boolean checkMessage(P2PProtocol.Message in) {
-        if (in != null && in.getCmd() != null) {
-            return true;
-        }
-        return false;
-    }
-
     @Override
     public void obtain(String filename) {
     }
@@ -126,8 +117,7 @@ public class Peer implements P2PTransfer {
             FileObject listendir = fsManager.resolveFile(new File("shared/").getAbsolutePath());
             DefaultFileMonitor fm = new DefaultFileMonitor(new FileListener() {
                 private synchronized void update() {
-                    // update its filehash
-                    //, so that the query by neighbors could update
+                    indexServer.updateFileHash(getSharedFiles());
                 }
 
                 @Override
@@ -164,16 +154,10 @@ public class Peer implements P2PTransfer {
     }
 
     @Override
-    public void query() {
+    public void query(String filename) {
         throw new UnsupportedOperationException("Not supported yet.");
 
         // query its neighbors
-    }
-
-    @Override
-    public void hitquery() {
-        throw new UnsupportedOperationException("Not supported yet.");
-
-        // return query to its neighbors
+        // print out all hit messages
     }
 }

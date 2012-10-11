@@ -29,6 +29,13 @@ import java.net.Socket;
 import java.net.SocketException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import mytorrent.p2p.FileHash;
+import mytorrent.p2p.P2PProtocol;
+import mytorrent.p2p.P2PProtocol.Command;
+import mytorrent.p2p.P2PProtocol.HitMessage;
+import mytorrent.p2p.P2PProtocol.Message;
+import mytorrent.p2p.P2PProtocol.QueryMessage;
+import mytorrent.p2p.PeerAddress;
 
 /**
  *
@@ -37,23 +44,31 @@ import java.util.logging.Logger;
  */
 public class IndexServer extends Thread {
 
-    private final int port;
+    private final PeerAddress[] neighbors;
+    private final PeerAddress host;
     private boolean running;
     private ServerSocket listener;
+    private static FileHash hash = new FileHash();
 
-    public IndexServer(int port) {
-        this.port = port;
+    public IndexServer(PeerAddress host, PeerAddress[] neighbors) {
+        this.host = host;
+        this.neighbors = neighbors;
+    }
+
+    public void updateFileHash(String[] files) {
+        // Todo: 
+        // hash.addEntry(null);
     }
 
     @Override
     public void run() {
         this.running = true;
         try {
-            listener = new ServerSocket(port);
+            listener = new ServerSocket(host.getIndexServerPort());
             while (running) {
                 try {
                     Socket sock = listener.accept();
-                    // do nothing
+                    new Worker(sock).start();
                 } catch (SocketException socketException) {
                     Logger.getLogger(IndexServer.class.getName()).log(Level.SEVERE, "socket error", socketException);
                     continue;
@@ -73,6 +88,53 @@ public class IndexServer extends Thread {
                 this.listener.close();
             } catch (IOException ex) {
                 Logger.getLogger(IndexServer.class.getName()).log(Level.SEVERE, "close error", ex);
+            }
+        }
+    }
+
+    class Worker extends Thread {
+
+        private Socket socket;
+        private P2PProtocol protocol;
+
+        public Worker(Socket socket) {
+            this.socket = socket;
+        }
+
+        private boolean checkMessage(P2PProtocol.Message in) {
+            if (in != null && in.getCmd() != null) {
+                return true;
+            }
+            return false;
+        }
+
+        @Override
+        public void run() {
+            Message msgOut = null;
+            try {
+                Message msgIn = protocol.processInput(socket.getInputStream());
+                if (checkMessage(msgIn)) {
+                    if (msgIn.getCmd() == Command.QUERYMSG) {
+                        QueryMessage qm = msgIn.getQueryMessage();
+                        // Todo: process this message
+                    } else if (msgIn.getCmd() == Command.HITMSG) {
+                        HitMessage hm = msgIn.getHitMessage();
+                        // Todo: process this message
+                    }
+                }
+                if (msgOut == null) {
+                    msgOut = protocol.new Message(Command.ERR);
+                }
+            } catch (IOException ex) {
+                Logger.getLogger(IndexServer.class.getName()).log(Level.SEVERE, null, ex);
+                msgOut = protocol.new Message(Command.ERR);
+            } finally {
+                try {
+                    protocol.preparedOutput(socket.getOutputStream(), msgOut);
+                    socket.shutdownOutput();
+                } catch (IOException ex) {
+                    Logger.getLogger(IndexServer.class.getName()).log(Level.SEVERE, null, ex);
+                }
             }
         }
     }
