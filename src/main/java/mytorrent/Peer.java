@@ -105,10 +105,6 @@ public class Peer implements P2PTransfer {
     }
 
     @Override
-    public void obtain(String filename) {
-    }
-
-    @Override
     public void startup() {
         try {
             this.fileServer.start();
@@ -159,5 +155,16 @@ public class Peer implements P2PTransfer {
 
         // query its neighbors
         // print out all hit messages
+    }
+
+    @Override
+    public void obtain(String filename) {
+        new Thread(
+                new Runnable() {
+                    @Override
+                    public void run() {
+                        throw new UnsupportedOperationException("Not supported yet.");
+                    }
+                }).start();
     }
 }
