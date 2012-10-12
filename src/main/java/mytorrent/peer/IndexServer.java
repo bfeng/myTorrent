@@ -73,6 +73,18 @@ public class IndexServer extends Thread {
         }
     }
 
+    public long[] getQueryResult(String filename) {
+        long[] peerIDs = null;
+        FileHash.Entry[] results = fileHash.search(filename);
+        if (results != null && results.length > 0) {
+            peerIDs = new long[results.length];
+            for (int i = 0; i < results.length; i++) {
+                peerIDs[i] = results[i].getPeerId();
+            }
+        }
+        return peerIDs;
+    }
+
     @Override
     public void run() {
         this.running = true;
