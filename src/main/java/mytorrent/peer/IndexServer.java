@@ -58,8 +58,19 @@ public class IndexServer extends Thread {
     }
 
     public void updateFileHash(String[] files) {
-        // Todo: 
-        // hash.addEntry(null);
+        //#1
+        //Clear current filehash
+        fileHash.emptyAll();
+        //#2
+        //Get host peerId for filehash struct
+        long hostpeerId = host.getPeerID();
+        //#3
+        //Reconstruct filehash
+        if (files != null) {
+            for (String item : files) {
+                fileHash.addEntry(fileHash.new Entry(hostpeerId, item));
+            }
+        }
     }
 
     @Override
