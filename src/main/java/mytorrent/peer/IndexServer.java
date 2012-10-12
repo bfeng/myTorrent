@@ -73,7 +73,7 @@ public class IndexServer extends Thread {
         }
     }
 
-    public long[] getQueryResult(String filename) {
+    public synchronized long[] getQueryResult(String filename) {
         long[] peerIDs = null;
         FileHash.Entry[] results = fileHash.search(filename);
         if (results != null && results.length > 0) {
