@@ -23,12 +23,14 @@ public class P2PProtocol {
 
         private long peerID;
         private long messageID;
+        private String filename;
         private Deque<Long> stack; // a stack to storage all nodes in the path
 
         public AbstractMessage(long peerId, long messageId) {
             this.peerID = peerId;
             this.messageID = messageId;
             this.stack = new ArrayDeque<Long>();
+            this.filename = null;
         }
 
         public long getPeerID() {
@@ -57,6 +59,14 @@ public class P2PProtocol {
 
         protected boolean searchPath(long peerId) {
             return stack.contains(peerId);
+        }
+
+        public void setFilename(String filename) {
+            this.filename = filename;
+        }
+
+        public String getFilename() {
+            return this.filename;
         }
     }
 
@@ -100,6 +110,10 @@ public class P2PProtocol {
 
         public HitMessage reply() {
             throw new UnsupportedOperationException();
+        }
+
+        public String getFilename() {
+            return this.message.getFilename();
         }
     }
 
@@ -150,6 +164,12 @@ public class P2PProtocol {
                 return this.hitAddress.peerPort;
             }
             return 0;
+        }
+        public void setFilename(String filename) {
+            this.message.setFilename(filename);
+        }
+        public String getFilename() {
+            return this.message.getFilename();
         }
 
         private final class HitAddress {
