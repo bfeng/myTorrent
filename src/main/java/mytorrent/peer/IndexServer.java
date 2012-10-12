@@ -85,15 +85,23 @@ public class IndexServer extends Thread {
         }
         return peerIDs;
     }
+
     public synchronized FileHash.Entry[] returnRemoteFileHash_for(String filename) {
         return remoteFileHash.search(filename);
     }
-    
+
     public synchronized void initUpdateRemoteFileHash_for(String filename) {
         //clear all filename entry
         remoteFileHash.removeAllFilename(filename);
     }
 
+    public String obtain_host_for(Long peerID) {
+        return peerHash.findIndexServerAddress(peerID);
+    }
+
+    public int obtain_FSport_for(Long peerID) {
+        return peerHash.findFileServerPort(peerID);
+    }
 
     @Override
     public void run() {
@@ -152,7 +160,7 @@ public class IndexServer extends Thread {
                     //MAIN BRANCH
                     if (msgIn.getCmd() == Command.QUERYMSG) {
                         QueryMessage qm = msgIn.getQueryMessage();
-                        
+
                         // Todo: process this message
                         // if this is my message, then ignore
                         // else search that file
@@ -161,7 +169,7 @@ public class IndexServer extends Thread {
                         // else return a hitmessage with miss
                         // finally, add my id to path 
                         // and forward the message to all of my neighbors if TTL > 0
-                        
+
                         if ( //#
                                 //I wont do it again if I started the Query       
                                 (host.getPeerID() != (int) qm.getPeerID())
@@ -240,7 +248,7 @@ public class IndexServer extends Thread {
                                 //ONLY generate HitQuery Message
                                 P2PProtocol.HitMessage generateHitQuery = protocol.new HitMessage(qm);
                                 //ensure it is a hit
-                                generateHitQuery.hit((long)host.getPeerID(), host.getPeerHost(), host.getFileServerPort(), host.getIndexServerPort());
+                                generateHitQuery.hit((long) host.getPeerID(), host.getPeerHost(), host.getFileServerPort(), host.getIndexServerPort());
                                 //Send it back via reverse-path, either owner or pop path
                                 int HitQueryNextNode = -1;
                                 //owner
@@ -272,16 +280,16 @@ public class IndexServer extends Thread {
                                 theNeighbourSocket.shutdownOutput();
                             }
                         }
-                        
+
                         //MAIN BRANCH
                         //revision: add a machenism for updating remoteFileHash
                     } else if (msgIn.getCmd() == Command.HITMSG) {
                         HitMessage hm = msgIn.getHitMessage();
-                        
+
                         // Todo: process this message
                         // if this is my message, then check the result
                         // else pull out my id from the path and send it to the next one
-                        
+
                         //# identify the ownership of the HitMsg
                         //prepare HitQuery msg
                         P2PProtocol.HitMessage generateHitQuery = hm;
@@ -313,12 +321,12 @@ public class IndexServer extends Thread {
                         } else {
                             //I started it
                             //Ask if update is still allowed
-                            
+
                             //update remotefilehash
                             FileHash.Entry newEntry = remoteFileHash.new Entry(hm.getPeerID(), hm.getFilename());
                             remoteFileHash.addEntry(newEntry);
                             //update peerHash
-                            PeerAddress toAddPeerHash = new PeerAddress((int)hm.getHitPeerID(), hm.getHitPeerHost(), hm.getHitPeerISPort(), hm.getHitPeerFSPort());
+                            PeerAddress toAddPeerHash = new PeerAddress((int) hm.getHitPeerID(), hm.getHitPeerHost(), hm.getHitPeerISPort(), hm.getHitPeerFSPort());
                             peerHash.addValue(hm.getHitPeerID(), toAddPeerHash);
                         }
                     }

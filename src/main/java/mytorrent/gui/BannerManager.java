@@ -37,7 +37,7 @@ public class BannerManager {
 
     public static void printClientInstruction() {
         System.out.println("User Input Direction:");
-        System.out.println(" * Query: query filename");
+        System.out.println(" * Query: query filename TTL");
         System.out.println(" * Obtain: obtain filename");
         System.out.println(" * Help: help (detailed info)");
         System.out.println(" * Exit Client: exit");
@@ -72,6 +72,7 @@ public class BannerManager {
         System.out.println(" [Query]: Search and list all peer who have the file called \"filename\" ");
         System.out.println("          You can type \"search filename\"");
         System.out.println("          or simply \"sea filename\" to complete this action.");
+        System.out.println("          TTL is an integer. It specify the wides of the network you want to query.");
         System.out.println("[Obtain]: Specific file will be automaticly downloaded to your \"received\" folder ");
         System.out.println("          You can type \"obtain filename\"");
         System.out.println("          or simply \"obt filename\" to complete this action.");
@@ -79,21 +80,30 @@ public class BannerManager {
         System.out.println("  [Exit]: You can exit this client by typing \"exit\"\n");
     }
 
-    public static void QueryWaiting() throws InterruptedException{
+    public static void QueryWaiting() throws InterruptedException {
         System.out.println("|                    Please Wait                   |");
         System.out.print("|");
         for (int i = 0; i < 16; i++) {
 
-                System.out.print("=");
-                Thread.sleep(133);
-                System.out.print("=");
-                Thread.sleep(133);
-                System.out.print("=");
-                Thread.sleep(133);
+            System.out.print("=");
+            Thread.sleep(133);
+            System.out.print("=");
+            Thread.sleep(133);
+            System.out.print("=");
+            Thread.sleep(133);
         }
         System.out.print("==|\n");
-        
 
 
+
+    }
+
+    public static void obtainResult(String filename, int flag) {
+        if (flag == 1) {
+            System.out.println("\n" + filename + " successfully obtained !\n");
+
+        } else {
+            System.out.println("\n" + filename + " not found in the network. Please try again later !\n");
+        }
     }
 }

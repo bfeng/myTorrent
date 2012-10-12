@@ -46,6 +46,7 @@ public class MyTorrent {
         //printbanners
         BannerManager.Banner();
         BannerManager.printClientInstruction();
+        int MessageID = 1;
         //#
         //Start accepting userinputs
         boolean Running = true;
@@ -54,19 +55,12 @@ public class MyTorrent {
             String[] userinput = new mytorrent.gui.CommandParser().run();
             if (userinput[0].toLowerCase().startsWith("que")) {
                 /* Query */
-                //Userinput: userinput[1]
-                //MyTorrent input: long thispeerId String[]filesofthis
-                //#
-                //First prepare inputs
-                //#
-                //Second call query and handle return value
+                mainPeer.query(userinput[1], MessageID, Integer.valueOf(userinput[2]));
+                MessageID++;
                 
-
             } else if (userinput[0].toLowerCase().startsWith("obt")) {
                 /* Obtain */
-
-
-
+                mainPeer.obtain(userinput[1]);
 
             } else if (userinput[0].toLowerCase().equals("exit")) {
                 //Turn off peer

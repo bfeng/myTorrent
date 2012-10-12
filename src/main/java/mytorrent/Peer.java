@@ -37,6 +37,7 @@ import mytorrent.gui.BannerManager;
 import mytorrent.p2p.Configuration;
 import mytorrent.p2p.FileHash;
 import mytorrent.p2p.P2PProtocol;
+import mytorrent.p2p.P2PReceiver;
 import mytorrent.p2p.P2PTransfer;
 import mytorrent.p2p.PeerAddress;
 import mytorrent.peer.FileServer;
@@ -183,7 +184,7 @@ public class Peer implements P2PTransfer {
             } catch (IOException ex) {
                 Logger.getLogger(Peer.class.getName()).log(Level.SEVERE, null, ex);
             }
-        }        
+        }
         //#-3
         //waiting and printing
         try {
@@ -195,18 +196,80 @@ public class Peer implements P2PTransfer {
         //get return value struct
         FileHash.Entry[] returnStruct = indexServer.returnRemoteFileHash_for(filename);
         BannerManager.printSearchReturns(returnStruct);
-        
 
+
+    }
+
+    public void internalquery(String filename) {
+        //#-1
+        //generate Query Msg
+        P2PProtocol.QueryMessage initQueryMsg = protocol.new QueryMessage(host.getPeerID(), -1, 9);
+        initQueryMsg.setFilename(filename);
+        //generate output MSG
+        P2PProtocol.Message initQueryMsgOut = protocol.new Message(initQueryMsg);
+        //init indexserver return value struct
+        indexServer.initUpdateRemoteFileHash_for(filename);
+        //#-2
+        //send them out to neighbours
+        String aNeighborHost = null;
+        int aNeighborPort = -1;
+        for (PeerAddress aNeighbor : neighbors) {
+            try {
+                aNeighborHost = aNeighbor.getPeerHost();
+                aNeighborPort = aNeighbor.getIndexServerPort();
+                socket = new Socket(aNeighborHost, aNeighborPort);
+                protocol.processOutput(socket.getOutputStream(), initQueryMsgOut);
+                socket.shutdownOutput();
+            } catch (UnknownHostException ex) {
+                Logger.getLogger(Peer.class.getName()).log(Level.SEVERE, null, ex);
+            } catch (IOException ex) {
+                Logger.getLogger(Peer.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        }
     }
 
     @Override
     public void obtain(String filename) {
+
+        final String filenametoobtain = filename;
         new Thread(
                 new Runnable() {
 
                     @Override
                     public void run() {
-                        throw new UnsupportedOperationException("Not supported yet.");
+                        //Perform Query
+                        internalquery(filenametoobtain);
+                        long[] queryResult = null;
+                        //Maximum time is 10 sec
+                        for (int i = 0; i < 50; i++) {
+                            queryResult = indexServer.getQueryResult(filenametoobtain);
+                            if (queryResult.length != 0) {
+                                break;
+                            }
+                            //or wait for another try
+                            try {
+                                Thread.sleep(200);
+                            } catch (InterruptedException ex) {
+                                Logger.getLogger(Peer.class.getName()).log(Level.SEVERE, null, ex);
+                            }
+                        }
+                        if (queryResult.length != 0) {
+                            try {
+                                //look up in peerHash
+                                String targetHost = indexServer.obtain_host_for(queryResult[0]);
+                                int targetFSport = indexServer.obtain_FSport_for(queryResult[0]);
+                                Socket target = new Socket(targetHost, targetFSport);
+                                P2PReceiver receiver = new P2PReceiver(target, filenametoobtain);
+                                receiver.start();
+                            } catch (IOException ex) {
+                                Logger.getLogger(Peer.class.getName()).log(Level.SEVERE, null, ex);
+                            }
+                            BannerManager.obtainResult(filenametoobtain, 1);
+
+                        } else {
+                            //print failure
+                            BannerManager.obtainResult(filenametoobtain, -1);
+                        }
                     }
                 }).start();
     }
