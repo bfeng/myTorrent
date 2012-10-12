@@ -149,17 +149,63 @@ public class IndexServer extends Thread {
                         // return a hitmessage with result
                         // else return a hitmessage with miss
                         // finally, add my id to path 
-                        // and forward the message to all of my neighbors if TTL > 0
-                        //#
-                        //I wont do it again if I started the Query  
-                        
-                        //#
-                        //It won't pass me again if this message passed thru me before
-                        //#
-                        //Frisk myself
+                        // and forward the message to all of my neighbors if TTL > 0                    
+                        if (    //#
+                                //I wont do it again if I started the Query       
+                                (host.getPeerID() != (int) qm.getPeerID())
+                                //#
+                                //It won't pass me again if this message passed thru me before
+                                && (!qm.searchPath(host.getPeerID()))) {
+                            //#
+                            //Frisk myself:
+                            //search local files
+                            FileHash.Entry localResults[] = fileHash.search(qm.getFilename());
+                            //execute Query or HitQuery while preparing message
+                            if (localResults.length < 1) {
+                                //#miss
+                                //prepare query and hit query
+                                //## Query
+                                if (qm.isLive()) {
+                                    P2PProtocol.QueryMessage forwardQuery = protocol.new QueryMessage(qm);
+                                    //Decrement TTL
+                                    forwardQuery.decrementTTL();
+                                    //Add Path
+                                    forwardQuery.addPath(host.getPeerID());
+                                    //generate msg to send out
+                                    P2PProtocol.Message forwardQueryMsgOut = protocol.new Message(forwardQuery);
+                                    //send msg out to neighboor
+                                    for (PeerAddress aNeighbor : neighbors) {
+                                        String aNeighborHost = aNeighbor.getPeerHost();
+                                        int aNeighborPort = aNeighbor.getIndexServerPort();
+                                        Socket aNeighborSocket = new Socket(aNeighborHost, aNeighborPort);
+                                        protocol.processOutput(aNeighborSocket.getOutputStream(), forwardQueryMsgOut);
+                                    }
+                                }
+                                //## HitQuery
+
+
+                            } else if (localResults.length >= 1) {
+                                //#hit
+                            }
+
+
+
+                        };
+
+
+
+
+
+
+
+
+
+
+
                         //#
                         //Return HitMessage to sender
                         //#
+
                         //Query out to neighboors
 
                     } else if (msgIn.getCmd() == Command.HITMSG) {
