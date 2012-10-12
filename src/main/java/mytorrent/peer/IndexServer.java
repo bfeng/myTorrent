@@ -143,9 +143,18 @@ public class IndexServer extends Thread {
                     if (msgIn.getCmd() == Command.QUERYMSG) {
                         QueryMessage qm = msgIn.getQueryMessage();
                         // Todo: process this message
+                        // if this is my message, then ignore
+                        // else search that file
+                        // if I can find the file
+                        // return a hitmessage with result
+                        // else return a hitmessage with miss
+                        // finally, add my id to path 
+                        // and forward the message to all of my neighbors if TTL > 0
                     } else if (msgIn.getCmd() == Command.HITMSG) {
                         HitMessage hm = msgIn.getHitMessage();
                         // Todo: process this message
+                        // if this is my message, then check the result
+                        // else pull out my id from the path and send it to the next one
                     }
                 }
                 if (msgOut == null) {
