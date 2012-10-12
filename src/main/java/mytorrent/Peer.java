@@ -162,6 +162,7 @@ public class Peer implements P2PTransfer {
         //#-1
         //generate Query Msg
         P2PProtocol.QueryMessage initQueryMsg = protocol.new QueryMessage(host.getPeerID(), messageID, TTL);
+        initQueryMsg.setFilename(filename);
         //generate output MSG
         P2PProtocol.Message initQueryMsgOut = protocol.new Message(initQueryMsg);
         //init indexserver return value struct

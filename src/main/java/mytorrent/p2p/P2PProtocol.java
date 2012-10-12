@@ -115,6 +115,9 @@ public class P2PProtocol {
         public String getFilename() {
             return this.message.getFilename();
         }
+        public void setFilename(String filename) {
+            this.message.setFilename(filename);
+        }
 
         public int size() {
             return message.size();
@@ -147,9 +150,9 @@ public class P2PProtocol {
             this.result = Result.MISS;
         }
 
-        public void hit(long peerID, String host, int port) {
+        public void hit(long peerID, String host, int port, int ISport) {
             this.result = Result.HIT;
-            this.hitAddress = new HitMessage.HitAddress(peerID, host, port);
+            this.hitAddress = new HitMessage.HitAddress(peerID, host, port, ISport);
         }
 
         public Result getResult() {
@@ -170,19 +173,20 @@ public class P2PProtocol {
             return -1;
         }
 
-        public int getHitPeerPort() {
+        public int getHitPeerISPort() {
             if (this.result == Result.HIT) {
-                return this.hitAddress.peerFSPort;
+                return this.hitAddress.peerISPort;
             }
             return -1;
         }
 
-        public int getPeerFSPort() {
+        public int getHitPeerFSPort() {
             if (this.result == Result.HIT) {
                 return this.hitAddress.peerFSPort;
             }
             return 0;
         }
+        
 
         public void setFilename(String filename) {
             this.message.setFilename(filename);
@@ -196,12 +200,14 @@ public class P2PProtocol {
 
             public String peerHost;
             public int peerFSPort;
+            public int peerISPort;
             public long peerID;
 
-            private HitAddress(long peerID, String host, int port) {
+            private HitAddress(long peerID, String host, int port, int ISport) {
                 this.peerHost = host;
                 this.peerFSPort = port;
                 this.peerID = peerID;
+                this.peerISPort = ISport;
             }
         }
 
