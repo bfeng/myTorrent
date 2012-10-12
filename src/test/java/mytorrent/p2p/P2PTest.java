@@ -129,4 +129,114 @@ public class P2PTest {
 
         assertEquals(Result.MISS, gotHit.getResult());
     }
+
+    @Test
+    public void test_Forward_QueryMessage() {
+        final long peerId = 101;
+        final long messageId = 100;
+        new Thread(
+                new Runnable() {
+                    @Override
+                    public void run() {
+                        QueryMessage qm = protocol.new QueryMessage(peerId, messageId, 3);
+                        Message msgOut = protocol.new Message(qm);
+                        protocol.processOutput(out, msgOut);
+                    }
+                }).start();
+
+        try {
+            final InputStream inN = new PipedInputStream();
+            final OutputStream outN = new PipedOutputStream((PipedInputStream) inN);
+            new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    Message msgIn = protocol.processInput(in);
+                    assertEquals(Command.QUERYMSG, msgIn.getCmd());
+                    QueryMessage gotQuery = msgIn.getQueryMessage();
+
+                    // continue to forward
+                    gotQuery.addPath(102);
+                    Message msgOut = protocol.new Message(gotQuery);
+                    protocol.processOutput(outN, msgOut);
+                }
+            }).start();
+
+            Message msgIn = protocol.processInput(inN);
+            assertNotNull(msgIn);
+            assertEquals(Command.QUERYMSG, msgIn.getCmd());
+            QueryMessage gotQuery = msgIn.getQueryMessage();
+            assertNotNull(gotQuery);
+            assertEquals(peerId, gotQuery.getPeerID());
+            assertEquals(messageId, gotQuery.getMessageID());
+        } catch (IOException ex) {
+            fail(ex.getMessage());
+        }
+    }
+
+    @Test
+    public void test_Reply_HitMessage() {
+        try {
+            final long peerId = 101;
+            final long messageId = 100;
+            new Thread(
+                    new Runnable() {
+                        @Override
+                        public void run() {
+                            QueryMessage qm = protocol.new QueryMessage(peerId, messageId, 3);
+                            Message msgOut = protocol.new Message(qm);
+                            protocol.processOutput(out, msgOut);
+                        }
+                    }).start();
+
+            final InputStream inN = new PipedInputStream();
+            final OutputStream outN = new PipedOutputStream((PipedInputStream) inN);
+            new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    Message msgIn = protocol.processInput(in);
+                    assertEquals(Command.QUERYMSG, msgIn.getCmd());
+                    QueryMessage gotQuery = msgIn.getQueryMessage();
+
+                    // continue to forward
+                    gotQuery.addPath(102);
+                    Message msgOut = protocol.new Message(gotQuery);
+                    protocol.processOutput(outN, msgOut);
+                }
+            }).start();
+
+
+            final InputStream inM = new PipedInputStream();
+            final OutputStream outM = new PipedOutputStream((PipedInputStream) inM);
+            new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    Message msgIn = protocol.processInput(inN);
+                    assertNotNull(msgIn);
+                    assertEquals(Command.QUERYMSG, msgIn.getCmd());
+                    QueryMessage gotQuery = msgIn.getQueryMessage();
+                    assertNotNull(gotQuery);
+                    assertEquals(peerId, gotQuery.getPeerID());
+                    assertEquals(messageId, gotQuery.getMessageID());
+
+
+                    // reply a hit
+                    HitMessage hm = protocol.new HitMessage(gotQuery);
+                    hm.hit("192.168.1.1", 5711);
+                    assertEquals(102, hm.nextPath().longValue());
+                    Message msgOut = protocol.new Message(hm);
+                    protocol.processOutput(outM, msgOut);
+                }
+            }).start();
+
+            Message msgIn = protocol.processInput(inM);
+            assertNotNull(msgIn);
+            assertEquals(Command.HITMSG, msgIn.getCmd());
+            HitMessage gotHit = msgIn.getHitMessage();
+            assertNotNull(gotHit);
+            assertEquals(peerId, gotHit.getPeerID());
+            assertEquals(messageId, gotHit.getMessageID());
+        } catch (IOException ex) {
+            fail(ex.getMessage());
+        }
+    }
 }
