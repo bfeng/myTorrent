@@ -37,7 +37,7 @@ public class MyTorrent {
     /**
      * @param args the command line arguments
      */
-    public static void main(String[] args) throws FileNotFoundException {
+    public static void main(String[] args) throws FileNotFoundException, InterruptedException {
         //#
         //Startup peer, which contains the fileserver thread and indexserver thread
         Peer mainPeer = new Peer();
@@ -57,7 +57,8 @@ public class MyTorrent {
                 //Userinput: userinput[1]
                 //MyTorrent input: long thispeerId String[]filesofthis
                 //#
-                //First prepare inputs:
+                //First prepare inputs and print banner
+                BannerManager.QueryWaiting();
                 //#
                 //Second call registry and handle return value
                 

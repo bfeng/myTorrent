@@ -1,5 +1,7 @@
 package mytorrent.gui;
 
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import mytorrent.p2p.PeerAddress;
 import mytorrent.p2p.FileHash;
 
@@ -75,5 +77,23 @@ public class BannerManager {
         System.out.println("          or simply \"obt filename\" to complete this action.");
         System.out.println("  [Help]: See this message by typing \"help\"\n");
         System.out.println("  [Exit]: You can exit this client by typing \"exit\"\n");
+    }
+
+    public static void QueryWaiting() throws InterruptedException{
+        System.out.println("|                    Please Wait                   |");
+        System.out.print("|");
+        for (int i = 0; i < 16; i++) {
+
+                System.out.print("=");
+                Thread.sleep(133);
+                System.out.print("=");
+                Thread.sleep(133);
+                System.out.print("=");
+                Thread.sleep(133);
+        }
+        System.out.print("==|\n");
+        
+
+
     }
 }
