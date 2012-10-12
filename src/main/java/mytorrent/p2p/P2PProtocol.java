@@ -68,6 +68,10 @@ public class P2PProtocol {
         public String getFilename() {
             return this.filename;
         }
+
+        public int size() {
+            return stack.size();
+        }
     }
 
     public class QueryMessage {
@@ -79,11 +83,6 @@ public class P2PProtocol {
             this.message = new AbstractMessage(peerId, messageId);
             this.TTL = TTL;
         }
-
-        public QueryMessage(QueryMessage qm) {
-            this.message = qm.message;
-        }
-
         public synchronized boolean isLive() {
             return TTL > 0;
         }
@@ -114,6 +113,10 @@ public class P2PProtocol {
 
         public String getFilename() {
             return this.message.getFilename();
+        }
+
+        public int size() {
+            return message.size();
         }
     }
 
@@ -165,9 +168,11 @@ public class P2PProtocol {
             }
             return 0;
         }
+
         public void setFilename(String filename) {
             this.message.setFilename(filename);
         }
+
         public String getFilename() {
             return this.message.getFilename();
         }
@@ -181,6 +186,10 @@ public class P2PProtocol {
                 this.peerHost = host;
                 this.peerPort = port;
             }
+        }
+
+        public int size() {
+            return message.size();
         }
     }
 

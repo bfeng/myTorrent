@@ -140,6 +140,7 @@ public class IndexServer extends Thread {
             try {
                 Message msgIn = protocol.processInput(socket.getInputStream());
                 if (checkMessage(msgIn)) {
+                    //MAIN BRANCH
                     if (msgIn.getCmd() == Command.QUERYMSG) {
                         QueryMessage qm = msgIn.getQueryMessage();
                         // Todo: process this message
@@ -150,7 +151,7 @@ public class IndexServer extends Thread {
                         // else return a hitmessage with miss
                         // finally, add my id to path 
                         // and forward the message to all of my neighbors if TTL > 0                    
-                        if (    //#
+                        if ( //#
                                 //I wont do it again if I started the Query       
                                 (host.getPeerID() != (int) qm.getPeerID())
                                 //#
@@ -175,9 +176,11 @@ public class IndexServer extends Thread {
                                     //generate msg to send out
                                     P2PProtocol.Message forwardQueryMsgOut = protocol.new Message(forwardQuery);
                                     //send msg out to neighbour
+                                    String aNeighborHost = null;
+                                    int aNeighborPort = -1;
                                     for (PeerAddress aNeighbor : neighbors) {
-                                        String aNeighborHost = aNeighbor.getPeerHost();
-                                        int aNeighborPort = aNeighbor.getIndexServerPort();
+                                        aNeighborHost = aNeighbor.getPeerHost();
+                                        aNeighborPort = aNeighbor.getIndexServerPort();
                                         Socket aNeighborSocket = new Socket(aNeighborHost, aNeighborPort);
                                         protocol.processOutput(aNeighborSocket.getOutputStream(), forwardQueryMsgOut);
                                     }
@@ -187,53 +190,83 @@ public class IndexServer extends Thread {
                                 P2PProtocol.HitMessage generateHitQuery = protocol.new HitMessage(qm);
                                 //ensure it is a miss
                                 generateHitQuery.miss();
-                                //pop path from deque
-                                int HitQueryNextNode = generateHitQuery.nextPath().intValue();
-                                //generate msg to send out after pop in the last step ONLY
+                                //### send to pop path or owner
+                                int HitQueryNextNode = -1;
+                                //owner
+                                if (generateHitQuery.size() == 0) {
+                                    HitQueryNextNode = (int) generateHitQuery.getPeerID();
+                                } else {
+                                    //pop path from deque
+                                    HitQueryNextNode = generateHitQuery.nextPath().intValue();
+                                }
+                                //generate msg to send out after pop or identified empty deque in the last step ONLY
                                 P2PProtocol.Message generateHitQueryMsgOut = protocol.new Message(generateHitQuery);
                                 //look up path from neighbour
                                 String theNeighbourHost = null;
-                                int theNeighbourPort = -1;                                        
+                                int theNeighbourPort = -1;
                                 for (PeerAddress neighbours : neighbors) {
-                                    if(neighbours.getPeerID()==HitQueryNextNode){
+                                    if (neighbours.getPeerID() == HitQueryNextNode) {
                                         theNeighbourHost = neighbours.getPeerHost();
-                                        c = neighbours.getIndexServerPort();
+                                        theNeighbourPort = neighbours.getIndexServerPort();
                                         break;
                                     }
                                 }
+                                //Exceptions:
+                                if (theNeighbourHost == null || theNeighbourPort == -1) {
+                                    System.out.println("ERROR sending Query. Msg doesn't match network configuration");
+                                }
+
                                 //send msg out to THE neighbour
                                 Socket theNeighbourSocket = new Socket(theNeighbourHost, theNeighbourPort);
                                 protocol.processOutput(theNeighbourSocket.getOutputStream(), generateHitQueryMsgOut);
 
                             } else if (localResults.length >= 1) {
                                 //#hit
+                                //DO NOT forward any Query message
+                                //ONLY generate HitQuery Message
+                                P2PProtocol.HitMessage generateHitQuery = protocol.new HitMessage(qm);
+                                //ensure it is a hit
+                                generateHitQuery.hit(host.getPeerHost(), (int) host.getPeerID());
+                                //Send it back via reverse-path, either owner or pop path
+                                int HitQueryNextNode = -1;
+                                //owner
+                                if (generateHitQuery.size() == 0) {
+                                    HitQueryNextNode = (int) generateHitQuery.getPeerID();
+                                } else {
+                                    //pop path from deque
+                                    HitQueryNextNode = generateHitQuery.nextPath().intValue();
+                                }
+                                //generate msg to send out after pop or identified empty deque in the last step ONLY
+                                P2PProtocol.Message generateHitQueryMsgOut = protocol.new Message(generateHitQuery);
+                                //look up path from neighbour
+                                String theNeighbourHost = null;
+                                int theNeighbourPort = -1;
+                                for (PeerAddress neighbours : neighbors) {
+                                    if (neighbours.getPeerID() == HitQueryNextNode) {
+                                        theNeighbourHost = neighbours.getPeerHost();
+                                        theNeighbourPort = neighbours.getIndexServerPort();
+                                        break;
+                                    }
+                                }
+                                //Exceptions:
+                                if (theNeighbourHost == null || theNeighbourPort == -1) {
+                                    System.out.println("ERROR sending Query. Msg doesn't match network configuration");
+                                }
                             }
-
-
-
                         };
-
-
-
-
-
-
-
-
-
-
-
-                        //#
-                        //Return HitMessage to sender
-                        //#
-
-                        //Query out to neighboors
-
+                        //MAIN BRANCH
                     } else if (msgIn.getCmd() == Command.HITMSG) {
                         HitMessage hm = msgIn.getHitMessage();
                         // Todo: process this message
                         // if this is my message, then check the result
                         // else pull out my id from the path and send it to the next one
+                        //# identify the ownership of the HitMsg
+                        if ((int) hm.getPeerID() != host.getPeerID()) {
+                            //I didn't started it
+                        } else {
+                            //I started it
+                            
+                        }
                     }
                 }
                 if (msgOut == null) {
