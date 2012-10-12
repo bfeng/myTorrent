@@ -63,7 +63,7 @@ public class Peer implements P2PTransfer {
      * @param fileServerPort
      */
     public Peer() throws FileNotFoundException {
-        this("config.yaml");
+        this("config.yml");
     }
 
     /**

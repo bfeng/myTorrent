@@ -23,6 +23,9 @@
  */
 package mytorrent;
 
+import java.io.FileNotFoundException;
+import mytorrent.gui.BannerManager;
+
 /**
  *
  * @author Bo Feng
@@ -34,6 +37,55 @@ public class MyTorrent {
     /**
      * @param args the command line arguments
      */
-    public static void main(String[] args) {
+    public static void main(String[] args) throws FileNotFoundException {
+        //#
+        //Startup peer, which contains the fileserver thread and indexserver thread
+        Peer mainPeer = new Peer();
+        mainPeer.startup();
+        //#
+        //printbanners
+        BannerManager.Banner();
+        BannerManager.printClientInstruction();
+        //#
+        //Start accepting userinputs
+        boolean Running = true;
+        while (Running) {
+            BannerManager.printCursor();
+            String[] userinput = new mytorrent.gui.CommandParser().run();
+            if (userinput[0].toLowerCase().startsWith("que")) {
+                /* Query */
+                //Userinput: userinput[1]
+                //MyTorrent input: long thispeerId String[]filesofthis
+                //#
+                //First prepare inputs:
+                //#
+                //Second call registry and handle return value
+                
+
+            } else if (userinput[0].toLowerCase().startsWith("obt")) {
+                /* Obtain */
+
+
+
+
+            } else if (userinput[0].toLowerCase().equals("exit")) {
+                //Turn off peer
+                System.out.println("  - Client Terminated ! -");
+                mainPeer.exit();
+                //Turn off CommandParser: not neccessary here.
+                //Exit while and end main()
+                //Enter here only if > Exit while and end main()
+                Running = false;
+            } else if (userinput[0].toLowerCase().equals("help")) {
+                BannerManager.printHelp();
+
+            } else {
+                System.out.println("Command not recognized!");
+
+            }
+
+        }
+
+
     }
 }
