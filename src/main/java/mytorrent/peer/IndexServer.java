@@ -85,12 +85,11 @@ public class IndexServer extends Thread {
         }
         return peerIDs;
     }
-    public synchronized void closeUpdateRemoteFileHash_for(String filename) {
-        
+    public synchronized void initUpdateRemoteFileHash_for(String filename) {
+        //clear all filename entry
+        remoteFileHash.removeAllFilename(filename);
     }
-    public synchronized void openUpdateRemoteFileHash_for(String filename) {
-        
-    }
+
 
     @Override
     public void run() {
