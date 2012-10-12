@@ -173,8 +173,7 @@ public class FileHash {
     }
     //#
     // Remove all entry with respect to a specific filename.
-    // This method is mainly used in peer thread for update local filehash by FileMonitor
-    //in IndexServer.updateFileHash
+    // This method is mainly used in updating query return values
     //       this.hash.remove(filename);
     //input filename
     //return void
@@ -186,7 +185,16 @@ public class FileHash {
             }
         }
     }
-    
+    //#
+    // Remove all entry
+    // This method is mainly used in peer thread for update local filehash by FileMonitor
+    //in IndexServer.updateFileHash
+    //input filename
+    //return void
+    public synchronized void emptyAll() {
+        this.hash.clear();
+    }
+
     private Entry[] toArray(Collection<Entry> result) {
         return (Entry[]) result.toArray(new Entry[result.size()]);
     }
