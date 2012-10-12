@@ -163,7 +163,7 @@ public class FileHash {
     //input peerId
     //return void
     public synchronized void removeAll(long peerId) {
- 
+
         for (String key : this.hash.keySet()) {
             String peerIdString = key.split(":", 2)[0];
             if (peerIdString.equals(String.valueOf(peerId))) {
@@ -171,7 +171,22 @@ public class FileHash {
             }
         }
     }
-
+    //#
+    // Remove all entry with respect to a specific filename.
+    // This method is mainly used in peer thread for update local filehash by FileMonitor
+    //in IndexServer.updateFileHash
+    //       this.hash.remove(filename);
+    //input filename
+    //return void
+    public synchronized void removeAllFilename(String filename) {
+        for (String key : this.hash.keySet()) {
+            String filenameString = key.split(":", 2)[1];
+            if (filenameString.equals(filename)) {
+                this.hash.remove(key);
+            }
+        }
+    }
+    
     private Entry[] toArray(Collection<Entry> result) {
         return (Entry[]) result.toArray(new Entry[result.size()]);
     }
