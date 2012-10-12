@@ -143,6 +143,20 @@ public class IndexServer extends Thread {
                     if (msgIn.getCmd() == Command.QUERYMSG) {
                         QueryMessage qm = msgIn.getQueryMessage();
                         // Todo: process this message
+                        //#
+                        //I wont do it again if I started the Query  
+                        
+                        //#
+                        //It won't pass me again if this message passed thru me before
+                        //#
+                        //Frisk myself
+                        //#
+                        //Return HitMessage to sender
+                        //#
+                        //Query out to neighboors
+
+                        
+                        
                     } else if (msgIn.getCmd() == Command.HITMSG) {
                         HitMessage hm = msgIn.getHitMessage();
                         // Todo: process this message
