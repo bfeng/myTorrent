@@ -25,12 +25,17 @@ package mytorrent;
 
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.net.Socket;
+import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import mytorrent.gui.BannerManager;
 import mytorrent.p2p.Configuration;
+import mytorrent.p2p.FileHash;
 import mytorrent.p2p.P2PProtocol;
 import mytorrent.p2p.P2PTransfer;
 import mytorrent.p2p.PeerAddress;
@@ -56,6 +61,8 @@ public class Peer implements P2PTransfer {
     private final IndexServer indexServer;
     private final PeerAddress[] neighbors;
     private final PeerAddress host;
+    private P2PProtocol protocol;
+    private Socket socket = null;
 
     /**
      * This is the constructor of Peer.
@@ -112,6 +119,7 @@ public class Peer implements P2PTransfer {
             FileSystemManager fsManager = VFS.getManager();
             FileObject listendir = fsManager.resolveFile(new File("shared/").getAbsolutePath());
             DefaultFileMonitor fm = new DefaultFileMonitor(new FileListener() {
+
                 private synchronized void update() {
                     indexServer.updateFileHash(getSharedFiles());
                 }
@@ -150,13 +158,51 @@ public class Peer implements P2PTransfer {
     }
 
     @Override
-    public void query(String filename) {
+    public void query(String filename, long messageID, int TTL) {
+        //#-1
+        //generate Query Msg
+        P2PProtocol.QueryMessage initQueryMsg = protocol.new QueryMessage(host.getPeerID(), messageID, TTL);
+        //generate output MSG
+        P2PProtocol.Message initQueryMsgOut = protocol.new Message(initQueryMsg);
+        //init indexserver return value struct
+        indexServer.initUpdateRemoteFileHash_for(filename);
+        //#-2
+        //send them out to neighbours
+        String aNeighborHost = null;
+        int aNeighborPort = -1;
+        for (PeerAddress aNeighbor : neighbors) {
+            try {
+                aNeighborHost = aNeighbor.getPeerHost();
+                aNeighborPort = aNeighbor.getIndexServerPort();
+                socket = new Socket(aNeighborHost, aNeighborPort);
+                protocol.processOutput(socket.getOutputStream(), initQueryMsgOut);
+                socket.shutdownOutput();
+            } catch (UnknownHostException ex) {
+                Logger.getLogger(Peer.class.getName()).log(Level.SEVERE, null, ex);
+            } catch (IOException ex) {
+                Logger.getLogger(Peer.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        }        
+        //#-3
+        //waiting and printing
+        try {
+            BannerManager.QueryWaiting();
+        } catch (InterruptedException ex) {
+            Logger.getLogger(Peer.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        //#-4
+        //get return value struct
+        FileHash.Entry[] returnStruct = indexServer.returnRemoteFileHash_for(filename);
+        BannerManager.printSearchReturns(returnStruct);
+        
+
     }
 
     @Override
     public void obtain(String filename) {
         new Thread(
                 new Runnable() {
+
                     @Override
                     public void run() {
                         throw new UnsupportedOperationException("Not supported yet.");

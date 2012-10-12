@@ -48,7 +48,7 @@ public class BannerManager {
     }
 
     public static void printSearchReturns(FileHash.Entry[] entrytoprint) {
-        System.out.println("  - Search Result: " + entrytoprint.length + " found in the network");
+        System.out.println("  - Query Result: " + entrytoprint.length + " found in the network");
         for (FileHash.Entry item : entrytoprint) {
             System.out.println("    " + item.getFilename() + " at PeerID: " + item.getPeerId());
         }

@@ -85,6 +85,10 @@ public class IndexServer extends Thread {
         }
         return peerIDs;
     }
+    public synchronized FileHash.Entry[] returnRemoteFileHash_for(String filename) {
+        return remoteFileHash.search(filename);
+    }
+    
     public synchronized void initUpdateRemoteFileHash_for(String filename) {
         //clear all filename entry
         remoteFileHash.removeAllFilename(filename);
@@ -185,11 +189,13 @@ public class IndexServer extends Thread {
                                     //send msg out to neighbour
                                     String aNeighborHost = null;
                                     int aNeighborPort = -1;
+                                    Socket aNeighborSocket = null;
                                     for (PeerAddress aNeighbor : neighbors) {
                                         aNeighborHost = aNeighbor.getPeerHost();
                                         aNeighborPort = aNeighbor.getIndexServerPort();
-                                        Socket aNeighborSocket = new Socket(aNeighborHost, aNeighborPort);
+                                        aNeighborSocket = new Socket(aNeighborHost, aNeighborPort);
                                         protocol.processOutput(aNeighborSocket.getOutputStream(), forwardQueryMsgOut);
+                                        aNeighborSocket.shutdownOutput();
                                     }
                                 }
                                 //## HitQuery-miss
@@ -226,6 +232,7 @@ public class IndexServer extends Thread {
                                 //send msg out to THE neighbour
                                 Socket theNeighbourSocket = new Socket(theNeighbourHost, theNeighbourPort);
                                 protocol.processOutput(theNeighbourSocket.getOutputStream(), generateHitQueryMsgOut);
+                                theNeighbourSocket.shutdownOutput();
 
                             } else if (localResults.length >= 1) {
                                 //#hit
@@ -262,8 +269,9 @@ public class IndexServer extends Thread {
                                 //send msg out to THE neighbour
                                 Socket theNeighbourSocket = new Socket(theNeighbourHost, theNeighbourPort);
                                 protocol.processOutput(theNeighbourSocket.getOutputStream(), generateHitQueryMsgOut);
+                                theNeighbourSocket.shutdownOutput();
                             }
-                        };
+                        }
                         
                         //MAIN BRANCH
                         //revision: add a machenism for updating remoteFileHash
@@ -301,6 +309,7 @@ public class IndexServer extends Thread {
                             //send msg out to THE neighbour
                             Socket theNeighbourSocket = new Socket(theNeighbourHost, theNeighbourPort);
                             protocol.processOutput(theNeighbourSocket.getOutputStream(), generateHitQueryMsgOut);
+                            theNeighbourSocket.shutdownOutput();
                         } else {
                             //I started it
                             //Ask if update is still allowed

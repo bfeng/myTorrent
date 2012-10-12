@@ -57,10 +57,9 @@ public class MyTorrent {
                 //Userinput: userinput[1]
                 //MyTorrent input: long thispeerId String[]filesofthis
                 //#
-                //First prepare inputs and print banner
-                BannerManager.QueryWaiting();
+                //First prepare inputs
                 //#
-                //Second call registry and handle return value
+                //Second call query and handle return value
                 
 
             } else if (userinput[0].toLowerCase().startsWith("obt")) {

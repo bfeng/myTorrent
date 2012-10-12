@@ -30,7 +30,7 @@ package mytorrent.p2p;
  */
 public interface P2PTransfer {
 
-    public void query(String filename);
+    public void query(String filename, long messageID, int TTL);
 
     public void obtain(String filename);
 
