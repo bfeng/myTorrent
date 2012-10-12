@@ -166,6 +166,7 @@ public class IndexServer extends Thread {
                                 //prepare query and hit query
                                 //## Query
                                 if (qm.isLive()) {
+                                    //prepare Query msg
                                     P2PProtocol.QueryMessage forwardQuery = protocol.new QueryMessage(qm);
                                     //Decrement TTL
                                     forwardQuery.decrementTTL();
@@ -173,7 +174,7 @@ public class IndexServer extends Thread {
                                     forwardQuery.addPath(host.getPeerID());
                                     //generate msg to send out
                                     P2PProtocol.Message forwardQueryMsgOut = protocol.new Message(forwardQuery);
-                                    //send msg out to neighboor
+                                    //send msg out to neighbour
                                     for (PeerAddress aNeighbor : neighbors) {
                                         String aNeighborHost = aNeighbor.getPeerHost();
                                         int aNeighborPort = aNeighbor.getIndexServerPort();
@@ -181,8 +182,28 @@ public class IndexServer extends Thread {
                                         protocol.processOutput(aNeighborSocket.getOutputStream(), forwardQueryMsgOut);
                                     }
                                 }
-                                //## HitQuery
-
+                                //## HitQuery-miss
+                                //prepare HitQuery msg
+                                P2PProtocol.HitMessage generateHitQuery = protocol.new HitMessage(qm);
+                                //ensure it is a miss
+                                generateHitQuery.miss();
+                                //pop path from deque
+                                int HitQueryNextNode = generateHitQuery.nextPath().intValue();
+                                //generate msg to send out after pop in the last step ONLY
+                                P2PProtocol.Message generateHitQueryMsgOut = protocol.new Message(generateHitQuery);
+                                //look up path from neighbour
+                                String theNeighbourHost = null;
+                                int theNeighbourPort = -1;                                        
+                                for (PeerAddress neighbours : neighbors) {
+                                    if(neighbours.getPeerID()==HitQueryNextNode){
+                                        theNeighbourHost = neighbours.getPeerHost();
+                                        c = neighbours.getIndexServerPort();
+                                        break;
+                                    }
+                                }
+                                //send msg out to THE neighbour
+                                Socket theNeighbourSocket = new Socket(theNeighbourHost, theNeighbourPort);
+                                protocol.processOutput(theNeighbourSocket.getOutputStream(), generateHitQueryMsgOut);
 
                             } else if (localResults.length >= 1) {
                                 //#hit
