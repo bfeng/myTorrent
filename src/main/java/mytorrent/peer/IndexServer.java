@@ -85,6 +85,12 @@ public class IndexServer extends Thread {
         }
         return peerIDs;
     }
+    public synchronized void closeUpdateRemoteFileHash_for(String filename) {
+        
+    }
+    public synchronized void openUpdateRemoteFileHash_for(String filename) {
+        
+    }
 
     @Override
     public void run() {
@@ -143,6 +149,7 @@ public class IndexServer extends Thread {
                     //MAIN BRANCH
                     if (msgIn.getCmd() == Command.QUERYMSG) {
                         QueryMessage qm = msgIn.getQueryMessage();
+                        
                         // Todo: process this message
                         // if this is my message, then ignore
                         // else search that file
@@ -150,7 +157,8 @@ public class IndexServer extends Thread {
                         // return a hitmessage with result
                         // else return a hitmessage with miss
                         // finally, add my id to path 
-                        // and forward the message to all of my neighbors if TTL > 0                    
+                        // and forward the message to all of my neighbors if TTL > 0
+                        
                         if ( //#
                                 //I wont do it again if I started the Query       
                                 (host.getPeerID() != (int) qm.getPeerID())
@@ -168,7 +176,7 @@ public class IndexServer extends Thread {
                                 //## Query
                                 if (qm.isLive()) {
                                     //prepare Query msg
-                                    P2PProtocol.QueryMessage forwardQuery = protocol.new QueryMessage(qm);
+                                    P2PProtocol.QueryMessage forwardQuery = qm;
                                     //Decrement TTL
                                     forwardQuery.decrementTTL();
                                     //Add Path
@@ -252,20 +260,55 @@ public class IndexServer extends Thread {
                                 if (theNeighbourHost == null || theNeighbourPort == -1) {
                                     System.out.println("ERROR sending Query. Msg doesn't match network configuration");
                                 }
+                                //send msg out to THE neighbour
+                                Socket theNeighbourSocket = new Socket(theNeighbourHost, theNeighbourPort);
+                                protocol.processOutput(theNeighbourSocket.getOutputStream(), generateHitQueryMsgOut);
                             }
                         };
+                        
                         //MAIN BRANCH
+                        //revision: add a machenism for updating remoteFileHash
                     } else if (msgIn.getCmd() == Command.HITMSG) {
                         HitMessage hm = msgIn.getHitMessage();
+                        
                         // Todo: process this message
                         // if this is my message, then check the result
                         // else pull out my id from the path and send it to the next one
+                        
                         //# identify the ownership of the HitMsg
+                        //prepare HitQuery msg
+                        P2PProtocol.HitMessage generateHitQuery = hm;
+                        int HitQueryNextNode = -1;
                         if ((int) hm.getPeerID() != host.getPeerID()) {
                             //I didn't started it
+                            HitQueryNextNode = generateHitQuery.nextPath().intValue();
+
+                            //generate msg to send out after pop or identified empty deque in the last step ONLY
+                            P2PProtocol.Message generateHitQueryMsgOut = protocol.new Message(generateHitQuery);
+                            //look up path from neighbour
+                            String theNeighbourHost = null;
+                            int theNeighbourPort = -1;
+                            for (PeerAddress neighbours : neighbors) {
+                                if (neighbours.getPeerID() == HitQueryNextNode) {
+                                    theNeighbourHost = neighbours.getPeerHost();
+                                    theNeighbourPort = neighbours.getIndexServerPort();
+                                    break;
+                                }
+                            }
+                            //Exceptions:
+                            if (theNeighbourHost == null || theNeighbourPort == -1) {
+                                System.out.println("ERROR sending Query. Msg doesn't match network configuration");
+                            }
+                            //send msg out to THE neighbour
+                            Socket theNeighbourSocket = new Socket(theNeighbourHost, theNeighbourPort);
+                            protocol.processOutput(theNeighbourSocket.getOutputStream(), generateHitQueryMsgOut);
                         } else {
                             //I started it
+                            //Ask if update is still allowed
                             
+                            //update remotefilehash
+                            FileHash.Entry newEntry = remoteFileHash.new Entry(hm.getPeerID(), hm.getFilename());
+                            remoteFileHash.addEntry(newEntry);
                         }
                     }
                 }
