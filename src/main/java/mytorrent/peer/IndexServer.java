@@ -59,14 +59,14 @@ public class IndexServer extends Thread {
 
     public void updateFileHash(String[] files) {
         //#1
-        //Clear current filehash
-        fileHash.emptyAll();
-        //#2
         //Get host peerId for filehash struct
         long hostpeerId = host.getPeerID();
+        //#2
+        //Clear all filehash for the host only
+        fileHash.removeAll(hostpeerId);
         //#3
         //Reconstruct filehash
-        if (files != null) {
+        if (files != null && files.length > 0) {
             for (String item : files) {
                 fileHash.addEntry(fileHash.new Entry(hostpeerId, item));
             }
