@@ -54,6 +54,7 @@ public class P2PProtocol {
         protected void addPath(long peerID) {
             stack.push(peerID);
         }
+
         protected boolean searchPath(long peerId) {
             return stack.contains(peerId);
         }
@@ -69,6 +70,10 @@ public class P2PProtocol {
             this.TTL = TTL;
         }
 
+        public QueryMessage(QueryMessage qm) {
+            this.message = qm.message;
+        }
+
         public synchronized boolean isLive() {
             return TTL > 0;
         }
@@ -76,6 +81,7 @@ public class P2PProtocol {
         public synchronized void addPath(long peerId) {
             this.message.addPath(peerId);
         }
+
         public synchronized boolean searchPath(long peerId) {
             return this.message.searchPath(peerId);
         }
