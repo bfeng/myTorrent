@@ -83,6 +83,7 @@ public class P2PProtocol {
             this.message = new AbstractMessage(peerId, messageId);
             this.TTL = TTL;
         }
+
         public synchronized boolean isLive() {
             return TTL > 0;
         }
@@ -146,25 +147,39 @@ public class P2PProtocol {
             this.result = Result.MISS;
         }
 
-        public void hit(String host, int port) {
+        public void hit(long peerID, String host, int port) {
             this.result = Result.HIT;
-            this.hitAddress = new HitMessage.HitAddress(host, port);
+            this.hitAddress = new HitMessage.HitAddress(peerID, host, port);
         }
 
         public Result getResult() {
             return this.result;
         }
 
-        public String getPeerHost() {
+        public String getHitPeerHost() {
             if (this.result == Result.HIT) {
                 return this.hitAddress.peerHost;
             }
             return null;
         }
 
-        public int getPeerPort() {
+        public long getHitPeerID() {
             if (this.result == Result.HIT) {
-                return this.hitAddress.peerPort;
+                return this.hitAddress.peerID;
+            }
+            return -1;
+        }
+
+        public int getHitPeerPort() {
+            if (this.result == Result.HIT) {
+                return this.hitAddress.peerFSPort;
+            }
+            return -1;
+        }
+
+        public int getPeerFSPort() {
+            if (this.result == Result.HIT) {
+                return this.hitAddress.peerFSPort;
             }
             return 0;
         }
@@ -180,11 +195,13 @@ public class P2PProtocol {
         private final class HitAddress {
 
             public String peerHost;
-            public int peerPort;
+            public int peerFSPort;
+            public long peerID;
 
-            private HitAddress(String host, int port) {
+            private HitAddress(long peerID, String host, int port) {
                 this.peerHost = host;
-                this.peerPort = port;
+                this.peerFSPort = port;
+                this.peerID = peerID;
             }
         }
 

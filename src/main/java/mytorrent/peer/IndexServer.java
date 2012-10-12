@@ -240,7 +240,7 @@ public class IndexServer extends Thread {
                                 //ONLY generate HitQuery Message
                                 P2PProtocol.HitMessage generateHitQuery = protocol.new HitMessage(qm);
                                 //ensure it is a hit
-                                generateHitQuery.hit(host.getPeerHost(), (int) host.getPeerID());
+                                generateHitQuery.hit((long)host.getPeerID(), host.getPeerHost(), host.getFileServerPort());
                                 //Send it back via reverse-path, either owner or pop path
                                 int HitQueryNextNode = -1;
                                 //owner
@@ -317,6 +317,8 @@ public class IndexServer extends Thread {
                             //update remotefilehash
                             FileHash.Entry newEntry = remoteFileHash.new Entry(hm.getPeerID(), hm.getFilename());
                             remoteFileHash.addEntry(newEntry);
+                            
+                            peerHash.addValue(hm., host);
                         }
                     }
                 }
