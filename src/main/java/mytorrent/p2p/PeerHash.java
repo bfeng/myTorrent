@@ -31,7 +31,25 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 public class PeerHash extends ConcurrentHashMap<Long, PeerAddress> {
 
-    public long findIndexServerPort(Long peerId) {
-        return 0;
+    public synchronized int findIndexServerPort(Long peerId) {
+        PeerAddress value = get(peerId);
+        int returnvalue = value.getIndexServerPort();
+        return returnvalue;
+    }
+
+    public synchronized String findIndexServerAddress(Long peerId) {
+        PeerAddress value = get(peerId);
+        String returnvalue = value.getPeerHost();
+        return returnvalue;
+    }
+
+    public synchronized int findFileServerPort(Long peerId) {
+        PeerAddress value = get(peerId);
+        int returnvalue = value.getFileServerPort();
+        return returnvalue;
+    }
+
+    public synchronized void addValue(long peerId, PeerAddress PA) {
+        this.put(peerId, PA);
     }
 }

@@ -35,10 +35,8 @@ public class BannerManager {
 
     public static void printClientInstruction() {
         System.out.println("User Input Direction:");
-        System.out.println(" * Registry: registry");
-        System.out.println(" * Search: search filename");
+        System.out.println(" * Query: query filename");
         System.out.println(" * Obtain: obtain filename");
-        System.out.println(" * Lookup Peer Address: lookup peerID ");
         System.out.println(" * Help: help (detailed info)");
         System.out.println(" * Exit Client: exit");
     }
@@ -69,14 +67,13 @@ public class BannerManager {
 
     public static void printHelp() {
         System.out.println("\n Welcome to Help !");
-        System.out.println("[Registry]: Files under \"shared\" folder will be registered onto IndexServer");
-        System.out.println("            You can type \"register\" or simply \"reg\" to complete this action.");
-        System.out.println("  [Search]: Search and list all peer(with peerID) who have the file called \"filename\" ");
-        System.out.println("            You can type \"search filename\" or simply \"sea filename\" to complete this action.");
-        System.out.println("  [Obtain]: Specific file will be automaticly downloaded to your \"shared\" folder ");
-        System.out.println("            You can type \"obtain filename\" or simply \"obt filename\" to complete this action.");
-        System.out.println("  [Lookup]: Lookup a specific peer's IP address and port number with PeerID. PeerID is always returned from search.");
-        System.out.println("            You can type \"lookup peerID\" or simply \"look peerID\" to complete this action.");
-        System.out.println("    [Exit]: You can exit this client by typing \"exit\"\n");
+        System.out.println(" [Query]: Search and list all peer who have the file called \"filename\" ");
+        System.out.println("          You can type \"search filename\"");
+        System.out.println("          or simply \"sea filename\" to complete this action.");
+        System.out.println("[Obtain]: Specific file will be automaticly downloaded to your \"received\" folder ");
+        System.out.println("          You can type \"obtain filename\"");
+        System.out.println("          or simply \"obt filename\" to complete this action.");
+        System.out.println("  [Help]: See this message by typing \"help\"\n");
+        System.out.println("  [Exit]: You can exit this client by typing \"exit\"\n");
     }
 }

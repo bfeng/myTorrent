@@ -50,6 +50,7 @@ public class IndexServer extends Thread {
     private boolean running;
     private ServerSocket listener;
     private static FileHash fileHash = new FileHash();
+    private static FileHash remoteFileHash = new FileHash();
     private static PeerHash peerHash = new PeerHash();
 
     public IndexServer(PeerAddress host, PeerAddress[] neighbors) {
@@ -58,8 +59,31 @@ public class IndexServer extends Thread {
     }
 
     public void updateFileHash(String[] files) {
-        // Todo: 
-        // hash.addEntry(null);
+        //#1
+        //Clear current filehash
+        fileHash.emptyAll();
+        //#2
+        //Get host peerId for filehash struct
+        long hostpeerId = host.getPeerID();
+        //#3
+        //Reconstruct filehash
+        if (files != null && files.length > 0) {
+            for (String item : files) {
+                fileHash.addEntry(fileHash.new Entry(hostpeerId, item));
+            }
+        }
+    }
+
+    public synchronized long[] getQueryResult(String filename) {
+        long[] peerIDs = null;
+        FileHash.Entry[] results = remoteFileHash.search(filename);
+        if (results != null && results.length > 0) {
+            peerIDs = new long[results.length];
+            for (int i = 0; i < results.length; i++) {
+                peerIDs[i] = results[i].getPeerId();
+            }
+        }
+        return peerIDs;
     }
 
     @Override
@@ -119,9 +143,18 @@ public class IndexServer extends Thread {
                     if (msgIn.getCmd() == Command.QUERYMSG) {
                         QueryMessage qm = msgIn.getQueryMessage();
                         // Todo: process this message
+                        // if this is my message, then ignore
+                        // else search that file
+                        // if I can find the file
+                        // return a hitmessage with result
+                        // else return a hitmessage with miss
+                        // finally, add my id to path 
+                        // and forward the message to all of my neighbors if TTL > 0
                     } else if (msgIn.getCmd() == Command.HITMSG) {
                         HitMessage hm = msgIn.getHitMessage();
                         // Todo: process this message
+                        // if this is my message, then check the result
+                        // else pull out my id from the path and send it to the next one
                     }
                 }
                 if (msgOut == null) {
