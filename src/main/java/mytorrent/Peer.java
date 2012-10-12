@@ -151,10 +151,6 @@ public class Peer implements P2PTransfer {
 
     @Override
     public void query(String filename) {
-        //throw new UnsupportedOperationException("Not supported yet.");
-
-        // query its neighbors
-        // print out all hit messages
     }
 
     @Override

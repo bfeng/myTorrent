@@ -50,6 +50,7 @@ public class IndexServer extends Thread {
     private boolean running;
     private ServerSocket listener;
     private static FileHash fileHash = new FileHash();
+    private static FileHash remoteFileHash = new FileHash();
     private static PeerHash peerHash = new PeerHash();
 
     public IndexServer(PeerAddress host, PeerAddress[] neighbors) {
@@ -59,11 +60,11 @@ public class IndexServer extends Thread {
 
     public void updateFileHash(String[] files) {
         //#1
+        //Clear current filehash
+        fileHash.emptyAll();
+        //#2
         //Get host peerId for filehash struct
         long hostpeerId = host.getPeerID();
-        //#2
-        //Clear all filehash for the host only
-        fileHash.removeAll(hostpeerId);
         //#3
         //Reconstruct filehash
         if (files != null && files.length > 0) {
@@ -75,7 +76,7 @@ public class IndexServer extends Thread {
 
     public synchronized long[] getQueryResult(String filename) {
         long[] peerIDs = null;
-        FileHash.Entry[] results = fileHash.search(filename);
+        FileHash.Entry[] results = remoteFileHash.search(filename);
         if (results != null && results.length > 0) {
             peerIDs = new long[results.length];
             for (int i = 0; i < results.length; i++) {
