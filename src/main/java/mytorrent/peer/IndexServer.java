@@ -152,6 +152,27 @@ public class IndexServer extends Thread {
             return false;
         }
 
+        private void send2Peer(Message msg, String host, int port) throws IOException {
+            Socket client = new Socket(host, port);
+            protocol.preparedOutput(client.getOutputStream(), msg);
+            client.shutdownOutput();
+        }
+
+        private void send2Neighbors(Message msg) throws IOException {
+            for (PeerAddress n : neighbors) {
+                this.send2Peer(msg, n.getPeerHost(), n.getIndexServerPort());
+            }
+        }
+
+        private PeerAddress findANeighbor(long neighborID) {
+            for (PeerAddress neighbours : neighbors) {
+                if (neighbours.getPeerID() == neighborID) {
+                    return neighbours;
+                }
+            }
+            throw new RuntimeException("ERROR sending Query. Msg doesn't match network configuration");
+        }
+
         @Override
         public void run() {
             Message msgOut = null;
@@ -171,12 +192,11 @@ public class IndexServer extends Thread {
                         // finally, add my id to path 
                         // and forward the message to all of my neighbors if TTL > 0
 
-                        if ( //#
-                                //I wont do it again if I started the Query       
-                                (host.getPeerID() != (int) qm.getPeerID())
-                                //#
-                                //It won't pass me again if this message passed thru me before
-                                && (!qm.searchPath(host.getPeerID()))) {
+                        P2PProtocol.HitMessage generateHitQuery = null;
+
+
+                        //I wont do it again if I started the Query 
+                        if (host.getPeerID() != qm.getPeerID()) {
                             //#
                             //Frisk myself:
                             //search local files
@@ -196,90 +216,28 @@ public class IndexServer extends Thread {
                                     //generate msg to send out
                                     P2PProtocol.Message forwardQueryMsgOut = protocol.new Message(forwardQuery);
                                     //send msg out to neighbour
-                                    String aNeighborHost = null;
-                                    int aNeighborPort = -1;
-                                    Socket aNeighborSocket = null;
-                                    for (PeerAddress aNeighbor : neighbors) {
-                                        aNeighborHost = aNeighbor.getPeerHost();
-                                        aNeighborPort = aNeighbor.getIndexServerPort();
-                                        aNeighborSocket = new Socket(aNeighborHost, aNeighborPort);
-                                        protocol.processOutput(aNeighborSocket.getOutputStream(), forwardQueryMsgOut);
-                                        aNeighborSocket.shutdownOutput();
-                                    }
+                                    this.send2Neighbors(forwardQueryMsgOut);
                                 }
                                 //## HitQuery-miss
                                 //prepare HitQuery msg
-                                P2PProtocol.HitMessage generateHitQuery = protocol.new HitMessage(qm);
+                                generateHitQuery = protocol.new HitMessage(qm);
                                 //ensure it is a miss
                                 generateHitQuery.miss();
-                                //### send to pop path or owner
-                                int HitQueryNextNode = -1;
-                                //owner
-                                if (generateHitQuery.size() == 0) {
-                                    HitQueryNextNode = (int) generateHitQuery.getPeerID();
-                                } else {
-                                    //pop path from deque
-                                    HitQueryNextNode = generateHitQuery.nextPath().intValue();
-                                }
-                                //generate msg to send out after pop or identified empty deque in the last step ONLY
-                                P2PProtocol.Message generateHitQueryMsgOut = protocol.new Message(generateHitQuery);
-                                //look up path from neighbour
-                                String theNeighbourHost = null;
-                                int theNeighbourPort = -1;
-                                for (PeerAddress neighbours : neighbors) {
-                                    if (neighbours.getPeerID() == HitQueryNextNode) {
-                                        theNeighbourHost = neighbours.getPeerHost();
-                                        theNeighbourPort = neighbours.getIndexServerPort();
-                                        break;
-                                    }
-                                }
-                                //Exceptions:
-                                if (theNeighbourHost == null || theNeighbourPort == -1) {
-                                    System.out.println("ERROR sending Query. Msg doesn't match network configuration");
-                                }
-
-                                //send msg out to THE neighbour
-                                Socket theNeighbourSocket = new Socket(theNeighbourHost, theNeighbourPort);
-                                protocol.processOutput(theNeighbourSocket.getOutputStream(), generateHitQueryMsgOut);
-                                theNeighbourSocket.shutdownOutput();
-
                             } else if (localResults.length >= 1) {
                                 //#hit
                                 //DO NOT forward any Query message
                                 //ONLY generate HitQuery Message
-                                P2PProtocol.HitMessage generateHitQuery = protocol.new HitMessage(qm);
+                                generateHitQuery = protocol.new HitMessage(qm);
                                 //ensure it is a hit
                                 generateHitQuery.hit((long) host.getPeerID(), host.getPeerHost(), host.getFileServerPort(), host.getIndexServerPort());
-                                //Send it back via reverse-path, either owner or pop path
-                                int HitQueryNextNode = -1;
-                                //owner
-                                if (generateHitQuery.size() == 0) {
-                                    HitQueryNextNode = (int) generateHitQuery.getPeerID();
-                                } else {
-                                    //pop path from deque
-                                    HitQueryNextNode = generateHitQuery.nextPath().intValue();
-                                }
-                                //generate msg to send out after pop or identified empty deque in the last step ONLY
-                                P2PProtocol.Message generateHitQueryMsgOut = protocol.new Message(generateHitQuery);
-                                //look up path from neighbour
-                                String theNeighbourHost = null;
-                                int theNeighbourPort = -1;
-                                for (PeerAddress neighbours : neighbors) {
-                                    if (neighbours.getPeerID() == HitQueryNextNode) {
-                                        theNeighbourHost = neighbours.getPeerHost();
-                                        theNeighbourPort = neighbours.getIndexServerPort();
-                                        break;
-                                    }
-                                }
-                                //Exceptions:
-                                if (theNeighbourHost == null || theNeighbourPort == -1) {
-                                    System.out.println("ERROR sending Query. Msg doesn't match network configuration");
-                                }
-                                //send msg out to THE neighbour
-                                Socket theNeighbourSocket = new Socket(theNeighbourHost, theNeighbourPort);
-                                protocol.preparedOutput(theNeighbourSocket.getOutputStream(), generateHitQueryMsgOut);
-                                theNeighbourSocket.shutdownOutput();
                             }
+                            //generate msg to send out after pop or identified empty deque in the last step ONLY
+                            P2PProtocol.Message generateHitQueryMsgOut = protocol.new Message(generateHitQuery);
+                            //look up path from neighbour
+                            PeerAddress neighbor = this.findANeighbor(generateHitQuery.nextPath());
+
+                            //send msg out to THE neighbour
+                            this.send2Peer(generateHitQueryMsgOut, neighbor.getPeerHost(), neighbor.getIndexServerPort());
                         }
 
                         //MAIN BRANCH
@@ -293,32 +251,16 @@ public class IndexServer extends Thread {
 
                         //# identify the ownership of the HitMsg
                         //prepare HitQuery msg
-                        P2PProtocol.HitMessage generateHitQuery = hm;
-                        int HitQueryNextNode = -1;
-                        if ((int) hm.getPeerID() != host.getPeerID()) {
+                        if (hm.getPeerID() != host.getPeerID()) {
                             //I didn't started it
-                            HitQueryNextNode = generateHitQuery.nextPath().intValue();
 
                             //generate msg to send out after pop or identified empty deque in the last step ONLY
-                            P2PProtocol.Message generateHitQueryMsgOut = protocol.new Message(generateHitQuery);
-                            //look up path from neighbour
-                            String theNeighbourHost = null;
-                            int theNeighbourPort = -1;
-                            for (PeerAddress neighbours : neighbors) {
-                                if (neighbours.getPeerID() == HitQueryNextNode) {
-                                    theNeighbourHost = neighbours.getPeerHost();
-                                    theNeighbourPort = neighbours.getIndexServerPort();
-                                    break;
-                                }
-                            }
-                            //Exceptions:
-                            if (theNeighbourHost == null || theNeighbourPort == -1) {
-                                System.out.println("ERROR sending Query. Msg doesn't match network configuration");
-                            }
+                            P2PProtocol.Message generateHitQueryMsgOut = protocol.new Message(hm);
+
+                            PeerAddress nextOne = this.findANeighbor(hm.nextPath());
+
                             //send msg out to THE neighbour
-                            Socket theNeighbourSocket = new Socket(theNeighbourHost, theNeighbourPort);
-                            protocol.processOutput(theNeighbourSocket.getOutputStream(), generateHitQueryMsgOut);
-                            theNeighbourSocket.shutdownOutput();
+                            this.send2Peer(generateHitQueryMsgOut, nextOne.getPeerHost(), nextOne.getIndexServerPort());
                         } else {
                             //I started it
                             //Ask if update is still allowed
@@ -327,7 +269,7 @@ public class IndexServer extends Thread {
                             FileHash.Entry newEntry = remoteFileHash.new Entry(hm.getPeerID(), hm.getFilename());
                             remoteFileHash.addEntry(newEntry);
                             //update peerHash
-                            PeerAddress toAddPeerHash = new PeerAddress((int) hm.getHitPeerID(), hm.getHitPeerHost(), hm.getHitPeerISPort(), hm.getHitPeerFSPort());
+                            PeerAddress toAddPeerHash = new PeerAddress(hm.getHitPeerID(), hm.getHitPeerHost(), hm.getHitPeerISPort(), hm.getHitPeerFSPort());
                             peerHash.addValue(hm.getHitPeerID(), toAddPeerHash);
                         }
                     }
@@ -335,7 +277,7 @@ public class IndexServer extends Thread {
                 if (msgOut == null) {
                     msgOut = protocol.new Message(Command.ERR);
                 }
-            } catch (IOException ex) {
+            } catch (Exception ex) {
                 Logger.getLogger(IndexServer.class.getName()).log(Level.SEVERE, null, ex);
                 msgOut = protocol.new Message(Command.ERR);
             } finally {
