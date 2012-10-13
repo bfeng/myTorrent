@@ -175,7 +175,7 @@ public class Peer implements P2PTransfer {
                 aNeighborHost = aNeighbor.getPeerHost();
                 aNeighborPort = aNeighbor.getIndexServerPort();
                 Socket socket = new Socket(aNeighborHost, aNeighborPort);
-                protocol.processOutput(socket.getOutputStream(), initQueryMsgOut);
+                protocol.preparedOutput(socket.getOutputStream(), initQueryMsgOut);
                 socket.shutdownOutput();
             } catch (UnknownHostException ex) {
                 Logger.getLogger(Peer.class.getName()).log(Level.SEVERE, null, ex);
