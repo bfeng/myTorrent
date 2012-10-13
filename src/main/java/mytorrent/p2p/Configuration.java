@@ -59,8 +59,8 @@ public class Configuration {
 
     private static PeerAddress map2PeerAddress(Map<String, Object> map) {
         PeerAddress pa = new PeerAddress();
-        pa.setPeerID((Integer) map.get("PeerID"));
-        pa.setPeerHost((String)map.get("PeerHost"));
+        pa.setPeerID((new Long((Integer) map.get("PeerID"))).longValue());
+        pa.setPeerHost((String) map.get("PeerHost"));
         pa.setFileServerPort((Integer) map.get("FileServerPort"));
         pa.setIndexServerPort((Integer) map.get("IndexServerPort"));
         return pa;
