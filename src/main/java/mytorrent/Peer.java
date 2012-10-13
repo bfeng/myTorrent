@@ -193,17 +193,15 @@ public class Peer implements P2PTransfer {
 
         Set<Long> found = new CopyOnWriteArraySet<Long>();
         int size = 0;
-        int timer = 60;
+        int timer = 60; // the maximum seconds it can wait
         while (true) {
             try {
-                Thread.sleep(5000);
+                Thread.sleep(1000);
                 long[] results = indexServer.getQueryResult(filename);
                 if (results != null) {
                     for (long r : results) {
                         found.add(r);
-                        System.out.print(r);
                     }
-                    System.out.println();
                 }
 
                 if (found.size() > size) {
