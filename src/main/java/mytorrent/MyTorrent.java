@@ -51,7 +51,7 @@ public class MyTorrent {
         //Start accepting userinputs
         boolean Running = true;
         while (Running) {
-            BannerManager.printCursor();
+            BannerManager.printCursor(mainPeer.getPeerId());
             String[] userinput = new mytorrent.gui.CommandParser().run();
             if (userinput[0].toLowerCase().startsWith("que")) {
                 /* Query */

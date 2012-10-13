@@ -196,11 +196,14 @@ public class Peer implements P2PTransfer {
         int timer = 60;
         while (true) {
             try {
+                Thread.sleep(5000);
                 long[] results = indexServer.getQueryResult(filename);
                 if (results != null) {
                     for (long r : results) {
                         found.add(r);
+                        System.out.print(r);
                     }
+                    System.out.println();
                 }
 
                 if (found.size() > size) {
@@ -212,7 +215,6 @@ public class Peer implements P2PTransfer {
                 if (timer-- < 0) {
                     break;
                 }
-                Thread.sleep(1000);
             } catch (InterruptedException ex) {
                 Logger.getLogger(Peer.class.getName()).log(Level.SEVERE, null, ex);
                 break;

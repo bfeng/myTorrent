@@ -31,8 +31,6 @@ public class BannerManager {
         System.out.println("* Author:      Bo Feng: A20273356 *");
         System.out.println("*          Sizhou Wang: A20249772 *");
         System.out.println("* * * * * * * * * * * * * * * * * *");
-
-
     }
 
     public static void printClientInstruction() {
@@ -45,6 +43,10 @@ public class BannerManager {
 
     public static void printCursor() {
         System.out.print("$ >>");
+    }
+
+    public static void printCursor(long peerId) {
+        System.out.print("Peer " + peerId + " >");
     }
 
     public static void printSearchReturns(FileHash.Entry[] entrytoprint) {
