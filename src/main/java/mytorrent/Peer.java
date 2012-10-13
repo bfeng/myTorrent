@@ -31,6 +31,8 @@ import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Set;
+import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import mytorrent.gui.BannerManager;
@@ -115,7 +117,7 @@ public class Peer implements P2PTransfer {
         try {
             this.indexServer.start();
             this.fileServer.start();
-            
+
             this.indexServer.updateFileHash(this.getSharedFiles());
 
             FileSystemManager fsManager = VFS.getManager();
@@ -188,12 +190,42 @@ public class Peer implements P2PTransfer {
         }
         //#-3
         //waiting and printing
-        try {
-            BannerManager.QueryWaiting();
-        } catch (InterruptedException ex) {
-            Logger.getLogger(Peer.class.getName()).log(Level.SEVERE, null, ex);
+
+        Set<Long> found = new CopyOnWriteArraySet<Long>();
+        int size = 0;
+        int timer = 60;
+        while (true) {
+            try {
+                long[] results = indexServer.getQueryResult(filename);
+                if (results != null) {
+                    for (long r : results) {
+                        found.add(r);
+                    }
+                }
+
+                if (found.size() > size) {
+                    size = found.size();
+                } else {
+                    break;
+                }
+
+                if (timer-- < 0) {
+                    break;
+                }
+                Thread.sleep(1000);
+            } catch (InterruptedException ex) {
+                Logger.getLogger(Peer.class.getName()).log(Level.SEVERE, null, ex);
+                break;
+            }
         }
-        //#-4
+
+
+//        try {
+//            BannerManager.QueryWaiting();
+//        } catch (InterruptedException ex) {
+//            Logger.getLogger(Peer.class.getName()).log(Level.SEVERE, null, ex);
+//        }
+//        //#-4
         //get return value struct
         FileHash.Entry[] returnStruct = indexServer.returnRemoteFileHash_for(filename);
         BannerManager.printSearchReturns(returnStruct);

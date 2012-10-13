@@ -79,24 +79,25 @@ public class BannerManager {
         System.out.println("  [Help]: See this message by typing \"help\"\n");
         System.out.println("  [Exit]: You can exit this client by typing \"exit\"\n");
     }
+    /*
+     public static void QueryWaiting() throws InterruptedException {
+     System.out.println("|                    Please Wait                   |");
+     System.out.print("|");
+     for (int i = 0; i < 16; i++) {
 
-    public static void QueryWaiting() throws InterruptedException {
-        System.out.println("|                    Please Wait                   |");
-        System.out.print("|");
-        for (int i = 0; i < 16; i++) {
-
-            System.out.print("=");
-            Thread.sleep(133);
-            System.out.print("=");
-            Thread.sleep(133);
-            System.out.print("=");
-            Thread.sleep(133);
-        }
-        System.out.print("==|\n");
+     System.out.print("=");
+     Thread.sleep(133);
+     System.out.print("=");
+     Thread.sleep(133);
+     System.out.print("=");
+     Thread.sleep(133);
+     }
+     System.out.print("==|\n");
 
 
 
-    }
+     }
+     */
 
     public static void obtainResult(String filename, int flag) {
         if (flag == 1) {
