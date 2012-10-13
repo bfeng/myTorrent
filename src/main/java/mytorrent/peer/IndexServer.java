@@ -35,6 +35,7 @@ import mytorrent.p2p.P2PProtocol.Command;
 import mytorrent.p2p.P2PProtocol.HitMessage;
 import mytorrent.p2p.P2PProtocol.Message;
 import mytorrent.p2p.P2PProtocol.QueryMessage;
+import mytorrent.p2p.P2PProtocol.Result;
 import mytorrent.p2p.PeerAddress;
 import mytorrent.p2p.PeerHash;
 
@@ -264,13 +265,14 @@ public class IndexServer extends Thread {
                         } else {
                             //I started it
                             //Ask if update is still allowed
-
-                            //update remotefilehash
-                            FileHash.Entry newEntry = remoteFileHash.new Entry(hm.getPeerID(), hm.getFilename());
-                            remoteFileHash.addEntry(newEntry);
-                            //update peerHash
-                            PeerAddress toAddPeerHash = new PeerAddress(hm.getHitPeerID(), hm.getHitPeerHost(), hm.getHitPeerISPort(), hm.getHitPeerFSPort());
-                            peerHash.addValue(hm.getHitPeerID(), toAddPeerHash);
+                            if (hm.getResult() == Result.HIT) {
+                                //update remotefilehash
+                                FileHash.Entry newEntry = remoteFileHash.new Entry(hm.getHitPeerID(), hm.getFilename());
+                                remoteFileHash.addEntry(newEntry);
+                                //update peerHash
+                                PeerAddress toAddPeerHash = new PeerAddress(hm.getHitPeerID(), hm.getHitPeerHost(), hm.getHitPeerISPort(), hm.getHitPeerFSPort());
+                                peerHash.addValue(hm.getHitPeerID(), toAddPeerHash);
+                            }
                         }
                     }
                 }
