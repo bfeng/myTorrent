@@ -62,8 +62,6 @@ public class Peer implements P2PTransfer {
     private final IndexServer indexServer;
     private final PeerAddress[] neighbors;
     private final PeerAddress host;
-    private P2PProtocol protocol;
-    private Socket socket = null;
 
     /**
      * This is the constructor of Peer.
@@ -120,7 +118,6 @@ public class Peer implements P2PTransfer {
             FileSystemManager fsManager = VFS.getManager();
             FileObject listendir = fsManager.resolveFile(new File("shared/").getAbsolutePath());
             DefaultFileMonitor fm = new DefaultFileMonitor(new FileListener() {
-
                 private synchronized void update() {
                     indexServer.updateFileHash(getSharedFiles());
                 }
@@ -160,6 +157,7 @@ public class Peer implements P2PTransfer {
 
     @Override
     public void query(String filename, long messageID, int TTL) {
+        P2PProtocol protocol = new P2PProtocol();
         //#-1
         //generate Query Msg
         P2PProtocol.QueryMessage initQueryMsg = protocol.new QueryMessage(host.getPeerID(), messageID, TTL);
@@ -176,7 +174,7 @@ public class Peer implements P2PTransfer {
             try {
                 aNeighborHost = aNeighbor.getPeerHost();
                 aNeighborPort = aNeighbor.getIndexServerPort();
-                socket = new Socket(aNeighborHost, aNeighborPort);
+                Socket socket = new Socket(aNeighborHost, aNeighborPort);
                 protocol.processOutput(socket.getOutputStream(), initQueryMsgOut);
                 socket.shutdownOutput();
             } catch (UnknownHostException ex) {
@@ -200,32 +198,35 @@ public class Peer implements P2PTransfer {
 
     }
 
-    public void internalquery(String filename) {
-        //#-1
-        //generate Query Msg
-        P2PProtocol.QueryMessage initQueryMsg = protocol.new QueryMessage(host.getPeerID(), -1, 9);
-        initQueryMsg.setFilename(filename);
-        //generate output MSG
-        P2PProtocol.Message initQueryMsgOut = protocol.new Message(initQueryMsg);
-        //init indexserver return value struct
-        indexServer.initUpdateRemoteFileHash_for(filename);
-        //#-2
-        //send them out to neighbours
-        String aNeighborHost = null;
-        int aNeighborPort = -1;
-        for (PeerAddress aNeighbor : neighbors) {
-            try {
-                aNeighborHost = aNeighbor.getPeerHost();
-                aNeighborPort = aNeighbor.getIndexServerPort();
-                socket = new Socket(aNeighborHost, aNeighborPort);
-                protocol.processOutput(socket.getOutputStream(), initQueryMsgOut);
-                socket.shutdownOutput();
-            } catch (UnknownHostException ex) {
-                Logger.getLogger(Peer.class.getName()).log(Level.SEVERE, null, ex);
-            } catch (IOException ex) {
-                Logger.getLogger(Peer.class.getName()).log(Level.SEVERE, null, ex);
-            }
-        }
+    private void internalquery(String filename) {
+        /*
+         P2PProtocl
+         //#-1
+         //generate Query Msg
+         P2PProtocol.QueryMessage initQueryMsg = protocol.new QueryMessage(host.getPeerID(), -1, 9);
+         initQueryMsg.setFilename(filename);
+         //generate output MSG
+         P2PProtocol.Message initQueryMsgOut = protocol.new Message(initQueryMsg);
+         //init indexserver return value struct
+         indexServer.initUpdateRemoteFileHash_for(filename);
+         //#-2
+         //send them out to neighbours
+         String aNeighborHost = null;
+         int aNeighborPort = -1;
+         for (PeerAddress aNeighbor : neighbors) {
+         try {
+         aNeighborHost = aNeighbor.getPeerHost();
+         aNeighborPort = aNeighbor.getIndexServerPort();
+         socket = new Socket(aNeighborHost, aNeighborPort);
+         protocol.processOutput(socket.getOutputStream(), initQueryMsgOut);
+         socket.shutdownOutput();
+         } catch (UnknownHostException ex) {
+         Logger.getLogger(Peer.class.getName()).log(Level.SEVERE, null, ex);
+         } catch (IOException ex) {
+         Logger.getLogger(Peer.class.getName()).log(Level.SEVERE, null, ex);
+         }
+         }
+         */
     }
 
     @Override
@@ -234,7 +235,6 @@ public class Peer implements P2PTransfer {
         final String filenametoobtain = filename;
         new Thread(
                 new Runnable() {
-
                     @Override
                     public void run() {
                         //Perform Query

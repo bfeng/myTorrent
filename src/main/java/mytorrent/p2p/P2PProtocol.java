@@ -135,7 +135,11 @@ public class P2PProtocol {
         }
 
         public synchronized Long nextPath() {
-            return this.message.nextPath();
+            Long peerId = this.message.nextPath();
+            if(peerId==null) {
+                peerId = this.message.getPeerID();
+            }
+            return peerId;
         }
 
         public long getPeerID() {

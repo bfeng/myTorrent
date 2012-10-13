@@ -30,7 +30,7 @@ package mytorrent.p2p;
  */
 public class PeerAddress {
 
-    private int peerID;
+    private long peerID;
     private String peerHost;
     private int fileServerPort;
     private int indexServerPort;
@@ -38,18 +38,18 @@ public class PeerAddress {
     public PeerAddress() {
     }
 
-    public PeerAddress(int peerID, String peerHost, int indexServerPort, int fileServerPort) {
+    public PeerAddress(long peerID, String peerHost, int indexServerPort, int fileServerPort) {
         this.peerID = peerID;
         this.peerHost = peerHost;
         this.fileServerPort = fileServerPort;
         this.indexServerPort = indexServerPort;
     }
 
-    public int getPeerID() {
+    public long getPeerID() {
         return peerID;
     }
 
-    public void setPeerID(int peerID) {
+    public void setPeerID(long peerID) {
         this.peerID = peerID;
     }
 
@@ -103,8 +103,8 @@ public class PeerAddress {
 
     @Override
     public int hashCode() {
-        int hash = 5;
-        hash = 89 * hash + this.peerID;
+        int hash = 7;
+        hash = 89 * hash + (int) (this.peerID ^ (this.peerID >>> 32));
         hash = 89 * hash + (this.peerHost != null ? this.peerHost.hashCode() : 0);
         hash = 89 * hash + this.fileServerPort;
         hash = 89 * hash + this.indexServerPort;
