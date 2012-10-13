@@ -142,6 +142,7 @@ public class IndexServer extends Thread {
 
         public Worker(Socket socket) {
             this.socket = socket;
+            this.protocol = new P2PProtocol();
         }
 
         private boolean checkMessage(P2PProtocol.Message in) {

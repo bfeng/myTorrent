@@ -113,7 +113,10 @@ public class Peer implements P2PTransfer {
     @Override
     public void startup() {
         try {
+            this.indexServer.start();
             this.fileServer.start();
+            
+            this.indexServer.updateFileHash(this.getSharedFiles());
 
             FileSystemManager fsManager = VFS.getManager();
             FileObject listendir = fsManager.resolveFile(new File("shared/").getAbsolutePath());
