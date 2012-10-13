@@ -277,7 +277,7 @@ public class IndexServer extends Thread {
                                 }
                                 //send msg out to THE neighbour
                                 Socket theNeighbourSocket = new Socket(theNeighbourHost, theNeighbourPort);
-                                protocol.processOutput(theNeighbourSocket.getOutputStream(), generateHitQueryMsgOut);
+                                protocol.preparedOutput(theNeighbourSocket.getOutputStream(), generateHitQueryMsgOut);
                                 theNeighbourSocket.shutdownOutput();
                             }
                         }
