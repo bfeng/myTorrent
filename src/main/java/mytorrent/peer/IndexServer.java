@@ -153,15 +153,15 @@ public class IndexServer extends Thread {
             return false;
         }
 
-        private void send2Peer(Message msg, String host, int port) throws IOException {
-            Socket client = new Socket(host, port);
+        private void send2Peer(Message msg, PeerAddress pa) throws IOException {
+            Socket client = new Socket(pa.getPeerHost(), pa.getIndexServerPort());
             protocol.preparedOutput(client.getOutputStream(), msg);
             client.shutdownOutput();
         }
 
         private void send2Neighbors(Message msg) throws IOException {
             for (PeerAddress n : neighbors) {
-                this.send2Peer(msg, n.getPeerHost(), n.getIndexServerPort());
+                this.send2Peer(msg, n);
             }
         }
 
@@ -193,11 +193,10 @@ public class IndexServer extends Thread {
                         // finally, add my id to path 
                         // and forward the message to all of my neighbors if TTL > 0
 
-                        P2PProtocol.HitMessage generateHitQuery = null;
-
 
                         //I wont do it again if I started the Query 
                         if (host.getPeerID() != qm.getPeerID()) {
+                            P2PProtocol.HitMessage generateHitQuery = protocol.new HitMessage(qm);
                             //#
                             //Frisk myself:
                             //search local files
@@ -205,31 +204,9 @@ public class IndexServer extends Thread {
                             //execute Query or HitQuery while preparing message
                             if (localResults.length < 1) {
                                 //#miss
-                                //prepare query and hit query
-                                //## Query
-                                if (qm.isLive()) {
-                                    //prepare Query msg
-                                    P2PProtocol.QueryMessage forwardQuery = qm;
-                                    //Decrement TTL
-                                    forwardQuery.decrementTTL();
-                                    //Add Path
-                                    forwardQuery.addPath(host.getPeerID());
-                                    //generate msg to send out
-                                    P2PProtocol.Message forwardQueryMsgOut = protocol.new Message(forwardQuery);
-                                    //send msg out to neighbour
-                                    this.send2Neighbors(forwardQueryMsgOut);
-                                }
-                                //## HitQuery-miss
-                                //prepare HitQuery msg
-                                generateHitQuery = protocol.new HitMessage(qm);
-                                //ensure it is a miss
                                 generateHitQuery.miss();
                             } else if (localResults.length >= 1) {
                                 //#hit
-                                //DO NOT forward any Query message
-                                //ONLY generate HitQuery Message
-                                generateHitQuery = protocol.new HitMessage(qm);
-                                //ensure it is a hit
                                 generateHitQuery.hit((long) host.getPeerID(), host.getPeerHost(), host.getFileServerPort(), host.getIndexServerPort());
                             }
                             //generate msg to send out after pop or identified empty deque in the last step ONLY
@@ -238,7 +215,19 @@ public class IndexServer extends Thread {
                             PeerAddress neighbor = this.findANeighbor(generateHitQuery.nextPath());
 
                             //send msg out to THE neighbour
-                            this.send2Peer(generateHitQueryMsgOut, neighbor.getPeerHost(), neighbor.getIndexServerPort());
+                            this.send2Peer(generateHitQueryMsgOut, neighbor);
+
+                            //## Query
+                            if (qm.isLive()) {
+                                //Decrement TTL
+                                qm.decrementTTL();
+                                //Add Path
+                                qm.addPath(host.getPeerID());
+                                //generate msg to send out
+                                P2PProtocol.Message forwardQueryMsgOut = protocol.new Message(qm);
+                                //send msg out to neighbour
+                                this.send2Neighbors(forwardQueryMsgOut);
+                            }
                         }
 
                         //MAIN BRANCH
@@ -256,12 +245,12 @@ public class IndexServer extends Thread {
                             //I didn't started it
 
                             //generate msg to send out after pop or identified empty deque in the last step ONLY
-                            P2PProtocol.Message generateHitQueryMsgOut = protocol.new Message(hm);
+                            P2PProtocol.Message hitOut = protocol.new Message(hm);
 
                             PeerAddress nextOne = this.findANeighbor(hm.nextPath());
 
                             //send msg out to THE neighbour
-                            this.send2Peer(generateHitQueryMsgOut, nextOne.getPeerHost(), nextOne.getIndexServerPort());
+                            this.send2Peer(hitOut, nextOne);
                         } else {
                             //I started it
                             //Ask if update is still allowed
