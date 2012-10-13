@@ -134,9 +134,11 @@ public class P2PProtocol {
             this.message = qm.message;
         }
 
-        public synchronized Long nextPath() {
-            Long peerId = this.message.nextPath();
-            if(peerId==null) {
+        public synchronized long nextPath() {
+            long peerId;
+            try {
+                peerId = this.message.nextPath();
+            } catch (java.util.NoSuchElementException e) {
                 peerId = this.message.getPeerID();
             }
             return peerId;
