@@ -222,7 +222,7 @@ public class P2PTest {
                     // reply a hit
                     HitMessage hm = protocol.new HitMessage(gotQuery);
                     hm.hit(101, "192.168.1.1", 5711, 5712);
-                    assertEquals(102, hm.nextPath().longValue());
+                    assertEquals(102, hm.nextPath());
                     Message msgOut = protocol.new Message(hm);
                     protocol.processOutput(outM, msgOut);
                 }
