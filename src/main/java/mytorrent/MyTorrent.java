@@ -55,9 +55,15 @@ public class MyTorrent {
             String[] userinput = new mytorrent.gui.CommandParser().run();
             if (userinput[0].toLowerCase().startsWith("que")) {
                 /* Query */
+
+                if (userinput.length < 3) {
+                    System.out.println("Wrong parameters");
+                    continue;
+                }
+
                 mainPeer.query(userinput[1], MessageID, Integer.valueOf(userinput[2]));
                 MessageID++;
-                
+
             } else if (userinput[0].toLowerCase().startsWith("obt")) {
                 /* Obtain */
                 mainPeer.obtain(userinput[1]);
