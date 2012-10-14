@@ -214,18 +214,7 @@ public class IndexServer extends Thread {
                                 generateHitQuery.hit((long) host.getPeerID(), host.getPeerHost(), host.getFileServerPort(), host.getIndexServerPort());
                             }
                             //generate msg to send out after pop or identified empty deque in the last step ONLY
-                            P2PProtocol.Message generateHitQueryMsgOut = protocol.new Message(generateHitQuery);
-                            //look up path from neighbour
-                            PeerAddress neighbor = null;
-                            try {
-                                neighbor = this.findANeighbor(generateHitQuery.nextPath());
-                            } catch (Exception e) {
-                                Logger.getLogger(IndexServer.class.getName()).log(Level.SEVERE, "[QUERYMSG] This is definitely a bug:\n"
-                                        + "Path: " + generateHitQuery.debugPath(), e);
-                            }
-
-                            //send msg out to THE neighbour
-                            this.send2Peer(generateHitQueryMsgOut, neighbor);
+                            msgOut = protocol.new Message(generateHitQuery);
 
                             //## Query
                             if (qm.isLive()) {
