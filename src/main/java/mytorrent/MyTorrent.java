@@ -66,7 +66,13 @@ public class MyTorrent {
 
             } else if (userinput[0].toLowerCase().startsWith("obt")) {
                 /* Obtain */
-                mainPeer.obtain(userinput[1]);
+                if (userinput.length < 3) {
+                    System.out.println("Wrong parameters");
+                    continue;
+                }
+
+                mainPeer.obtain(userinput[1], MessageID, Integer.valueOf(userinput[2]));
+                MessageID++;
 
             } else if (userinput[0].toLowerCase().equals("exit")) {
                 //Turn off peer

@@ -96,12 +96,8 @@ public class IndexServer extends Thread {
         remoteFileHash.removeAllFilename(filename);
     }
 
-    public String obtain_host_for(Long peerID) {
-        return peerHash.findIndexServerAddress(peerID);
-    }
-
-    public int obtain_FSport_for(Long peerID) {
-        return peerHash.findFileServerPort(peerID);
+    public PeerAddress getPeerAddress(long peerID) {
+        return peerHash.get(peerID);
     }
 
     @Override

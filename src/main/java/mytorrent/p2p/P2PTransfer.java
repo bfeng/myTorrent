@@ -32,7 +32,7 @@ public interface P2PTransfer {
 
     public void query(String filename, long messageID, int TTL);
 
-    public void obtain(String filename);
+    public void obtain(final String filename, final int messageID, final int TTL);
 
     public boolean ping();
 
