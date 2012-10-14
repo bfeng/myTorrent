@@ -237,7 +237,7 @@ public class Peer {
                         try {
                             innerQuery(filename, messageID, TTL);
                             long[] results = indexServer.getQueryResult(filename);
-                            if (results.length == 0) {
+                            if (results==null || results.length == 0) {
                                 return;
                             }
                             PeerAddress pa = indexServer.getPeerAddress(results[0]);
