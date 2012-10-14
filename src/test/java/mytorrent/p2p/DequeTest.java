@@ -74,10 +74,12 @@ public class DequeTest {
         
         hm.nextPath();
         
-        assertEquals("[101] -> 102", qm.debugPath());
+        assertEquals("[101] -> 102", hm.debugPath());
         
         hm.nextPath();
         
-        assertEquals("[101]", qm.debugPath());
+        assertEquals("[101]", hm.debugPath());
+        
+        assertEquals("[101] -> 102 -> 103", qm.debugPath());
     }
 }
