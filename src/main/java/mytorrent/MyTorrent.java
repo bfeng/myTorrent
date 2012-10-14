@@ -61,7 +61,7 @@ public class MyTorrent {
                     continue;
                 }
 
-                mainPeer.query(userinput[1], MessageID, Integer.valueOf(userinput[2]));
+                mainPeer.query(userinput[1], MessageID, Integer.valueOf(userinput[2]), false);
                 MessageID++;
 
             } else if (userinput[0].toLowerCase().startsWith("obt")) {
@@ -82,6 +82,42 @@ public class MyTorrent {
                 //Exit while and end main()
                 //Enter here only if > Exit while and end main()
                 Running = false;
+            } else if (userinput[0].toLowerCase().equals("test")) {
+                if (userinput.length < 5) {
+                    System.err.println("Wrong parameters");
+
+                    System.err.print("Usage: test query|obtian filename TTL repeat");
+
+                    continue;
+                }
+                int tests = 3;
+                if (userinput[1].equalsIgnoreCase("query")) {
+                    int repeat = Integer.parseInt(userinput[4]);
+
+                    long[] time = new long[tests];
+                    for (int j = 0; j < tests; j++) {
+                        long start = System.currentTimeMillis();
+                        for (int i = 0; i < repeat; i++) {
+                            mainPeer.query(userinput[2], MessageID, Integer.parseInt(userinput[3]), true);
+                        }
+                        long end = System.currentTimeMillis();
+                        time[j] = end - start;
+                    }
+                    System.out.printf("Query: %d, %d, %d\n", time[0], time[1], time[2]);
+                } else if (userinput[1].equalsIgnoreCase("obtain")) {
+                    int repeat = Integer.parseInt(userinput[4]);
+
+                    long[] time = new long[tests];
+                    for (int j = 0; j < tests; j++) {
+                        long start = System.currentTimeMillis();
+                        for (int i = 0; i < repeat; i++) {
+                            mainPeer.obtain(userinput[2], MessageID, Integer.parseInt(userinput[3]));
+                        }
+                        long end = System.currentTimeMillis();
+                        time[j] = end - start;
+                    }
+                    System.out.printf("Query: %d, %d, %d\n", time[0], time[1], time[2]);
+                }
             } else if (userinput[0].toLowerCase().equals("help")) {
                 BannerManager.printHelp();
 
