@@ -181,7 +181,7 @@ public class IndexServer extends Thread {
 
             try {
                 Message msgIn = protocol.processInput(socket.getInputStream());
-                if (!ignoreMessage(msgIn)) {
+                if (ignoreMessage(msgIn)) {
                     return;
                 } else {
                     Message msgOut = protocol.new Message(Command.ING);
