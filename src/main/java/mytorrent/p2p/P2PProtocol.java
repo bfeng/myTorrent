@@ -8,8 +8,11 @@ import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.util.ArrayDeque;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.Deque;
 import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -30,7 +33,7 @@ public class P2PProtocol {
         public AbstractMessage(long peerId, long messageId) {
             this.peerID = peerId;
             this.messageID = messageId;
-            this.stack = new ArrayDeque<Long>();
+            this.stack = new LinkedList<Long>();
             this.filename = null;
         }
 
@@ -153,7 +156,9 @@ public class P2PProtocol {
         private HitAddress hitAddress;
 
         public HitMessage(QueryMessage qm) {
-            this.message = qm.message;
+            this.message = new AbstractMessage(qm.getPeerID(), qm.getMessageID());
+            this.message.filename = qm.getFilename();
+            this.message.stack = (Deque<Long>)((LinkedList<Long>) qm.message.stack).clone();
         }
 
         public synchronized long nextPath() {
