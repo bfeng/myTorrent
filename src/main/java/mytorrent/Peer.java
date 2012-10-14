@@ -188,7 +188,7 @@ public class Peer {
 
         Set<Long> found = new CopyOnWriteArraySet<Long>();
         int size = 0;
-        int timer = 60; // the maximum seconds it can wait
+        int timer = 5; // the maximum seconds it can wait
         while (true) {
             try {
                 Thread.sleep(1000);
