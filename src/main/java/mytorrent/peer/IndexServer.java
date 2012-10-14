@@ -27,6 +27,7 @@ import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.SocketException;
+import java.util.Arrays;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import mytorrent.p2p.FileHash;
@@ -162,12 +163,17 @@ public class IndexServer extends Thread {
         }
 
         private PeerAddress findANeighbor(long neighborID) {
-            for (PeerAddress neighbours : neighbors) {
-                if (neighbours.getPeerID() == neighborID) {
-                    return neighbours;
+            long[] neiIDs = new long[neighbors.length];
+            for (int i = 0; i < neighbors.length; i++) {
+                PeerAddress pa = neighbors[i];
+                neiIDs[i] = pa.getPeerID();
+                if (pa.getPeerID() == neighborID) {
+                    return pa;
                 }
             }
-            throw new RuntimeException("ERROR sending Query. Msg doesn't match network configuration");
+            throw new RuntimeException(
+                    String.format("ERROR sending Query to %d. Known neighbors: [%s]",
+                    neighborID, Arrays.toString(neiIDs)));
         }
 
         @Override
