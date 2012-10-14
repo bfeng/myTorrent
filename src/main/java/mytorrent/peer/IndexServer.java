@@ -191,8 +191,6 @@ public class IndexServer extends Thread {
                 if (msgIn.getCmd() == Command.QUERYMSG) {
                     QueryMessage qm = msgIn.getQueryMessage();
 
-                    Logger.getLogger(IndexServer.class.getName()).log(Level.SEVERE, qm.debugPath());
-
                     // Todo: process this message
                     // if this is my message, then ignore
                     // else search that file
@@ -211,9 +209,9 @@ public class IndexServer extends Thread {
                             hitQuery.hit((long) host.getPeerID(), host.getPeerHost(), host.getFileServerPort(), host.getIndexServerPort());
                         }
                         Message msgOut = protocol.new Message(hitQuery);
-                        
+
                         Logger.getLogger(IndexServer.class.getName()).log(Level.SEVERE, "\nThe hit message should follow the reversed path:\nPath: {0}", hitQuery.debugPath());
-                        
+
                         PeerAddress pa = this.findANeighbor(hitQuery.nextPath());
                         this.send2Peer(msgOut, pa);
 
@@ -224,7 +222,7 @@ public class IndexServer extends Thread {
                             qm.addPath(host.getPeerID());
                             //generate msg to send out
                             P2PProtocol.Message forwardQueryMsgOut = protocol.new Message(qm);
-                            Logger.getLogger(IndexServer.class.getName()).log(Level.SEVERE, qm.debugPath());
+                            Logger.getLogger(IndexServer.class.getName()).log(Level.SEVERE, "\nThe query message should contain the full path:\nPath: {0}", qm.debugPath());
                             //send msg out to neighbour
                             this.send2Neighbors(forwardQueryMsgOut);
                         }
