@@ -51,7 +51,7 @@ public class IndexServer extends Thread {
     private final PeerAddress host;
     private boolean running;
     private ServerSocket listener;
-    private static FileHash fileHash = new FileHash();
+    private static FileHash localFileHash = new FileHash();
     private static FileHash remoteFileHash = new FileHash();
     private static PeerHash peerHash = new PeerHash();
 
@@ -63,7 +63,7 @@ public class IndexServer extends Thread {
     public void updateFileHash(String[] files) {
         //#1
         //Clear current filehash
-        fileHash.emptyAll();
+        localFileHash.emptyAll();
         //#2
         //Get host peerId for filehash struct
         long hostpeerId = host.getPeerID();
@@ -71,7 +71,7 @@ public class IndexServer extends Thread {
         //Reconstruct filehash
         if (files != null && files.length > 0) {
             for (String item : files) {
-                fileHash.addEntry(fileHash.new Entry(hostpeerId, item));
+                localFileHash.addEntry(localFileHash.new Entry(hostpeerId, item));
             }
         }
     }
@@ -202,7 +202,7 @@ public class IndexServer extends Thread {
                             //#
                             //Frisk myself:
                             //search local files
-                            FileHash.Entry localResults[] = fileHash.search(qm.getFilename());
+                            FileHash.Entry localResults[] = localFileHash.search(qm.getFilename());
                             //execute Query or HitQuery while preparing message
                             if (localResults.length < 1) {
                                 //#miss
@@ -214,7 +214,14 @@ public class IndexServer extends Thread {
                             //generate msg to send out after pop or identified empty deque in the last step ONLY
                             P2PProtocol.Message generateHitQueryMsgOut = protocol.new Message(generateHitQuery);
                             //look up path from neighbour
-                            PeerAddress neighbor = this.findANeighbor(generateHitQuery.nextPath());
+                            PeerAddress neighbor = null;
+                            try {
+                                neighbor = this.findANeighbor(generateHitQuery.nextPath());
+                            } catch (Exception e) {
+                                System.err.println("[QUERYMSG] This is definitely a bug:");
+                                System.err.println("Path: " + generateHitQuery.debugPath());
+                                e.printStackTrace();
+                            }
 
                             //send msg out to THE neighbour
                             this.send2Peer(generateHitQueryMsgOut, neighbor);
@@ -249,7 +256,14 @@ public class IndexServer extends Thread {
                             //generate msg to send out after pop or identified empty deque in the last step ONLY
                             P2PProtocol.Message hitOut = protocol.new Message(hm);
 
-                            PeerAddress nextOne = this.findANeighbor(hm.nextPath());
+                            PeerAddress nextOne = null;
+                            try {
+                                nextOne = this.findANeighbor(hm.nextPath());
+                            } catch (Exception e) {
+                                System.err.println("[HITMSG] This is definitely a bug:");
+                                System.err.println("Path: " + hm.debugPath());
+                                e.printStackTrace();
+                            }
 
                             //send msg out to THE neighbour
                             this.send2Peer(hitOut, nextOne);

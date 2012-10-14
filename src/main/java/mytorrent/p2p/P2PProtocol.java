@@ -9,6 +9,7 @@ import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.util.ArrayDeque;
 import java.util.Deque;
+import java.util.Iterator;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -72,6 +73,22 @@ public class P2PProtocol {
         public int size() {
             return stack.size();
         }
+
+        public String debugPath() {
+            StringBuilder sb = new StringBuilder("[");
+            sb.append(peerID);
+            sb.append("]");
+            if (!stack.isEmpty()) {
+                sb.append(" -> ");
+                for (Iterator<Long> iter = stack.descendingIterator(); iter.hasNext();) {
+                    sb.append(iter.next());
+                    if (iter.hasNext()) {
+                        sb.append(" -> ");
+                    }
+                }
+            }
+            return sb.toString();
+        }
     }
 
     public class QueryMessage {
@@ -115,12 +132,17 @@ public class P2PProtocol {
         public String getFilename() {
             return this.message.getFilename();
         }
+
         public void setFilename(String filename) {
             this.message.setFilename(filename);
         }
 
         public int size() {
             return message.size();
+        }
+
+        public String debugPath() {
+            return this.message.debugPath();
         }
     }
 
@@ -192,7 +214,6 @@ public class P2PProtocol {
             }
             return 0;
         }
-        
 
         public void setFilename(String filename) {
             this.message.setFilename(filename);
@@ -219,6 +240,10 @@ public class P2PProtocol {
 
         public int size() {
             return message.size();
+        }
+
+        public String debugPath() {
+            return this.message.debugPath();
         }
     }
 
