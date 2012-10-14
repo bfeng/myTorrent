@@ -81,7 +81,7 @@ public class ConfigurationTest {
     @Test
     public void testGetHostAddress() {
         System.out.println("getHostAddress");
-        PeerAddress expResult = new PeerAddress(101, "192.168.1.101", 5700, 5711);
+        PeerAddress expResult = new PeerAddress(101L, "192.168.1.101", 5700, 5711);
         PeerAddress result = instance.getHostAddress();
         assertEquals(expResult, result);
     }
@@ -92,7 +92,7 @@ public class ConfigurationTest {
     @Test
     public void testGetNeighbors() {
         System.out.println("getNeighbors");
-        PeerAddress[] expResult = {new PeerAddress(102, "192.168.1.102", 5700, 5711), new PeerAddress(103, "192.168.1.103", 5700, 5711)};
+        PeerAddress[] expResult = {new PeerAddress(102L, "192.168.1.102", 5700, 5711), new PeerAddress(103, "192.168.1.103", 5700, 5711)};
         PeerAddress[] result = instance.getNeighbors();
         assertArrayEquals(expResult, result);
     }
