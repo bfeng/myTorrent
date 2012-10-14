@@ -218,9 +218,8 @@ public class IndexServer extends Thread {
                             try {
                                 neighbor = this.findANeighbor(generateHitQuery.nextPath());
                             } catch (Exception e) {
-                                System.err.println("[QUERYMSG] This is definitely a bug:");
-                                System.err.println("Path: " + generateHitQuery.debugPath());
-                                e.printStackTrace();
+                                Logger.getLogger(IndexServer.class.getName()).log(Level.SEVERE, "[QUERYMSG] This is definitely a bug:\n"
+                                        + "Path: " + generateHitQuery.debugPath(), e);
                             }
 
                             //send msg out to THE neighbour
@@ -260,9 +259,8 @@ public class IndexServer extends Thread {
                             try {
                                 nextOne = this.findANeighbor(hm.nextPath());
                             } catch (Exception e) {
-                                System.err.println("[HITMSG] This is definitely a bug:");
-                                System.err.println("Path: " + hm.debugPath());
-                                e.printStackTrace();
+                                Logger.getLogger(IndexServer.class.getName()).log(Level.SEVERE, "[HITMSG] This is definitely a bug:\n"
+                                        + "Path: " + hm.debugPath(), e);
                             }
 
                             //send msg out to THE neighbour
