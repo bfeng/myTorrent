@@ -203,15 +203,18 @@ public class IndexServer extends Thread {
                     // and forward the message to all of my neighbors if TTL > 0
 
                     if (host.getPeerID() != qm.getPeerID()) {
-                        P2PProtocol.HitMessage generateHitQuery = protocol.new HitMessage(qm);
+                        P2PProtocol.HitMessage hitQuery = protocol.new HitMessage(qm);
                         FileHash.Entry localResults[] = localFileHash.search(qm.getFilename());
                         if (localResults.length < 1) {
-                            generateHitQuery.miss();
+                            hitQuery.miss();
                         } else if (localResults.length >= 1) {
-                            generateHitQuery.hit((long) host.getPeerID(), host.getPeerHost(), host.getFileServerPort(), host.getIndexServerPort());
+                            hitQuery.hit((long) host.getPeerID(), host.getPeerHost(), host.getFileServerPort(), host.getIndexServerPort());
                         }
-                        Message msgOut = protocol.new Message(generateHitQuery);
-                        PeerAddress pa = this.findANeighbor(generateHitQuery.nextPath());
+                        Message msgOut = protocol.new Message(hitQuery);
+                        
+                        Logger.getLogger(IndexServer.class.getName()).log(Level.SEVERE, "\nThe hit message should follow the reversed path:\nPath: {0}", hitQuery.debugPath());
+                        
+                        PeerAddress pa = this.findANeighbor(hitQuery.nextPath());
                         this.send2Peer(msgOut, pa);
 
                         if (qm.isLive()) {
