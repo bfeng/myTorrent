@@ -233,6 +233,7 @@ public class IndexServer extends Thread {
                                 qm.addPath(host.getPeerID());
                                 //generate msg to send out
                                 P2PProtocol.Message forwardQueryMsgOut = protocol.new Message(qm);
+                                Logger.getLogger(IndexServer.class.getName()).log(Level.SEVERE, qm.debugPath());
                                 //send msg out to neighbour
                                 this.send2Neighbors(forwardQueryMsgOut);
                             }
