@@ -59,7 +59,7 @@ public class FileServer extends Thread {
                     P2PSender sender = new P2PSender(sock);
                     sender.start();
                 } catch (SocketException socketException) {
-                    Logger.getLogger(FileServer.class.getName()).log(Level.SEVERE, "socket error", socketException);
+                    Logger.getLogger(FileServer.class.getName()).log(Level.FINE, "socket error", socketException);
                     continue;
                 }
             }
