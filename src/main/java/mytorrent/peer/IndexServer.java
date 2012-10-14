@@ -185,6 +185,8 @@ public class IndexServer extends Thread {
                     //MAIN BRANCH
                     if (msgIn.getCmd() == Command.QUERYMSG) {
                         QueryMessage qm = msgIn.getQueryMessage();
+                        
+                        Logger.getLogger(IndexServer.class.getName()).log(Level.SEVERE, qm.debugPath());
 
                         // Todo: process this message
                         // if this is my message, then ignore
