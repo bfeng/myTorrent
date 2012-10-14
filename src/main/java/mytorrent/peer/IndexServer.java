@@ -143,8 +143,8 @@ public class IndexServer extends Thread {
             this.protocol = new P2PProtocol();
         }
 
-        private boolean checkMessage(P2PProtocol.Message in) {
-            if (in != null && in.getCmd() != null) {
+        private boolean ignoreMessage(P2PProtocol.Message in) {
+            if (in == null && in.getCmd() == null && in.getCmd() == Command.ERR && in.getCmd() == Command.ING) {
                 return true;
             }
             return false;
@@ -178,112 +178,86 @@ public class IndexServer extends Thread {
 
         @Override
         public void run() {
-            Message msgOut = null;
+
             try {
                 Message msgIn = protocol.processInput(socket.getInputStream());
-                if (checkMessage(msgIn)) {
-                    //MAIN BRANCH
-                    if (msgIn.getCmd() == Command.QUERYMSG) {
-                        QueryMessage qm = msgIn.getQueryMessage();
-                        
-                        Logger.getLogger(IndexServer.class.getName()).log(Level.SEVERE, qm.debugPath());
+                if (!ignoreMessage(msgIn)) {
+                    return;
+                } else {
+                    Message msgOut = protocol.new Message(Command.ING);
+                    protocol.preparedOutput(socket.getOutputStream(), msgOut);
+                    socket.shutdownOutput();
+                }
+                if (msgIn.getCmd() == Command.QUERYMSG) {
+                    QueryMessage qm = msgIn.getQueryMessage();
 
-                        // Todo: process this message
-                        // if this is my message, then ignore
-                        // else search that file
-                        // if I can find the file
-                        // return a hitmessage with result
-                        // else return a hitmessage with miss
-                        // finally, add my id to path 
-                        // and forward the message to all of my neighbors if TTL > 0
+                    Logger.getLogger(IndexServer.class.getName()).log(Level.SEVERE, qm.debugPath());
 
+                    // Todo: process this message
+                    // if this is my message, then ignore
+                    // else search that file
+                    // if I can find the file
+                    // return a hitmessage with result
+                    // else return a hitmessage with miss
+                    // finally, add my id to path 
+                    // and forward the message to all of my neighbors if TTL > 0
 
-                        //I wont do it again if I started the Query 
-                        if (host.getPeerID() != qm.getPeerID()) {
-                            P2PProtocol.HitMessage generateHitQuery = protocol.new HitMessage(qm);
-                            //#
-                            //Frisk myself:
-                            //search local files
-                            FileHash.Entry localResults[] = localFileHash.search(qm.getFilename());
-                            //execute Query or HitQuery while preparing message
-                            if (localResults.length < 1) {
-                                //#miss
-                                generateHitQuery.miss();
-                            } else if (localResults.length >= 1) {
-                                //#hit
-                                generateHitQuery.hit((long) host.getPeerID(), host.getPeerHost(), host.getFileServerPort(), host.getIndexServerPort());
-                            }
-                            //generate msg to send out after pop or identified empty deque in the last step ONLY
-                            msgOut = protocol.new Message(generateHitQuery);
-
-                            //## Query
-                            if (qm.isLive()) {
-                                //Decrement TTL
-                                qm.decrementTTL();
-                                //Add Path
-                                qm.addPath(host.getPeerID());
-                                //generate msg to send out
-                                P2PProtocol.Message forwardQueryMsgOut = protocol.new Message(qm);
-                                Logger.getLogger(IndexServer.class.getName()).log(Level.SEVERE, qm.debugPath());
-                                //send msg out to neighbour
-                                this.send2Neighbors(forwardQueryMsgOut);
-                            }
+                    if (host.getPeerID() != qm.getPeerID()) {
+                        P2PProtocol.HitMessage generateHitQuery = protocol.new HitMessage(qm);
+                        FileHash.Entry localResults[] = localFileHash.search(qm.getFilename());
+                        if (localResults.length < 1) {
+                            generateHitQuery.miss();
+                        } else if (localResults.length >= 1) {
+                            generateHitQuery.hit((long) host.getPeerID(), host.getPeerHost(), host.getFileServerPort(), host.getIndexServerPort());
                         }
+                        Message msgOut = protocol.new Message(generateHitQuery);
+                        PeerAddress pa = this.findANeighbor(generateHitQuery.nextPath());
+                        this.send2Peer(msgOut, pa);
 
-                        //MAIN BRANCH
-                        //revision: add a machenism for updating remoteFileHash
-                    } else if (msgIn.getCmd() == Command.HITMSG) {
-                        HitMessage hm = msgIn.getHitMessage();
+                        if (qm.isLive()) {
+                            //Decrement TTL
+                            qm.decrementTTL();
+                            //Add Path
+                            qm.addPath(host.getPeerID());
+                            //generate msg to send out
+                            P2PProtocol.Message forwardQueryMsgOut = protocol.new Message(qm);
+                            Logger.getLogger(IndexServer.class.getName()).log(Level.SEVERE, qm.debugPath());
+                            //send msg out to neighbour
+                            this.send2Neighbors(forwardQueryMsgOut);
+                        }
+                    }
 
-                        // Todo: process this message
-                        // if this is my message, then check the result
-                        // else pull out my id from the path and send it to the next one
+                    //MAIN BRANCH
+                } else if (msgIn.getCmd() == Command.HITMSG) {
+                    HitMessage hm = msgIn.getHitMessage();
 
-                        //# identify the ownership of the HitMsg
-                        //prepare HitQuery msg
-                        if (hm.getPeerID() != host.getPeerID()) {
-                            //I didn't started it
+                    // Todo: process this message
+                    // if this is my message, then check the result
+                    // else pull out my id from the path and send it to the next one
 
-                            //generate msg to send out after pop or identified empty deque in the last step ONLY
-                            P2PProtocol.Message hitOut = protocol.new Message(hm);
-
-                            PeerAddress nextOne = null;
-                            try {
-                                nextOne = this.findANeighbor(hm.nextPath());
-                            } catch (Exception e) {
-                                Logger.getLogger(IndexServer.class.getName()).log(Level.SEVERE, "[HITMSG] This is definitely a bug:\n"
-                                        + "Path: " + hm.debugPath(), e);
-                            }
-
-                            //send msg out to THE neighbour
-                            this.send2Peer(hitOut, nextOne);
-                        } else {
-                            //I started it
-                            //Ask if update is still allowed
-                            if (hm.getResult() == Result.HIT) {
-                                //update remotefilehash
-                                FileHash.Entry newEntry = remoteFileHash.new Entry(hm.getHitPeerID(), hm.getFilename());
-                                remoteFileHash.addEntry(newEntry);
-                                //update peerHash
-                                PeerAddress toAddPeerHash = new PeerAddress(hm.getHitPeerID(), hm.getHitPeerHost(), hm.getHitPeerISPort(), hm.getHitPeerFSPort());
-                                peerHash.addValue(hm.getHitPeerID(), toAddPeerHash);
-                            }
+                    if (hm.getPeerID() != host.getPeerID()) {
+                        P2PProtocol.Message hitOut = protocol.new Message(hm);
+                        PeerAddress nextOne = null;
+                        try {
+                            nextOne = this.findANeighbor(hm.nextPath());
+                        } catch (Exception e) {
+                            Logger.getLogger(IndexServer.class.getName()).log(Level.SEVERE, "[HITMSG] This is definitely a bug:\n"
+                                    + "Path: " + hm.debugPath(), e);
+                        }
+                        this.send2Peer(hitOut, nextOne);
+                    } else {
+                        if (hm.getResult() == Result.HIT) {
+                            //update remotefilehash
+                            FileHash.Entry newEntry = remoteFileHash.new Entry(hm.getHitPeerID(), hm.getFilename());
+                            remoteFileHash.addEntry(newEntry);
+                            //update peerHash
+                            PeerAddress toAddPeerHash = new PeerAddress(hm.getHitPeerID(), hm.getHitPeerHost(), hm.getHitPeerISPort(), hm.getHitPeerFSPort());
+                            peerHash.addValue(hm.getHitPeerID(), toAddPeerHash);
                         }
                     }
                 }
-                if (msgOut == null) {
-                    msgOut = protocol.new Message(Command.ERR);
-                }
             } catch (Exception ex) {
                 Logger.getLogger(IndexServer.class.getName()).log(Level.SEVERE, null, ex);
-                msgOut = protocol.new Message(Command.ERR);
-            } finally {
-                try {
-                    protocol.preparedOutput(socket.getOutputStream(), msgOut);
-                    socket.shutdownOutput();
-                } catch (IOException ex) {
-                    Logger.getLogger(IndexServer.class.getName()).log(Level.SEVERE, null, ex);
-                }
             }
         }
     }

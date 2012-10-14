@@ -255,6 +255,7 @@ public class P2PProtocol {
     public enum Command {
 
         ERR,
+        ING,
         PING,
         PONG,
         QUERYMSG,
