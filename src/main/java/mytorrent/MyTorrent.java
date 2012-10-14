@@ -86,7 +86,7 @@ public class MyTorrent {
                 if (userinput.length < 5) {
                     System.err.println("Wrong parameters");
 
-                    System.err.print("Usage: test query|obtian filename TTL repeat");
+                    System.err.println("Usage: test query|obtian filename TTL repeat");
 
                     continue;
                 }
