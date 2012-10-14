@@ -199,10 +199,10 @@ public class Peer {
                     }
                 }
 
-                if (size > 0) {
-                    if (found.size() > size) {
-                        size = found.size();
-                    } else {
+                if (found.size() > size) {
+                    size = found.size();
+                } else {
+                    if (size > 0) {
                         break;
                     }
                 }
@@ -221,7 +221,7 @@ public class Peer {
 
         this.innerQuery(filename, messageID, TTL);
 
-        if (showoff) {
+        if (!showoff) {
             //get return value struct
             FileHash.Entry[] returnStruct = indexServer.returnRemoteFileHash_for(filename);
             BannerManager.printSearchReturns(returnStruct);
