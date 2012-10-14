@@ -40,7 +40,6 @@ import mytorrent.p2p.Configuration;
 import mytorrent.p2p.FileHash;
 import mytorrent.p2p.P2PProtocol;
 import mytorrent.p2p.P2PReceiver;
-import mytorrent.p2p.P2PTransfer;
 import mytorrent.p2p.PeerAddress;
 import mytorrent.peer.FileServer;
 import mytorrent.peer.IndexServer;
@@ -58,7 +57,7 @@ import org.apache.commons.vfs2.impl.DefaultFileMonitor;
  * @author Bo Feng
  * @version 2.0
  */
-public class Peer implements P2PTransfer {
+public class Peer {
 
     private final FileServer fileServer;
     private final IndexServer indexServer;
@@ -112,7 +111,6 @@ public class Peer implements P2PTransfer {
         return (String[]) fileNames.toArray(new String[fileNames.size()]);
     }
 
-    @Override
     public void startup() {
         try {
             this.indexServer.start();
@@ -150,18 +148,15 @@ public class Peer implements P2PTransfer {
         }
     }
 
-    @Override
     public void exit() {
         this.fileServer.close();
     }
 
-    @Override
     public boolean ping() {
         return this.fileServer.isAlive() && this.fileServer.isDaemon();
     }
 
-    @Override
-    public void query(String filename, long messageID, int TTL) {
+    private void innerQuery(String filename, long messageID, int TTL) {
         P2PProtocol protocol = new P2PProtocol();
         //#-1
         //generate Query Msg
@@ -204,10 +199,12 @@ public class Peer implements P2PTransfer {
                     }
                 }
 
-                if (found.size() > size) {
-                    size = found.size();
-                } else {
-                    break;
+                if (size > 0) {
+                    if (found.size() > size) {
+                        size = found.size();
+                    } else {
+                        break;
+                    }
                 }
 
                 if (timer-- < 0) {
@@ -218,22 +215,19 @@ public class Peer implements P2PTransfer {
                 break;
             }
         }
-
-
-//        try {
-//            BannerManager.QueryWaiting();
-//        } catch (InterruptedException ex) {
-//            Logger.getLogger(Peer.class.getName()).log(Level.SEVERE, null, ex);
-//        }
-//        //#-4
-        //get return value struct
-        FileHash.Entry[] returnStruct = indexServer.returnRemoteFileHash_for(filename);
-        BannerManager.printSearchReturns(returnStruct);
-
-
     }
 
-    @Override
+    public void query(String filename, long messageID, int TTL, boolean showoff) {
+
+        this.innerQuery(filename, messageID, TTL);
+
+        if (showoff) {
+            //get return value struct
+            FileHash.Entry[] returnStruct = indexServer.returnRemoteFileHash_for(filename);
+            BannerManager.printSearchReturns(returnStruct);
+        }
+    }
+
     public void obtain(final String filename, final int messageID, final int TTL) {
 
         new Thread(
@@ -241,7 +235,7 @@ public class Peer implements P2PTransfer {
                     @Override
                     public void run() {
                         try {
-                            query(filename, messageID, TTL);
+                            innerQuery(filename, messageID, TTL);
                             long[] results = indexServer.getQueryResult(filename);
                             PeerAddress pa = indexServer.getPeerAddress(results[0]);
                             Socket socket = new Socket(pa.getPeerHost(), pa.getFileServerPort());
