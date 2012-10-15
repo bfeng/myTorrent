@@ -36,7 +36,7 @@ public class BannerManager {
     public static void printClientInstruction() {
         System.out.println("User Input Direction:");
         System.out.println(" * Query: query filename TTL");
-        System.out.println(" * Obtain: obtain filename");
+        System.out.println(" * Obtain: obtain filename TTL");
         System.out.println(" * Help: help (detailed info)");
         System.out.println(" * Exit Client: exit");
     }
