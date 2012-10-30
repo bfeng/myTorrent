@@ -28,11 +28,94 @@ package mytorrent.p2p;
  * @author swang
  */
 public class FileBusinessCard {
-    
+
+    //info: original copy ownner, no matter PULL or PUSH
     String filename;
-    long PeerID;
-    
-    
-    
-    
+    long peerID;
+    String peerHost;
+    int fileServerPort;
+    int indexServerPort;
+    //changable
+    Approach approach;
+    State state;
+    int versionNumber;
+
+    public enum Approach {
+
+        NULL,
+        PUSH,
+        PULL
+    }
+
+    public enum State {
+
+        NULL,
+        VALID,
+        INVALID,
+        TTL_EXPIRED
+    }
+
+    public FileBusinessCard() {
+        filename = "null";
+    }
+
+    public FileBusinessCard(String filenameIN, long peerIDIN, String peerHostIN, int fileServerPortIN, int indexServerPortIN) {
+
+        filename = filenameIN;
+        peerID = peerIDIN;
+        peerHost = peerHostIN;
+        fileServerPort = fileServerPortIN;
+        indexServerPort = indexServerPortIN;
+
+        approach = Approach.NULL;
+        state = State.NULL;
+        versionNumber = 0;
+    }
+
+    //get_info
+    public String get_filename() {
+        return filename;
+    }
+
+    public long get_peerID() {
+        return peerID;
+    }
+
+    public String get_peerHost() {
+        return peerHost;
+    }
+
+    public int get_fileServerPort() {
+        return fileServerPort;
+    }
+
+    public int get_indexServerPort() {
+        return indexServerPort;
+    }
+
+    //get_changable
+    public Approach get_approach() {
+        return approach;
+    }
+
+    public State get_state() {
+        return state;
+    }
+
+    public int get_versionNumber() {
+        return versionNumber;
+    }
+
+    //set_changable
+    public void set_approach(Approach approachIN) {
+        this.approach = approachIN;
+    }
+
+    public void set_state(State stateIN) {
+        this.state = stateIN;
+    }
+
+    public void set_versionNumber(int versionNumberIN) {
+        this.versionNumber = versionNumberIN;
+    }
 }
