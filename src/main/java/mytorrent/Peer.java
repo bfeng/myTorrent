@@ -250,3 +250,69 @@ public class Peer {
                 }).start();
     }
 }
+/*
+
+Master copy of original file in one peer, as original server. Only the master copy can be modified. 
+The original file has version number, which is increased by '1' after each modification.
+PUSH:
+(1) As soon as original file modified, the original server broadcast invalidate message for the file, propagates like query. 
+(2)Each peer checks if it has the file, and invalidate them. 
+(3)Master server does NOT maintain list of owner peers. 
+1) INVALIDATION msg
+2) file state in peer: valid | invalid | TTR expired
+PULL:
+(1) Owner peer poll the original server for version. And server returns confirmation message. 
+(2) TTR is setted by original server and attached with each copy. 
+(3) eager or lazy manner of polling from each peer. 
+
+----------------------------------------------------------------------------------------------------------------------------
+An original server has file "foo.txt"
+(1) It sets the file rule as either PUSH or PULL
+(2) Any peer attempting to have the file must follow the rule.
+
+PUSH: download -> broadcast -> INVALIDATE
+PULL: download -> poll -> INVALIDATE
+
+<GENERAL>
+Switch or setup pull or push for each file
+<PUSH>
+- <shared FILE list>
+filename
+server info
+state:VALID | INVALID
+- <methods>
+filelistener()
+modification detector(push-list, )
+broadcast()
+- <COMMUNICATION>
+query->; <-pull or push setup msg; pull or push ok ->; <- file
+invalidation ->
+
+<PULL>
+- <received FILE list>
+filename
+server info
+state: VALID | INVALID | TTLEXPIRE
+version
+- <methods>
+modification detector(poll-list, )
+check file state(poll-list, )
+poll(poll-list, )
+answer poll()
+
+- <COMMUNICATION>
+obtain.query->; <-pull or push setup msg; pull or push ok ->; <- file
+poll ->; <- version number
+
+--------------------------------------------------------------------------------------------------------------------------
+[Own File Hash] key = filename (cannot query your own file)
+[Downloaded File Hash] key = filename
+[PUSH list] shared file sets for PUSH
+[POLL list] 
+
+upon receiving a query(obtain), it (1)check [Own File Hash] then (2)[Downloaded File Hash] for file setup
+upon receiving a POLL msg, it checkes [Own File Hash] for version and answer it. 
+upon receiving a PUSH.INVALIDATE msg, it update the file info in [Downloaded File Hash]
+
+
+*/
