@@ -50,6 +50,7 @@ public class FileBusinessCard {
     public enum State {
 
         NULL,
+        ORIGINAL,
         VALID,
         INVALID,
         TTL_EXPIRED
@@ -117,5 +118,9 @@ public class FileBusinessCard {
 
     public void set_versionNumber(int versionNumberIN) {
         this.versionNumber = versionNumberIN;
+    }
+    
+    public void increase_versionNumber() {
+        this.versionNumber++;
     }
 }
