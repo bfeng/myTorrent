@@ -265,7 +265,8 @@ public class P2PProtocol {
         PONG,
         QUERYMSG,
         HITMSG,
-        INVALIDATE
+        INVALIDATE,
+        QUERYMSG2 //in order to preserve original query function, this query only returns valid copies
     }
 
     public class Message {
