@@ -338,6 +338,15 @@ public class IndexServer extends Thread {
                             this.send2Neighbors(forwardQueryMsgOut);
                         }
                     }
+                } else if (msgIn.getCmd() == Command.CARD) {
+                    //send card back to socket
+                    String filename = msgIn.getQueryMessage().getFilename();
+                    FileBusinessCard returnCard = versionMonitor.getACard(filename);
+                    Message msgOut = protocol.new Message(returnCard);
+                    msgOut.setCmd(Command.OK);
+                    
+                    protocol.preparedOutput(this.socket.getOutputStream(), msgOut);
+                    this.socket.shutdownOutput();
                 }
             } catch (Exception ex) {
                 Logger.getLogger(IndexServer.class.getName()).log(Level.SEVERE, null, ex);

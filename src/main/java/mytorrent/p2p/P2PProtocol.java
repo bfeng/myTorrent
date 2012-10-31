@@ -267,7 +267,8 @@ public class P2PProtocol {
         HITMSG,
         INVALIDATE,
         QUERYMSG2, //in order to preserve original query function, this query only returns valid copies
-        CARD //the msg ask an indexServer to return a specific FileBusinessCard
+        CARD, //the msg ask an indexServer to return a specific FileBusinessCard
+        OK //multifunction message return
     }
 
     public class Message {
