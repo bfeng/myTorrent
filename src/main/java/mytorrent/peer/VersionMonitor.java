@@ -30,6 +30,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import mytorrent.p2p.FileBusinessCard;
+import mytorrent.p2p.FileBusinessCard.Approach;
 import mytorrent.p2p.PeerAddress;
 import org.apache.commons.vfs2.FileChangeEvent;
 import org.apache.commons.vfs2.FileListener;
@@ -241,7 +242,7 @@ public class VersionMonitor extends Thread {
             FileObject temp = fce.getFile();
             System.out.println("PUSH TEST: file changed, the version will be increased." + temp.getName().getBaseName());
             //#-1 check approach
-            FileBusinessCard targetCard = Push_file_map.get(temp.getName().getBaseName());
+                FileBusinessCard targetCard = Push_file_map.get(temp.getName().getBaseName());
 
             //#-2 version update
             targetCard.increase_versionNumber();
@@ -259,20 +260,30 @@ public class VersionMonitor extends Thread {
 
         @Override
         public void fileCreated(FileChangeEvent fce) throws Exception {
-            //todo
-            System.out.println("PULL TEST: Local Copy Created");
+            FileObject temp = fce.getFile();
+            if (p2p_file_map.contains(temp.getName().getBaseName())) {
+                System.out.println("received folder:" + temp.getName().getBaseName() + " Local Copy Created !");
+            } else {
+                System.out.println("Please don't just drag a file into \"received\" folder !");
+            }
+
         }
 
         @Override
         public void fileDeleted(FileChangeEvent fce) throws Exception {
             //todo
-            System.out.println("PULL TEST: Local Copy Deleted!");
+            FileObject temp = fce.getFile();
+            if (p2p_file_map.contains(temp.getName().getBaseName())) {
+                System.out.println("received folder:" + temp.getName().getBaseName() + " Local Copy Deleted !");
+            } else {
+                System.out.println("A random file in \"received\" folder deleted !");
+            }
         }
 
         @Override
         public void fileChanged(FileChangeEvent fce) throws Exception {
             //todo
-            System.out.println("PULL WARNING: Local Copy shall not be modified!");
+            System.out.println("received folder: WARNING Local Copy shall not be modified!");
         }
     }
 
