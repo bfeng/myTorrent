@@ -291,7 +291,6 @@ public class P2PProtocol {
 
         public Message(FileBusinessCard fileBusinessCard) {
             this.fileBusinessCard = fileBusinessCard;
-            this.cmd = Command.INVALIDATE;
         }
 
         public Command getCmd() {
@@ -330,7 +329,7 @@ public class P2PProtocol {
             this.fileBusinessCard = fileBusinessCard;
         }
 
-        public FileBusinessCard getFileBusinessCard(FileBusinessCard fileBusinessCard) {
+        public FileBusinessCard getFileBusinessCard() {
             return this.fileBusinessCard;
         }
 

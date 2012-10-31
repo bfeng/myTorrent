@@ -261,7 +261,38 @@ public class IndexServer extends Thread {
                         }
                     }
                 } else if (msgIn.getCmd() == Command.INVALIDATE) {
-                    //
+                    //#-1 check local file for invalidate
+                    FileBusinessCard newCard = msgIn.getFileBusinessCard();
+                    String filename = newCard.get_filename();
+                    if(versionMonitor.p2p_file_map.contains(filename) && newCard.get_versionNumber()> versionMonitor.p2p_file_map.get(filename).get_versionNumber()){
+                        versionMonitor.justInvalidate(filename);
+                    }
+                    //#-2 propagate invalidate if necessary
+                    QueryMessage qm = msgIn.getQueryMessage();
+                    if (qm.isLive()) {
+                            //Decrement TTL
+                            qm.decrementTTL();
+                            //Add Path
+                            qm.addPath(host.getPeerID());
+                            //generate msg to send out
+                            P2PProtocol.Message forwardINVALIDATEMsgOut = protocol.new Message(newCard);
+                            forwardINVALIDATEMsgOut.setQueryMessage(qm);
+                            forwardINVALIDATEMsgOut.setCmd(Command.INVALIDATE);
+                            
+                            Logger.getLogger(IndexServer.class.getName()).log(Level.FINE, "\nThe query message should contain the full path:\nPath: {0}", qm.debugPath());
+                            //send msg out to neighbour
+                            for (PeerAddress n : neighbors) {
+                                try {
+                                    Socket client = new Socket(n.getPeerHost(), n.getIndexServerPort());
+                                    protocol.preparedOutput(client.getOutputStream(), forwardINVALIDATEMsgOut);
+                                    client.shutdownOutput();
+                                } catch (UnknownHostException ex) {
+                                    Logger.getLogger(IndexServer.class.getName()).log(Level.SEVERE, null, ex);
+                                } catch (IOException ex) {
+                                    Logger.getLogger(IndexServer.class.getName()).log(Level.SEVERE, null, ex);
+                                }
+                            }
+                        }
                 }
             } catch (Exception ex) {
                 Logger.getLogger(IndexServer.class.getName()).log(Level.SEVERE, null, ex);
@@ -316,7 +347,7 @@ public class IndexServer extends Thread {
                             FileBusinessCard newCard = versionMonitor.getACard(filename, versionMonitor.Push_file_map);
                             initINVALIDATEMsgOut.setFileBusinessCard(newCard);
                             //#-2
-                            //send them out to neighbours
+                            //send out to neighbours
                             for (PeerAddress n : neighbors) {
                                 try {
                                     Socket client = new Socket(n.getPeerHost(), n.getIndexServerPort());

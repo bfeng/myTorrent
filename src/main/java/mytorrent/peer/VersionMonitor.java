@@ -51,6 +51,7 @@ public class VersionMonitor extends Thread {
     DefaultFileMonitor Pull_fm;
     public ArrayDeque<String> Push_broadcast_external; //inter thread communication
     public ConcurrentHashMap<String, FileBusinessCard> Push_file_map;
+    public ConcurrentHashMap<String, FileBusinessCard> p2p_file_map;
 
     public VersionMonitor(PeerAddress host_me) {
 
@@ -177,6 +178,19 @@ public class VersionMonitor extends Thread {
         return the_map.get(filename);
     }
     
+    public void justInvalidate(String filename) {
+        if (!p2p_file_map.contains(filename)){
+            //error
+            System.out.println(filename + " not found in folder \"received\". Nothing to be done.");
+        } else {
+            //invalidate for the copy
+            FileBusinessCard temp = p2p_file_map.get(filename);
+            if(temp.get_approach() == FileBusinessCard.Approach.PUSH){
+            temp.set_state(FileBusinessCard.State.INVALID);
+            }
+            p2p_file_map.replace(filename, temp);
+        }
+    }
 
     private class PushFileListener implements FileListener {
 
