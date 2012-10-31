@@ -27,9 +27,11 @@ import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.SocketException;
+import java.net.UnknownHostException;
 import java.util.Arrays;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import mytorrent.p2p.FileBusinessCard;
 import mytorrent.p2p.FileHash;
 import mytorrent.p2p.P2PProtocol;
 import mytorrent.p2p.P2PProtocol.Command;
@@ -54,10 +56,12 @@ public class IndexServer extends Thread {
     private static FileHash localFileHash = new FileHash();
     private static FileHash remoteFileHash = new FileHash();
     private static PeerHash peerHash = new PeerHash();
+    private final VersionMonitor versionMonitor;
 
     public IndexServer(PeerAddress host, PeerAddress[] neighbors) {
         this.host = host;
         this.neighbors = neighbors;
+        this.versionMonitor = new VersionMonitor(this.host);
     }
 
     public void updateFileHash(String[] files) {
@@ -256,10 +260,79 @@ public class IndexServer extends Thread {
                             peerHash.addValue(hm.getHitPeerID(), toAddPeerHash);
                         }
                     }
+                } else if (msgIn.getCmd() == Command.INVALIDATE) {
+                    //
                 }
             } catch (Exception ex) {
                 Logger.getLogger(IndexServer.class.getName()).log(Level.SEVERE, null, ex);
             }
+        }
+    }
+
+    class VersionMonitorCoordinator extends Thread {
+        //watch VersionMonitor.Push_broadcast_external for broadcast_invalidate() jobs
+
+        boolean enable;
+
+        public VersionMonitorCoordinator() {
+            enable = true;
+        }
+
+        @Override
+        public void run() {
+            while (enable) {
+                if (!versionMonitor.Push_broadcast_external.isEmpty()) {
+                    String toBroadcast = versionMonitor.Push_broadcast_external.poll();
+                    //to broadcast push invalidate to neighbors
+                    broadcast_INVALIDATE(toBroadcast, 10);
+                    System.out.println(toBroadcast + " need to broadcast !");
+                }
+            }
+        }
+
+        public void pause() {
+            enable = false;
+        }
+
+        public void broadcast_INVALIDATE(final String filename, final int TTL) {
+
+            new Thread(
+                    new Runnable() {
+
+                        @Override
+                        public void run() {
+
+                            //# broad cast to all network
+                            P2PProtocol protocol = new P2PProtocol();
+                            //#-1
+                            //generate Query Msg for the use of TTL
+                            P2PProtocol.QueryMessage initQueryMsg = protocol.new QueryMessage(host.getPeerID(), 0, TTL);
+                            initQueryMsg.setFilename(filename);
+                            //generate output MSG
+                            P2PProtocol.Message initINVALIDATEMsgOut = protocol.new Message(initQueryMsg);
+                            // Make sure it is a INVALIDATE
+                            initINVALIDATEMsgOut.setCmd(P2PProtocol.Command.INVALIDATE);
+                            //get FileBusinessCard
+                            FileBusinessCard newCard = versionMonitor.getACard(filename, versionMonitor.Push_file_map);
+                            initINVALIDATEMsgOut.setFileBusinessCard(newCard);
+                            //#-2
+                            //send them out to neighbours
+                            for (PeerAddress n : neighbors) {
+                                try {
+                                    Socket client = new Socket(n.getPeerHost(), n.getIndexServerPort());
+                                    protocol.preparedOutput(client.getOutputStream(), initINVALIDATEMsgOut);
+                                    client.shutdownOutput();
+                                } catch (UnknownHostException ex) {
+                                    Logger.getLogger(IndexServer.class.getName()).log(Level.SEVERE, null, ex);
+                                } catch (IOException ex) {
+                                    Logger.getLogger(IndexServer.class.getName()).log(Level.SEVERE, null, ex);
+                                }
+                            }
+                        }
+                    }).start();
+
+
+
         }
     }
 }

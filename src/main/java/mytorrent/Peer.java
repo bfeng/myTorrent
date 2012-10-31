@@ -121,6 +121,7 @@ public class Peer {
             FileSystemManager fsManager = VFS.getManager();
             FileObject listendir = fsManager.resolveFile(new File("shared/").getAbsolutePath());
             DefaultFileMonitor fm = new DefaultFileMonitor(new FileListener() {
+
                 private synchronized void update() {
                     indexServer.updateFileHash(getSharedFiles());
                 }
@@ -232,12 +233,13 @@ public class Peer {
 
         new Thread(
                 new Runnable() {
+
                     @Override
                     public void run() {
                         try {
                             innerQuery(filename, messageID, TTL);
                             long[] results = indexServer.getQueryResult(filename);
-                            if (results==null || results.length == 0) {
+                            if (results == null || results.length == 0) {
                                 return;
                             }
                             PeerAddress pa = indexServer.getPeerAddress(results[0]);

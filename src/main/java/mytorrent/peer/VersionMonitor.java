@@ -207,7 +207,7 @@ public class VersionMonitor extends Thread {
             System.out.println("PUSH TEST: file changed, the version will be increased." + temp.getName().getBaseName());
             //#-1 check approach
             FileBusinessCard targetCard = Push_file_map.get(temp.getName().getBaseName());
-            System.out.println("debug:"+targetCard.get_filename());
+            
             //#-2 version update
             targetCard.increase_versionNumber();
             //#-3 broadcast

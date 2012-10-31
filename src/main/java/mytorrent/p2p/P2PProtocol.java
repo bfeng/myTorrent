@@ -158,7 +158,7 @@ public class P2PProtocol {
         public HitMessage(QueryMessage qm) {
             this.message = new AbstractMessage(qm.getPeerID(), qm.getMessageID());
             this.message.filename = qm.getFilename();
-            this.message.stack = (Deque<Long>)((LinkedList<Long>) qm.message.stack).clone();
+            this.message.stack = (Deque<Long>) ((LinkedList<Long>) qm.message.stack).clone();
         }
 
         public synchronized long nextPath() {
@@ -264,7 +264,8 @@ public class P2PProtocol {
         PING,
         PONG,
         QUERYMSG,
-        HITMSG
+        HITMSG,
+        INVALIDATE
     }
 
     public class Message {
@@ -272,6 +273,7 @@ public class P2PProtocol {
         private Command cmd;
         private QueryMessage queryMessage;
         private HitMessage hitMessage;
+        private FileBusinessCard fileBusinessCard;
 
         public Message(Command cmd) {
             this.cmd = cmd;
@@ -285,6 +287,11 @@ public class P2PProtocol {
         public Message(HitMessage hitMessage) {
             this.hitMessage = hitMessage;
             this.cmd = Command.HITMSG;
+        }
+
+        public Message(FileBusinessCard fileBusinessCard) {
+            this.fileBusinessCard = fileBusinessCard;
+            this.cmd = Command.INVALIDATE;
         }
 
         public Command getCmd() {
@@ -317,6 +324,14 @@ public class P2PProtocol {
 
         public void setHitMessage(HitMessage hitMessage) {
             this.hitMessage = hitMessage;
+        }
+
+        public void setFileBusinessCard(FileBusinessCard fileBusinessCard) {
+            this.fileBusinessCard = fileBusinessCard;
+        }
+
+        public FileBusinessCard getFileBusinessCard(FileBusinessCard fileBusinessCard) {
+            return this.fileBusinessCard;
         }
 
         @Override
