@@ -296,18 +296,18 @@ public class IndexServer extends Thread {
                 } else if (msgIn.getCmd() == Command.QUERYMSG2) {
                     QueryMessage qm = msgIn.getQueryMessage();
 
-                    // Todo: process this message
-                    // if this is my message, then ignore
-                    // ##
-                    // else search that file
-                    // if I can find the file
-                    // if the file is VALID
-                    // return a hitmessage with result
-                    // else return a hitmessage with miss
+                    // Process this message
+                    //  if this is my message, then ignore
+                    //  if this message passed me before, then ignore
+                    // Search that file
+                    //  if I can find the file
+                    //  if the file is VALID
+                    //      return a hitmessage with result, and a card
+                    //      else return a hitmessage with miss without a card
                     // finally, add my id to path 
                     // and forward the message to all of my neighbors if TTL > 0
 
-                    if (host.getPeerID() != qm.getPeerID()) {
+                    if (host.getPeerID() != qm.getPeerID() && !qm.searchPath(host.getPeerID())) {
                         P2PProtocol.HitMessage hitQuery = protocol.new HitMessage(qm);
                         String filename = qm.getFilename();
                         FileBusinessCard hitCard = null;
