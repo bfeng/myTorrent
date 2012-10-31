@@ -66,9 +66,32 @@ public class P2PSender extends Thread {
     @Override
     public void run() {
         try {
-            long numOfBytes = FileUtils.copyFile(new File("shared/" + filename), os);
-            Logger.getLogger(P2PSender.class.getName()).log(Level.INFO, filename, numOfBytes);
-            socket.shutdownOutput();
+            File sharedfile = new File("shard/" + filename);
+            File receivedfile = new File("received/" + filename);
+            int i = 0;
+            if (sharedfile.exists()) {
+                i = 1;
+            }
+            if (receivedfile.exists()) {
+                i = 2;
+            }
+            switch (i) {
+                case 0:
+                    System.out.println("BUG in sender! Attempting to get a non-exsiting file!");
+                    break;
+                case 1:
+                    long numOfBytes = FileUtils.copyFile(new File("shared/" + filename), os);
+                    Logger.getLogger(P2PSender.class.getName()).log(Level.INFO, filename, numOfBytes);
+                    socket.shutdownOutput();
+                    break;
+                case 2:
+                    long numOfBytes2 = FileUtils.copyFile(new File("received/" + filename), os);
+                    Logger.getLogger(P2PSender.class.getName()).log(Level.INFO, filename, numOfBytes2);
+                    socket.shutdownOutput();
+                    break;
+                default:
+                    break;
+            }
         } catch (IOException ex) {
             Logger.getLogger(P2PSender.class.getName()).log(Level.SEVERE, filename, ex);
         }
