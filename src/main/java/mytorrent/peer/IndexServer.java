@@ -56,7 +56,7 @@ public class IndexServer extends Thread {
     private static FileHash localFileHash = new FileHash();
     private static FileHash remoteFileHash = new FileHash();
     private static PeerHash peerHash = new PeerHash();
-    private final VersionMonitor versionMonitor;
+    public final VersionMonitor versionMonitor;
 
     public IndexServer(PeerAddress host, PeerAddress[] neighbors) {
         this.host = host;

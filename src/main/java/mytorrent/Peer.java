@@ -37,6 +37,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import mytorrent.gui.BannerManager;
 import mytorrent.p2p.Configuration;
+import mytorrent.p2p.FileBusinessCard;
 import mytorrent.p2p.FileHash;
 import mytorrent.p2p.P2PProtocol;
 import mytorrent.p2p.P2PReceiver;
@@ -251,70 +252,190 @@ public class Peer {
                     }
                 }).start();
     }
+
+    /*
+    
+    Master copy of original file in one peer, as original server. Only the master copy can be modified. 
+    The original file has version number, which is increased by '1' after each modification.
+    PUSH:
+    (1) As soon as original file modified, the original server broadcast invalidate message for the file, propagates like query. 
+    (2)Each peer checks if it has the file, and invalidate them. 
+    (3)Master server does NOT maintain list of owner peers. 
+    1) INVALIDATION msg
+    2) file state in peer: valid | invalid | TTR expired
+    PULL:
+    (1) Owner peer poll the original server for version. And server returns confirmation message. 
+    (2) TTR is setted by original server and attached with each copy. 
+    (3) eager or lazy manner of polling from each peer. 
+    
+    ----------------------------------------------------------------------------------------------------------------------------
+    An original server has file "foo.txt"
+    (1) It sets the file rule as either PUSH or PULL
+    (2) Any peer attempting to have the file must follow the rule.
+    
+    PUSH: download -> broadcast -> INVALIDATE
+    PULL: download -> poll -> INVALIDATE
+    
+    <GENERAL>
+    Switch or setup pull or push for each file
+    <PUSH>
+    - <shared FILE list>
+    filename
+    server info
+    state:VALID | INVALID
+    - <methods>
+    filelistener()
+    modification detector(push-list, )
+    broadcast()
+    - <COMMUNICATION>
+    query->; <-pull or push setup msg; pull or push ok ->; <- file
+    invalidation ->
+    
+    <PULL>
+    - <received FILE list>
+    filename
+    server info
+    state: VALID | INVALID | TTLEXPIRE
+    version
+    - <methods>
+    modification detector(poll-list, )
+    check file state(poll-list, )
+    poll(poll-list, )
+    answer poll()
+    
+    - <COMMUNICATION>
+    obtain.query->; <-pull or push setup msg; pull or push ok ->; <- file
+    poll ->; <- version number
+    
+    --------------------------------------------------------------------------------------------------------------------------
+    [Own File Hash] key = filename (cannot query your own file)
+    [Downloaded File Hash] key = filename
+    [PUSH list] shared file sets for PUSH
+    [POLL list] 
+    
+    upon receiving a query(obtain), it (1)check [Own File Hash] then (2)[Downloaded File Hash] for file setup
+    upon receiving a POLL msg, it checkes [Own File Hash] for version and answer it. 
+    upon receiving a PUSH.INVALIDATE msg, it update the file info in [Downloaded File Hash]
+    
+    
+     */
+    private void innerQuery2(String filename, long messageID, int TTL) {
+        P2PProtocol protocol = new P2PProtocol();
+        //#-1
+        //generate Query Msg
+        P2PProtocol.QueryMessage initQueryMsg = protocol.new QueryMessage(host.getPeerID(), messageID, TTL);
+        initQueryMsg.setFilename(filename);
+        //generate output MSG
+        P2PProtocol.Message initQueryMsgOut = protocol.new Message(initQueryMsg);
+        initQueryMsgOut.setCmd(P2PProtocol.Command.QUERYMSG2);
+        //init indexserver return value struct
+        indexServer.initUpdateRemoteFileHash_for(filename);
+        //#-2
+        //send them out to neighbours
+        String aNeighborHost = null;
+        int aNeighborPort = -1;
+        for (PeerAddress aNeighbor : neighbors) {
+            try {
+                aNeighborHost = aNeighbor.getPeerHost();
+                aNeighborPort = aNeighbor.getIndexServerPort();
+                Socket socket = new Socket(aNeighborHost, aNeighborPort);
+                protocol.preparedOutput(socket.getOutputStream(), initQueryMsgOut);
+                socket.shutdownOutput();
+            } catch (UnknownHostException ex) {
+                Logger.getLogger(Peer.class.getName()).log(Level.SEVERE, null, ex);
+            } catch (IOException ex) {
+                Logger.getLogger(Peer.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        }
+        //#-3
+        //waiting and printing
+
+        Set<Long> found = new CopyOnWriteArraySet<Long>();
+        int size = 0;
+        int timer = 5; // the maximum seconds it can wait
+        while (true) {
+            try {
+                Thread.sleep(1000);
+                long[] results = indexServer.getQueryResult(filename);
+                if (results != null) {
+                    for (long r : results) {
+                        found.add(r);
+                    }
+                }
+
+                if (found.size() > size) {
+                    size = found.size();
+                } else {
+                    if (size > 0) {
+                        break;
+                    }
+                }
+
+                if (timer-- < 0) {
+                    break;
+                }
+            } catch (InterruptedException ex) {
+                Logger.getLogger(Peer.class.getName()).log(Level.SEVERE, null, ex);
+                break;
+            }
+        }
+    }
+
+    public void query2(String filename, long messageID, int TTL, boolean showoff) {
+
+        this.innerQuery2(filename, messageID, TTL);
+
+        if (!showoff) {
+            //get return value struct
+            FileHash.Entry[] returnStruct = indexServer.returnRemoteFileHash_for(filename);
+            BannerManager.printSearchReturns(returnStruct);
+        }
+    }
+
+    public void obtain2(final String filename, final int messageID, final int TTL) {
+
+        new Thread(
+                new Runnable() {
+
+                    @Override
+                    public void run() {
+                        try {
+                            innerQuery2(filename, messageID, TTL);
+                            long[] results = indexServer.getQueryResult(filename);
+                            if (results == null || results.length == 0) {
+                                return;
+                            }
+                            PeerAddress pa = indexServer.getPeerAddress(results[0]);
+                            //#-1 Ask for Card
+                            P2PProtocol protocol = new P2PProtocol();
+                            //generate Query Msg
+                            P2PProtocol.QueryMessage initCARDMsg = protocol.new QueryMessage(host.getPeerID(), messageID, TTL);
+                            initCARDMsg.setFilename(filename);
+                            //generate output MSG
+                            P2PProtocol.Message initCARDMsgOut = protocol.new Message(initCARDMsg);
+                            initCARDMsgOut.setCmd(P2PProtocol.Command.CARD);
+                            //send out
+                            Socket socketCard = new Socket(pa.getPeerHost(), pa.getIndexServerPort());
+                            protocol.preparedOutput(socketCard.getOutputStream(), initCARDMsgOut);
+                            socketCard.shutdownOutput();
+                            //wait for input
+                            P2PProtocol.Message msgIn = protocol.processInput(socketCard.getInputStream());
+                            if (msgIn.getCmd() != P2PProtocol.Command.OK) {
+                                System.out.println("Error in asking for FileBusinessCard!");
+                                return;
+                            }
+                            //process the card
+                            FileBusinessCard theCard = msgIn.getFileBusinessCard();
+                            theCard.set_state(FileBusinessCard.State.VALID);
+                            indexServer.versionMonitor.p2p_file_map.put(filename, theCard);
+
+                            //#-2 Ask for file
+                            Socket socket = new Socket(pa.getPeerHost(), pa.getFileServerPort());
+                            new P2PReceiver(socket, filename).start();
+                        } catch (IOException ex) {
+                            Logger.getLogger(Peer.class.getName()).log(Level.SEVERE, "obtain", ex);
+                        }
+                    }
+                }).start();
+    }
 }
-/*
-
-Master copy of original file in one peer, as original server. Only the master copy can be modified. 
-The original file has version number, which is increased by '1' after each modification.
-PUSH:
-(1) As soon as original file modified, the original server broadcast invalidate message for the file, propagates like query. 
-(2)Each peer checks if it has the file, and invalidate them. 
-(3)Master server does NOT maintain list of owner peers. 
-1) INVALIDATION msg
-2) file state in peer: valid | invalid | TTR expired
-PULL:
-(1) Owner peer poll the original server for version. And server returns confirmation message. 
-(2) TTR is setted by original server and attached with each copy. 
-(3) eager or lazy manner of polling from each peer. 
-
-----------------------------------------------------------------------------------------------------------------------------
-An original server has file "foo.txt"
-(1) It sets the file rule as either PUSH or PULL
-(2) Any peer attempting to have the file must follow the rule.
-
-PUSH: download -> broadcast -> INVALIDATE
-PULL: download -> poll -> INVALIDATE
-
-<GENERAL>
-Switch or setup pull or push for each file
-<PUSH>
-- <shared FILE list>
-filename
-server info
-state:VALID | INVALID
-- <methods>
-filelistener()
-modification detector(push-list, )
-broadcast()
-- <COMMUNICATION>
-query->; <-pull or push setup msg; pull or push ok ->; <- file
-invalidation ->
-
-<PULL>
-- <received FILE list>
-filename
-server info
-state: VALID | INVALID | TTLEXPIRE
-version
-- <methods>
-modification detector(poll-list, )
-check file state(poll-list, )
-poll(poll-list, )
-answer poll()
-
-- <COMMUNICATION>
-obtain.query->; <-pull or push setup msg; pull or push ok ->; <- file
-poll ->; <- version number
-
---------------------------------------------------------------------------------------------------------------------------
-[Own File Hash] key = filename (cannot query your own file)
-[Downloaded File Hash] key = filename
-[PUSH list] shared file sets for PUSH
-[POLL list] 
-
-upon receiving a query(obtain), it (1)check [Own File Hash] then (2)[Downloaded File Hash] for file setup
-upon receiving a POLL msg, it checkes [Own File Hash] for version and answer it. 
-upon receiving a PUSH.INVALIDATE msg, it update the file info in [Downloaded File Hash]
-
-
-*/
