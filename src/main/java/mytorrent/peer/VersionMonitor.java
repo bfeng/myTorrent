@@ -117,8 +117,8 @@ public class VersionMonitor extends Thread {
         }
 
         //static init
-        Push_broadcast_external.clear();        
-        
+        Push_broadcast_external.clear();
+
     }
 
     //init helpers
@@ -135,12 +135,11 @@ public class VersionMonitor extends Thread {
             the_map.put(item, tempCard);
         }
     }
-    
+
     private void register_with_null(String filename, ConcurrentHashMap<String, FileBusinessCard> the_map) {
         FileBusinessCard tempCard = new FileBusinessCard(filename, this.host.getPeerID(), this.host.getPeerHost(), this.host.getFileServerPort(), this.host.getIndexServerPort());
         the_map.put(filename, tempCard);
     }
-
 
     //
     //VersionMonitor Methods:
@@ -173,20 +172,42 @@ public class VersionMonitor extends Thread {
             Push_file_map.replace(filename, temp);
         }
     }
-    
+
     public FileBusinessCard getACard(String filename, ConcurrentHashMap<String, FileBusinessCard> the_map) {
         return the_map.get(filename);
     }
-    
+
+    public FileBusinessCard getACard(String filename) {
+        //Potential ERROR:
+        //same file name under both folder
+        int i = 0;
+        if (this.Push_file_map.contains(filename)) {
+            i = 1;
+        }
+        if (this.p2p_file_map.contains(filename)) {
+            i = 2;
+        }
+        switch (i) {
+            case 0:
+                return null;
+            case 1:
+                return this.Push_file_map.get(filename);
+            case 2:
+                return this.p2p_file_map.get(filename);
+            default:
+                return null;
+        }
+    }
+
     public void justInvalidate(String filename) {
-        if (!p2p_file_map.contains(filename)){
+        if (!p2p_file_map.contains(filename)) {
             //error
             System.out.println(filename + " not found in folder \"received\". Nothing to be done.");
         } else {
             //invalidate for the copy
             FileBusinessCard temp = p2p_file_map.get(filename);
-            if(temp.get_approach() == FileBusinessCard.Approach.PUSH){
-            temp.set_state(FileBusinessCard.State.INVALID);
+            if (temp.get_approach() == FileBusinessCard.Approach.PUSH) {
+                temp.set_state(FileBusinessCard.State.INVALID);
             }
             p2p_file_map.replace(filename, temp);
         }
@@ -201,7 +222,7 @@ public class VersionMonitor extends Thread {
             System.out.println(" *** \"" + temp.getName().getBaseName() + "\" created in shared folder, ready for push! ***");
             //register the file into the Push_file_table, and set to NULL;
             register_with_null(temp.getName().getBaseName(), Push_file_map);
-            
+
         }
 
         @Override
@@ -209,9 +230,9 @@ public class VersionMonitor extends Thread {
             //after init, a file is deleted from 'shared' folder
             FileObject temp = fce.getFile();
             System.out.println(" *** \"" + temp.getName().getBaseName() + "\" deleted in shared folder, ready for push! ***/nPUSH WARNING: Original copy shall not be deleted!!");
-            
+
             Push_file_map.remove(temp.getName().getBaseName());
-            
+
         }
 
         @Override
@@ -221,16 +242,16 @@ public class VersionMonitor extends Thread {
             System.out.println("PUSH TEST: file changed, the version will be increased." + temp.getName().getBaseName());
             //#-1 check approach
             FileBusinessCard targetCard = Push_file_map.get(temp.getName().getBaseName());
-            
+
             //#-2 version update
             targetCard.increase_versionNumber();
             //#-3 broadcast
-            if(targetCard.get_approach() == FileBusinessCard.Approach.PUSH) {
+            if (targetCard.get_approach() == FileBusinessCard.Approach.PUSH) {
                 Push_broadcast_external.offer(temp.getName().getBaseName());
             }
 
-            
-            
+
+
         }
     }
 
@@ -260,9 +281,9 @@ public class VersionMonitor extends Thread {
         PeerAddress starter = new PeerAddress(101, "localhost", 5701, 5702);
         VersionMonitor fmr = new VersionMonitor(starter);
         fmr.start();
-        
+
         while (true) {
-            while(!fmr.Push_broadcast_external.isEmpty()) {
+            while (!fmr.Push_broadcast_external.isEmpty()) {
                 String toBroadcast = fmr.Push_broadcast_external.poll();
                 System.out.println(toBroadcast + " need to broadcast !");
             }
