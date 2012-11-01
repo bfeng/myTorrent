@@ -39,6 +39,8 @@ public class FileBusinessCard {
     Approach approach;
     State state;
     int versionNumber;
+    int TTR_threshold;
+    int TTR; //in an increasement manner
 
     public enum Approach {
 
@@ -53,7 +55,7 @@ public class FileBusinessCard {
         ORIGINAL,
         VALID,
         INVALID,
-        TTL_EXPIRED
+        TTR_EXPIRED
     }
 
     public FileBusinessCard() {
@@ -122,5 +124,17 @@ public class FileBusinessCard {
     
     public void increase_versionNumber() {
         this.versionNumber++;
+    }
+    
+    public void increase_TTR() {
+        if(this.TTR < this.TTR_threshold)
+            this.TTR++;
+    }
+    
+    public int check_TTR_expire() {
+        if(this.TTR == this.TTR_threshold)
+            return 1;
+        else
+            return 0;
     }
 }
