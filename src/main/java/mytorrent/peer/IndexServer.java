@@ -321,7 +321,7 @@ public class IndexServer extends Thread {
                             if (versionMonitor.p2p_file_map.get(filename).get_state() == FileBusinessCard.State.VALID)
                                 p2pHaveFileVALID = false;
                         }
-                        if (versionMonitor.Push_broadcast_external.contains(filename) || p2pHaveFileVALID) {
+                        if (versionMonitor.Push_file_map.containsKey(filename) || p2pHaveFileVALID) {
                             hitQuery.hit((long) host.getPeerID(), host.getPeerHost(), host.getFileServerPort(), host.getIndexServerPort());
                             hitCard = versionMonitor.getACard(filename);
                         } else {
