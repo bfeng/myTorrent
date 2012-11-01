@@ -53,7 +53,7 @@ public class MyTorrent {
         while (Running) {
             BannerManager.printCursor(mainPeer.getPeerId());
             String[] userinput = new mytorrent.gui.CommandParser().run();
-            if (userinput[0].toLowerCase().startsWith("que")) {
+            if (userinput[0].toLowerCase().equals("que")) {
                 /* Query */
 
                 if (userinput.length < 3) {
@@ -63,7 +63,7 @@ public class MyTorrent {
                 mainPeer.query2(userinput[1], MessageID, Integer.valueOf(userinput[2]), false);
                 MessageID++;
 
-            } else if (userinput[0].toLowerCase().startsWith("obt")) {
+            } else if (userinput[0].toLowerCase().equals("obt")) {
                 /* Obtain */
                 if (userinput.length < 3) {
                     System.out.println("Wrong parameters");

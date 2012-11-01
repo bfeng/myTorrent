@@ -1,16 +1,11 @@
 --- # This is a sample file. Please customize it before using.
-PeerID: 101
-PeerHost: 192.168.1.101
+PeerID: 102
+PeerHost: localhost
 IndexServerPort: 5700
 FileServerPort: 5711
 
 Neighbors:
   - PeerID: 102
-    PeerHost: 192.168.1.102
-    IndexServerPort: 5700
-    FileServerPort: 5711
-    
-  - PeerID: 103
-    PeerHost: 192.168.1.103
+    PeerHost: 64.131.105.115
     IndexServerPort: 5700
     FileServerPort: 5711

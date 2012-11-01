@@ -311,7 +311,16 @@ public class IndexServer extends Thread {
                         P2PProtocol.HitMessage hitQuery = protocol.new HitMessage(qm);
                         String filename = qm.getFilename();
                         FileBusinessCard hitCard = null;
-                        if (versionMonitor.Push_broadcast_external.contains(filename) || (versionMonitor.p2p_file_map.get(filename).get_state() == FileBusinessCard.State.VALID)) {
+                        boolean debug1 = false;
+                        boolean p2pHaveFileVALID = false;
+                        if(versionMonitor.p2p_file_map.contains(filename)){
+                            debug1 = true;
+                        }
+                        if (debug1){
+                            if (versionMonitor.p2p_file_map.get(filename).get_state() == FileBusinessCard.State.VALID)
+                                p2pHaveFileVALID = false;
+                        }
+                        if (versionMonitor.Push_broadcast_external.contains(filename) || p2pHaveFileVALID) {
                             hitQuery.hit((long) host.getPeerID(), host.getPeerHost(), host.getFileServerPort(), host.getIndexServerPort());
                             hitCard = versionMonitor.getACard(filename);
                         } else {
