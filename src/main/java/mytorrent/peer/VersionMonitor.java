@@ -238,10 +238,10 @@ public class VersionMonitor extends Thread {
         //Potential ERROR:
         //same file name under both folder
         int i = 0;
-        if (this.Push_file_map.contains(filename)) {
+        if (this.Push_file_map.containsKey(filename)) {
             i = 1;
         }
-        if (this.p2p_file_map.contains(filename)) {
+        if (this.p2p_file_map.containsKey(filename)) {
             i = 2;
         }
         switch (i) {
@@ -257,7 +257,7 @@ public class VersionMonitor extends Thread {
     }
 
     public void justInvalidate(String filename) {
-        if (!p2p_file_map.contains(filename)) {
+        if (!p2p_file_map.containsKey(filename)) {
             //error
             System.out.println(filename + " not found in folder \"received\". Nothing to be done.");
         } else {
@@ -317,7 +317,7 @@ public class VersionMonitor extends Thread {
         @Override
         public void fileCreated(FileChangeEvent fce) throws Exception {
             FileObject temp = fce.getFile();
-            if (p2p_file_map.contains(temp.getName().getBaseName())) {
+            if (p2p_file_map.containsKey(temp.getName().getBaseName())) {
                 System.out.println("received folder:" + temp.getName().getBaseName() + " Local Copy Created !");
             } else {
                 System.out.println("Please don't just drag a file into \"received\" folder !");
@@ -329,7 +329,7 @@ public class VersionMonitor extends Thread {
         public void fileDeleted(FileChangeEvent fce) throws Exception {
             //todo
             FileObject temp = fce.getFile();
-            if (p2p_file_map.contains(temp.getName().getBaseName())) {
+            if (p2p_file_map.containsKey(temp.getName().getBaseName())) {
                 System.out.println("received folder:" + temp.getName().getBaseName() + " Local Copy Deleted !");
                 p2p_file_map.remove(temp.getName().getBaseName());
             } else {
@@ -360,7 +360,7 @@ public class VersionMonitor extends Thread {
                     File receivedFolder = new File("received/");
                     String[] files = receivedFolder.list();
                     for (String afile : files) {
-                        if (p2p_file_map.contains(afile)) {
+                        if (p2p_file_map.containsKey(afile)) {
                             FileBusinessCard theCard = p2p_file_map.get(afile);
                             if (theCard.get_approach() == FileBusinessCard.Approach.PULL) {
 

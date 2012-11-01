@@ -265,7 +265,7 @@ public class IndexServer extends Thread {
                     //#-1 check local file for invalidate
                     FileBusinessCard newCard = msgIn.getFileBusinessCard();
                     String filename = newCard.get_filename();
-                    if (versionMonitor.p2p_file_map.contains(filename) && newCard.get_versionNumber() > versionMonitor.p2p_file_map.get(filename).get_versionNumber()) {
+                    if (versionMonitor.p2p_file_map.containsKey(filename) && newCard.get_versionNumber() > versionMonitor.p2p_file_map.get(filename).get_versionNumber()) {
                         versionMonitor.justInvalidate(filename);
                     }
                     //#-2 propagate invalidate if necessary
@@ -314,7 +314,7 @@ public class IndexServer extends Thread {
                         FileBusinessCard hitCard = null;
                         boolean debug1 = false;
                         boolean p2pHaveFileVALID = false;
-                        if(versionMonitor.p2p_file_map.contains(filename)){
+                        if(versionMonitor.p2p_file_map.containsKey(filename)){
                             debug1 = true;
                         }
                         if (debug1){
