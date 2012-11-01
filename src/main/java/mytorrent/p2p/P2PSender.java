@@ -66,7 +66,7 @@ public class P2PSender extends Thread {
     @Override
     public void run() {
         try {
-            File sharedfile = new File("shard/" + filename);
+            File sharedfile = new File("shared/" + filename);
             File receivedfile = new File("received/" + filename);
             int i = 0;
             if (sharedfile.exists()) {
