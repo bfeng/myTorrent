@@ -54,6 +54,7 @@ public class VersionMonitor extends Thread {
     public ArrayDeque<String> Pull_poll_external; //inter thread communication for pull
     public ConcurrentHashMap<String, FileBusinessCard> Push_file_map;
     public ConcurrentHashMap<String, FileBusinessCard> p2p_file_map;
+    TTR_Timer Ttr_timer;
 
     public VersionMonitor(PeerAddress host_me) {
 
@@ -74,6 +75,9 @@ public class VersionMonitor extends Thread {
         this.Push_broadcast_external = new ArrayDeque<String>();
         this.Push_file_map = new ConcurrentHashMap<String, FileBusinessCard>();
         this.p2p_file_map = new ConcurrentHashMap<String, FileBusinessCard>();
+        
+        //one ttr_timer
+        Ttr_timer = new TTR_Timer();
 
     }
 
@@ -84,9 +88,9 @@ public class VersionMonitor extends Thread {
         } catch (Exception ex) {
             Logger.getLogger(VersionMonitor.class.getName()).log(Level.SEVERE, null, ex);
         }
-
-
-        System.out.println("Good Bye");
+        
+        
+        System.out.println("VersionMonitor Started!");
 
 
     }
@@ -123,6 +127,8 @@ public class VersionMonitor extends Thread {
 
         //static init
         Push_broadcast_external.clear();
+        
+        Ttr_timer.start();
 
     }
 
@@ -188,6 +194,9 @@ public class VersionMonitor extends Thread {
             temp.set_approach(FileBusinessCard.Approach.PULL);
             temp.set_state(FileBusinessCard.State.VALID);
             temp.setTTR(20);
+            if (the_map == Push_file_map) {
+                temp.set_state(FileBusinessCard.State.ORIGINAL);
+            }
 
             the_map.replace(filename, temp);
         }

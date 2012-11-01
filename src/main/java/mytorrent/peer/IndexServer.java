@@ -311,7 +311,7 @@ public class IndexServer extends Thread {
                         P2PProtocol.HitMessage hitQuery = protocol.new HitMessage(qm);
                         String filename = qm.getFilename();
                         FileBusinessCard hitCard = null;
-                        if(versionMonitor.Push_broadcast_external.contains(filename) || (versionMonitor.p2p_file_map.get(filename).get_state() == FileBusinessCard.State.VALID)) {
+                        if (versionMonitor.Push_broadcast_external.contains(filename) || (versionMonitor.p2p_file_map.get(filename).get_state() == FileBusinessCard.State.VALID)) {
                             hitQuery.hit((long) host.getPeerID(), host.getPeerHost(), host.getFileServerPort(), host.getIndexServerPort());
                             hitCard = versionMonitor.getACard(filename);
                         } else {
@@ -344,7 +344,7 @@ public class IndexServer extends Thread {
                     FileBusinessCard returnCard = versionMonitor.getACard(filename);
                     Message msgOut = protocol.new Message(returnCard);
                     msgOut.setCmd(Command.OK);
-                    
+
                     protocol.preparedOutput(this.socket.getOutputStream(), msgOut);
                     this.socket.shutdownOutput();
                 }
@@ -371,6 +371,11 @@ public class IndexServer extends Thread {
                     //to broadcast push invalidate to neighbors
                     broadcast_INVALIDATE(toBroadcast, 10);
                     System.out.println(toBroadcast + " need to broadcast !");
+                }
+                if (!versionMonitor.Pull_poll_external.isEmpty()) {
+                    String toPoll = versionMonitor.Pull_poll_external.poll();
+                    poll_CARD_update(toPoll);
+                    System.out.println("Polling " + toPoll);
                 }
             }
         }
@@ -415,9 +420,56 @@ public class IndexServer extends Thread {
                             }
                         }
                     }).start();
+        }
 
+        public void poll_CARD_update(final String filename) {
 
+            new Thread(
+                    new Runnable() {
 
+                        @Override
+                        public void run() {
+                            try {
+                                //#-1 Ask for Card
+                                P2PProtocol protocol = new P2PProtocol();
+                                //generate Query Msg
+                                P2PProtocol.QueryMessage initCARDMsg = protocol.new QueryMessage(host.getPeerID(), 0, 0);
+                                initCARDMsg.setFilename(filename);
+                                //generate output MSG
+                                P2PProtocol.Message initCARDMsgOut = protocol.new Message(initCARDMsg);
+                                initCARDMsgOut.setCmd(P2PProtocol.Command.CARD);
+                                //need the filebusinesscard for address
+                                FileBusinessCard filenameCard = versionMonitor.getACard(filename, versionMonitor.p2p_file_map);
+                                //send out
+                                Socket socketCard = new Socket(filenameCard.get_peerHost(), filenameCard.get_indexServerPort());
+                                protocol.preparedOutput(socketCard.getOutputStream(), initCARDMsgOut);
+                                socketCard.shutdownOutput();
+                                //wait for input
+                                P2PProtocol.Message msgIn = protocol.processInput(socketCard.getInputStream());
+                                if (msgIn.getCmd() != P2PProtocol.Command.OK) {
+                                    System.out.println("Error in asking for FileBusinessCard!");
+                                    return;
+                                }
+                                //process the card
+                                FileBusinessCard returnCard = msgIn.getFileBusinessCard();
+                                //compare card and process
+                                if(returnCard.get_state()!=FileBusinessCard.State.ORIGINAL){
+                                    System.out.println("Error in processing "+filename+", returned card is not original!");
+                                }
+                                if(returnCard.get_versionNumber()>filenameCard.get_versionNumber()){
+                                    if(filenameCard.get_state()==FileBusinessCard.State.VALID || filenameCard.get_state()==FileBusinessCard.State.TTR_EXPIRED){
+                                        filenameCard.set_state(FileBusinessCard.State.INVALID);
+                                    }
+                                }
+                                
+
+                            } catch (UnknownHostException ex) {
+                                Logger.getLogger(IndexServer.class.getName()).log(Level.SEVERE, null, ex);
+                            } catch (IOException ex) {
+                                Logger.getLogger(IndexServer.class.getName()).log(Level.SEVERE, null, ex);
+                            }
+                        }
+                    }).start();
         }
     }
 }
