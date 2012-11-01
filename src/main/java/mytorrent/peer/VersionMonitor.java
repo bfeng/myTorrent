@@ -73,6 +73,7 @@ public class VersionMonitor extends Thread {
         this.host = host_me;
         this.Push_broadcast_external = new ArrayDeque<String>();
         this.Push_file_map = new ConcurrentHashMap<String, FileBusinessCard>();
+        this.p2p_file_map = new ConcurrentHashMap<String, FileBusinessCard>();
 
     }
 
@@ -112,11 +113,13 @@ public class VersionMonitor extends Thread {
         Pull_fm.addFile(initfiles_pull);
         Pull_fm.setRecursive(false);
         Pull_fm.start();
-
+        /*
         File temp2 = new File("received/");
         for (String item : temp2.list()) {
-            System.out.println(item);
+        System.out.println(item);
         }
+        
+         */
 
         //static init
         Push_broadcast_external.clear();
@@ -184,6 +187,7 @@ public class VersionMonitor extends Thread {
             FileBusinessCard temp = the_map.get(filename);
             temp.set_approach(FileBusinessCard.Approach.PULL);
             temp.set_state(FileBusinessCard.State.VALID);
+            temp.setTTR(20);
 
             the_map.replace(filename, temp);
         }
@@ -318,6 +322,7 @@ public class VersionMonitor extends Thread {
             FileObject temp = fce.getFile();
             if (p2p_file_map.contains(temp.getName().getBaseName())) {
                 System.out.println("received folder:" + temp.getName().getBaseName() + " Local Copy Deleted !");
+                p2p_file_map.remove(temp.getName().getBaseName());
             } else {
                 System.out.println("A random file in \"received\" folder deleted !");
             }
@@ -331,6 +336,47 @@ public class VersionMonitor extends Thread {
     }
 
     //Need a TTR_Timer
+    private class TTR_Timer extends Thread {
+
+        boolean enable;
+
+        public TTR_Timer() {
+            enable = true;
+        }
+
+        @Override
+        public void run() {
+            while (enable) {
+                try {
+                    File receivedFolder = new File("received/");
+                    String[] files = receivedFolder.list();
+                    for (String afile : files) {
+                        if (p2p_file_map.contains(afile)) {
+                            FileBusinessCard theCard = p2p_file_map.get(afile);
+                            if (theCard.get_approach() == FileBusinessCard.Approach.PULL) {
+
+                                //TTL not expire, increase TTR
+                                if (!theCard.check_TTR_expire()) {
+                                    theCard.increase_TTR();
+                                    p2p_file_map.replace(afile, theCard);
+                                } else if (theCard.check_TTR_expire() && theCard.get_state() == FileBusinessCard.State.VALID) {
+                                    //TTL expired AND state is VALID, set TTR_expire, send a job to external deque
+                                    theCard.set_state(FileBusinessCard.State.TTR_EXPIRED);
+                                    Pull_poll_external.offer(afile);
+                                }
+                            }
+                        }
+                    }
+                    //Timer ticks
+                    Thread.sleep(1000);
+                } catch (InterruptedException ex) {
+                    Logger.getLogger(VersionMonitor.class.getName()).log(Level.SEVERE, null, ex);
+                }
+            }
+
+        }
+    }
+
     public static void main(String[] args) {
         System.out.println("Start: main HELLO");
         PeerAddress starter = new PeerAddress(101, "localhost", 5701, 5702);

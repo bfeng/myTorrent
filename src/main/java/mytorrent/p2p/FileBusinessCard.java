@@ -133,11 +133,11 @@ public class FileBusinessCard {
             this.TTR++;
     }
     
-    public int check_TTR_expire() {
-        if(this.TTR == this.TTR_threshold)
-            return 1;
+    public boolean check_TTR_expire() {
+        if(this.TTR >= this.TTR_threshold)
+            return true;
         else
-            return 0;
+            return false;
     }
     
     public void setTTR(int ttr) {
