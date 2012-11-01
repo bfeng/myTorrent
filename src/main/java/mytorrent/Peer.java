@@ -61,7 +61,7 @@ import org.apache.commons.vfs2.impl.DefaultFileMonitor;
 public class Peer {
 
     private final FileServer fileServer;
-    private final IndexServer indexServer;
+    public final IndexServer indexServer;
     private final PeerAddress[] neighbors;
     private final PeerAddress host;
 

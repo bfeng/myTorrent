@@ -174,6 +174,33 @@ public class VersionMonitor extends Thread {
         }
     }
 
+    public void setPull(String filename) {
+        if (!p2p_file_map.containsKey(filename)) {
+            //user input error
+            System.out.println(filename + " not found in folder \"shared\". Nothing to be done.");
+        } else {
+            //setup approach for this copy
+            FileBusinessCard temp = p2p_file_map.get(filename);
+            temp.set_approach(FileBusinessCard.Approach.PULL);
+            temp.set_state(FileBusinessCard.State.VALID);
+
+            p2p_file_map.replace(filename, temp);
+        }
+    }
+
+    public void setPullStop(String filename) {
+        if (!p2p_file_map.containsKey(filename)) {
+            //user input error
+            System.out.println(filename + " not found in folder \"shared\". Nothing to be done.");
+        } else {
+            //setup approach for this copy
+            FileBusinessCard temp = p2p_file_map.get(filename);
+            temp.set_approach(FileBusinessCard.Approach.NULL);
+            temp.set_state(FileBusinessCard.State.NULL);
+
+            p2p_file_map.replace(filename, temp);
+        }
+    }
     public FileBusinessCard getACard(String filename, ConcurrentHashMap<String, FileBusinessCard> the_map) {
         return the_map.get(filename);
     }
@@ -242,7 +269,7 @@ public class VersionMonitor extends Thread {
             FileObject temp = fce.getFile();
             System.out.println("PUSH TEST: file changed, the version will be increased." + temp.getName().getBaseName());
             //#-1 check approach
-                FileBusinessCard targetCard = Push_file_map.get(temp.getName().getBaseName());
+            FileBusinessCard targetCard = Push_file_map.get(temp.getName().getBaseName());
 
             //#-2 version update
             targetCard.increase_versionNumber();

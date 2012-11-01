@@ -80,7 +80,7 @@ public class MyTorrent {
                 //Exit while and end main()
                 //Enter here only if > Exit while and end main()
                 Running = false;
-                
+
             } else if (userinput[0].toLowerCase().equals("queryall")) {
                 /* Project 2 Query */
 
@@ -90,7 +90,7 @@ public class MyTorrent {
                 }
                 mainPeer.query(userinput[1], MessageID, Integer.valueOf(userinput[2]), false);
                 MessageID++;
-                
+
             } else if (userinput[0].toLowerCase().equals("obtainall")) {
                 /* Project 2 Obtain */
                 if (userinput.length < 3) {
@@ -99,7 +99,52 @@ public class MyTorrent {
                 }
                 mainPeer.obtain2(userinput[1], MessageID, Integer.valueOf(userinput[2]));
                 MessageID++;
-                
+
+            } else if (userinput[0].toLowerCase().equals("push")) {
+                if (userinput.length != 2) {
+                    System.out.println("Wrong parameters");
+                    continue;
+                }
+                String thefile = userinput[2];
+                if (mainPeer.indexServer.versionMonitor.Push_file_map.contains(thefile)) {
+                    mainPeer.indexServer.versionMonitor.setPush(thefile);
+                } else {
+                    System.out.println("Wrong filename");
+                }
+
+            } else if (userinput[0].toLowerCase().equals("pushstop")) {
+                if (userinput.length != 2) {
+                    System.out.println("Wrong parameters");
+                    continue;
+                }
+                String thefile = userinput[2];
+                if (mainPeer.indexServer.versionMonitor.Push_file_map.contains(thefile)) {
+                    mainPeer.indexServer.versionMonitor.setPushStop(thefile);
+                } else {
+                    System.out.println("Wrong filename");
+                }
+            } else if (userinput[0].toLowerCase().equals("pull")) {
+                if (userinput.length != 2) {
+                    System.out.println("Wrong parameters");
+                    continue;
+                }
+                String thefile = userinput[2];
+                if (mainPeer.indexServer.versionMonitor.p2p_file_map.contains(thefile)) {
+                    mainPeer.indexServer.versionMonitor.setPull(thefile);
+                } else {
+                    System.out.println("Wrong filename");
+                }
+            } else if (userinput[0].toLowerCase().equals("pullstop")) {
+                if (userinput.length != 2) {
+                    System.out.println("Wrong parameters");
+                    continue;
+                }
+                String thefile = userinput[2];
+                if (mainPeer.indexServer.versionMonitor.p2p_file_map.contains(thefile)) {
+                    mainPeer.indexServer.versionMonitor.setPullStop(thefile);
+                } else {
+                    System.out.println("Wrong filename");
+                }
             } else if (userinput[0].toLowerCase().equals("test")) {
                 if (userinput.length < 5) {
                     System.err.println("Wrong parameters");
