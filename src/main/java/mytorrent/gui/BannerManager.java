@@ -73,15 +73,26 @@ public class BannerManager {
 
     public static void printHelp() {
         System.out.println("\n Welcome to Help !");
-        System.out.println(" [Query]: Search and list all peer who have the file called \"filename\" ");
-        System.out.println("          You can type \"search filename\"");
-        System.out.println("          or simply \"sea filename\" to complete this action.");
-        System.out.println("          TTL is an integer. It specify the wides of the network you want to query.");
-        System.out.println("[Obtain]: Specific file will be automaticly downloaded to your \"received\" folder ");
-        System.out.println("          You can type \"obtain filename\"");
-        System.out.println("          or simply \"obt filename\" to complete this action.");
-        System.out.println("  [Help]: See this message by typing \"help\"\n");
-        System.out.println("  [Exit]: You can exit this client by typing \"exit\"\n");
+        System.out.println("   [Query]: Search and list peers who have the VALID file called \"filename\" ");
+        System.out.println("            You can type \"search filename\"");
+        System.out.println("            or simply \"sea filename\" to complete this action.");
+        System.out.println("            TTL is an integer. It specify the wides of the network you want to query.");
+        System.out.println("  [Obtain]: Specific VALID file will be automaticly downloaded to your \"received\" folder ");
+        System.out.println("            You can type \"obtain filename\"");
+        System.out.println("            or simply \"obt filename\" to complete this action.");
+        System.out.println("    [Push]: - push filename : turn on push mechenism for file.");
+        System.out.println("[Pushstop]: - pushstop filename : turn off push mechenism for file.");
+        System.out.println("    [Pull]: - pull filename : turn on push mechenism for file.");
+        System.out.println("[Pullstop]: - pullstop filename : turn off push mechenism for file. ");
+        System.out.println("    [Help]: See this message by typing \"help\"\n");
+        System.out.println("    [Exit]: You can exit this client by typing \"exit\"\n");
+        System.out.println(" [Queryall]: (Project 2 old query)Search and list ALL peer who have the file called \"filename\" ");
+        System.out.println("             You can type \"search filename\"");
+        System.out.println("             or simply \"sea filename\" to complete this action.");
+        System.out.println("             TTL is an integer. It specify the wides of the network you want to query.");
+        System.out.println("[Obtainall]: (Project 2 old query) Specific file will be automaticly downloaded to your \"received\" folder ");
+        System.out.println("             You can type \"obtain filename\"");
+        System.out.println("             or simply \"obt filename\" to complete this action.");
     }
     /*
     public static void QueryWaiting() throws InterruptedException {
