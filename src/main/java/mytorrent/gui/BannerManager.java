@@ -37,8 +37,13 @@ public class BannerManager {
         System.out.println("User Input Direction:");
         System.out.println(" * Query: query filename TTL");
         System.out.println(" * Obtain: obtain filename TTL");
-        System.out.println(" * Query: queryall filename TTL");
-        System.out.println(" * Obtain: obtainall filename TTL");
+        System.out.println(" * Queryall: queryall filename TTL (regardless of VALID or INVALID)");
+        System.out.println(" * Obtainall: obtainall filename TTL (regardless of VALID or INVALID)");
+        System.out.println(" * push: push filename");
+        System.out.println(" * pushstop: pushstop filename");
+        System.out.println(" * pull: pull filename");
+        System.out.println(" * pullstop: pullstop filename");
+        System.out.println(" * pullset: pullset filename TTR");
         System.out.println(" * Help: help (detailed info)");
         System.out.println(" * Exit Client: exit");
     }
@@ -84,6 +89,7 @@ public class BannerManager {
         System.out.println("[Pushstop]: - pushstop filename : turn off push mechenism for file.");
         System.out.println("    [Pull]: - pull filename : turn on push mechenism for file.");
         System.out.println("[Pullstop]: - pullstop filename : turn off push mechenism for file. ");
+        System.out.println(" [Pullset]: - pullset filename TTR : set TTR time for file ");
         System.out.println("    [Help]: See this message by typing \"help\"\n");
         System.out.println("    [Exit]: You can exit this client by typing \"exit\"\n");
         System.out.println(" [Queryall]: (Project 2 old query)Search and list ALL peer who have the file called \"filename\" ");
