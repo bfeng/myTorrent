@@ -188,6 +188,15 @@ public class IndexServer extends Thread {
                 Message msgIn = protocol.processInput(socket.getInputStream());
                 if (ignoreMessage(msgIn)) {
                     return;
+                } else if (msgIn.getCmd() == Command.CARD) {
+                    //send card back to socket
+                    String filename = msgIn.getQueryMessage().getFilename();
+                    FileBusinessCard returnCard = versionMonitor.getACard(filename);
+                    Message msgOut = protocol.new Message(returnCard);
+                    msgOut.setCmd(Command.OK);
+
+                    protocol.preparedOutput(this.socket.getOutputStream(), msgOut);
+                    this.socket.shutdownOutput();
                 } else {
                     Message msgOut = protocol.new Message(Command.ING);
                     protocol.preparedOutput(socket.getOutputStream(), msgOut);
@@ -314,12 +323,13 @@ public class IndexServer extends Thread {
                         FileBusinessCard hitCard = null;
                         boolean debug1 = false;
                         boolean p2pHaveFileVALID = false;
-                        if(versionMonitor.p2p_file_map.containsKey(filename)){
+                        if (versionMonitor.p2p_file_map.containsKey(filename)) {
                             debug1 = true;
                         }
-                        if (debug1){
-                            if (versionMonitor.p2p_file_map.get(filename).get_state() == FileBusinessCard.State.VALID)
+                        if (debug1) {
+                            if (versionMonitor.p2p_file_map.get(filename).get_state() == FileBusinessCard.State.VALID) {
                                 p2pHaveFileVALID = false;
+                            }
                         }
                         if (versionMonitor.Push_file_map.containsKey(filename) || p2pHaveFileVALID) {
                             hitQuery.hit((long) host.getPeerID(), host.getPeerHost(), host.getFileServerPort(), host.getIndexServerPort());
@@ -348,15 +358,6 @@ public class IndexServer extends Thread {
                             this.send2Neighbors(forwardQueryMsgOut);
                         }
                     }
-                } else if (msgIn.getCmd() == Command.CARD) {
-                    //send card back to socket
-                    String filename = msgIn.getQueryMessage().getFilename();
-                    FileBusinessCard returnCard = versionMonitor.getACard(filename);
-                    Message msgOut = protocol.new Message(returnCard);
-                    msgOut.setCmd(Command.OK);
-
-                    protocol.preparedOutput(this.socket.getOutputStream(), msgOut);
-                    this.socket.shutdownOutput();
                 }
             } catch (Exception ex) {
                 Logger.getLogger(IndexServer.class.getName()).log(Level.SEVERE, null, ex);
@@ -463,15 +464,15 @@ public class IndexServer extends Thread {
                                 //process the card
                                 FileBusinessCard returnCard = msgIn.getFileBusinessCard();
                                 //compare card and process
-                                if(returnCard.get_state()!=FileBusinessCard.State.ORIGINAL){
-                                    System.out.println("Error in processing "+filename+", returned card is not original!");
+                                if (returnCard.get_state() != FileBusinessCard.State.ORIGINAL) {
+                                    System.out.println("Error in processing " + filename + ", returned card is not original!");
                                 }
-                                if(returnCard.get_versionNumber()>filenameCard.get_versionNumber()){
-                                    if(filenameCard.get_state()==FileBusinessCard.State.VALID || filenameCard.get_state()==FileBusinessCard.State.TTR_EXPIRED){
+                                if (returnCard.get_versionNumber() > filenameCard.get_versionNumber()) {
+                                    if (filenameCard.get_state() == FileBusinessCard.State.VALID || filenameCard.get_state() == FileBusinessCard.State.TTR_EXPIRED) {
                                         filenameCard.set_state(FileBusinessCard.State.INVALID);
                                     }
                                 }
-                                
+
 
                             } catch (UnknownHostException ex) {
                                 Logger.getLogger(IndexServer.class.getName()).log(Level.SEVERE, null, ex);
