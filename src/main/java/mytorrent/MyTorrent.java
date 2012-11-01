@@ -105,7 +105,7 @@ public class MyTorrent {
                     System.out.println("Wrong parameters");
                     continue;
                 }
-                String thefile = userinput[2];
+                String thefile = userinput[1];
                 if (mainPeer.indexServer.versionMonitor.Push_file_map.contains(thefile)) {
                     mainPeer.indexServer.versionMonitor.setPush(thefile);
                 } else {
@@ -117,7 +117,7 @@ public class MyTorrent {
                     System.out.println("Wrong parameters");
                     continue;
                 }
-                String thefile = userinput[2];
+                String thefile = userinput[1];
                 if (mainPeer.indexServer.versionMonitor.Push_file_map.contains(thefile)) {
                     mainPeer.indexServer.versionMonitor.setPushStop(thefile);
                 } else {
@@ -128,7 +128,7 @@ public class MyTorrent {
                     System.out.println("Wrong parameters");
                     continue;
                 }
-                String thefile = userinput[2];
+                String thefile = userinput[1];
                 if (mainPeer.indexServer.versionMonitor.p2p_file_map.contains(thefile)) {
                     System.out.println("You are not original copy owner of the file. You have enabled polling!");
                     mainPeer.indexServer.versionMonitor.setPull(thefile, mainPeer.indexServer.versionMonitor.p2p_file_map);
@@ -142,7 +142,7 @@ public class MyTorrent {
                     System.out.println("Wrong parameters");
                     continue;
                 }
-                String thefile = userinput[2];
+                String thefile = userinput[1];
                 if (mainPeer.indexServer.versionMonitor.p2p_file_map.contains(thefile)) {
                     System.out.println("You are not original copy owner of the file. You have disabled polling!");
                     mainPeer.indexServer.versionMonitor.setPull(thefile, mainPeer.indexServer.versionMonitor.p2p_file_map);
@@ -156,7 +156,7 @@ public class MyTorrent {
                     System.out.println("Wrong parameters");
                     continue;
                 }
-                String thefile = userinput[2];
+                String thefile = userinput[1];
                 int TTR = Integer.valueOf(userinput[2]);
                 if (mainPeer.indexServer.versionMonitor.p2p_file_map.contains(thefile)) {
                     System.out.println("You are not original copy owner of the file. You CANNOT change TTR!");
