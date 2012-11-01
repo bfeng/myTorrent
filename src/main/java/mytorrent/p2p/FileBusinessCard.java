@@ -73,6 +73,8 @@ public class FileBusinessCard {
         approach = Approach.NULL;
         state = State.NULL;
         versionNumber = 0;
+        TTR_threshold = -1;
+        TTR = 0;
     }
 
     //get_info

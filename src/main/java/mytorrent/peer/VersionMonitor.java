@@ -50,7 +50,8 @@ public class VersionMonitor extends Thread {
     FileSystemManager fsManager;
     DefaultFileMonitor Push_fm;
     DefaultFileMonitor Pull_fm;
-    public ArrayDeque<String> Push_broadcast_external; //inter thread communication
+    public ArrayDeque<String> Push_broadcast_external; //inter thread communication for push
+    public ArrayDeque<String> Pull_poll_external; //inter thread communication for pull
     public ConcurrentHashMap<String, FileBusinessCard> Push_file_map;
     public ConcurrentHashMap<String, FileBusinessCard> p2p_file_map;
 
@@ -174,33 +175,48 @@ public class VersionMonitor extends Thread {
         }
     }
 
-    public void setPull(String filename) {
-        if (!p2p_file_map.containsKey(filename)) {
+    public void setPull(String filename, ConcurrentHashMap<String, FileBusinessCard> the_map) {
+        if (!the_map.containsKey(filename)) {
             //user input error
             System.out.println(filename + " not found in folder \"shared\". Nothing to be done.");
         } else {
             //setup approach for this copy
-            FileBusinessCard temp = p2p_file_map.get(filename);
+            FileBusinessCard temp = the_map.get(filename);
             temp.set_approach(FileBusinessCard.Approach.PULL);
             temp.set_state(FileBusinessCard.State.VALID);
 
-            p2p_file_map.replace(filename, temp);
+            the_map.replace(filename, temp);
         }
     }
 
-    public void setPullStop(String filename) {
-        if (!p2p_file_map.containsKey(filename)) {
+    public void setPullStop(String filename, ConcurrentHashMap<String, FileBusinessCard> the_map) {
+        if (!the_map.containsKey(filename)) {
             //user input error
             System.out.println(filename + " not found in folder \"shared\". Nothing to be done.");
         } else {
             //setup approach for this copy
-            FileBusinessCard temp = p2p_file_map.get(filename);
+            FileBusinessCard temp = the_map.get(filename);
             temp.set_approach(FileBusinessCard.Approach.NULL);
             temp.set_state(FileBusinessCard.State.NULL);
 
-            p2p_file_map.replace(filename, temp);
+            the_map.replace(filename, temp);
         }
     }
+
+    public void setPullTTR(String filename, ConcurrentHashMap<String, FileBusinessCard> the_map, int TTR) {
+        if (!the_map.containsKey(filename)) {
+            //user input error
+            System.out.println(filename + " not found in folder \"shared\". Nothing to be done.");
+        } else {
+            //setup approach for this copy
+            FileBusinessCard temp = the_map.get(filename);
+            temp.setTTR(TTR);
+
+            the_map.replace(filename, temp);
+        }
+
+    }
+
     public FileBusinessCard getACard(String filename, ConcurrentHashMap<String, FileBusinessCard> the_map) {
         return the_map.get(filename);
     }
@@ -314,6 +330,7 @@ public class VersionMonitor extends Thread {
         }
     }
 
+    //Need a TTR_Timer
     public static void main(String[] args) {
         System.out.println("Start: main HELLO");
         PeerAddress starter = new PeerAddress(101, "localhost", 5701, 5702);
