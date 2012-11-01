@@ -60,8 +60,7 @@ public class MyTorrent {
                     System.out.println("Wrong parameters");
                     continue;
                 }
-
-                mainPeer.query(userinput[1], MessageID, Integer.valueOf(userinput[2]), false);
+                mainPeer.query2(userinput[1], MessageID, Integer.valueOf(userinput[2]), false);
                 MessageID++;
 
             } else if (userinput[0].toLowerCase().startsWith("obt")) {
@@ -70,8 +69,7 @@ public class MyTorrent {
                     System.out.println("Wrong parameters");
                     continue;
                 }
-
-                mainPeer.obtain(userinput[1], MessageID, Integer.valueOf(userinput[2]));
+                mainPeer.obtain2(userinput[1], MessageID, Integer.valueOf(userinput[2]));
                 MessageID++;
 
             } else if (userinput[0].toLowerCase().equals("exit")) {
@@ -82,6 +80,26 @@ public class MyTorrent {
                 //Exit while and end main()
                 //Enter here only if > Exit while and end main()
                 Running = false;
+                
+            } else if (userinput[0].toLowerCase().equals("queryall")) {
+                /* Project 2 Query */
+
+                if (userinput.length < 3) {
+                    System.out.println("Wrong parameters");
+                    continue;
+                }
+                mainPeer.query(userinput[1], MessageID, Integer.valueOf(userinput[2]), false);
+                MessageID++;
+                
+            } else if (userinput[0].toLowerCase().equals("obtainall")) {
+                /* Project 2 Obtain */
+                if (userinput.length < 3) {
+                    System.out.println("Wrong parameters");
+                    continue;
+                }
+                mainPeer.obtain2(userinput[1], MessageID, Integer.valueOf(userinput[2]));
+                MessageID++;
+                
             } else if (userinput[0].toLowerCase().equals("test")) {
                 if (userinput.length < 5) {
                     System.err.println("Wrong parameters");

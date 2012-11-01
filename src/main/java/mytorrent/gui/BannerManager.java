@@ -37,6 +37,8 @@ public class BannerManager {
         System.out.println("User Input Direction:");
         System.out.println(" * Query: query filename TTL");
         System.out.println(" * Obtain: obtain filename TTL");
+        System.out.println(" * Query: queryall filename TTL");
+        System.out.println(" * Obtain: obtainall filename TTL");
         System.out.println(" * Help: help (detailed info)");
         System.out.println(" * Exit Client: exit");
     }
@@ -82,23 +84,23 @@ public class BannerManager {
         System.out.println("  [Exit]: You can exit this client by typing \"exit\"\n");
     }
     /*
-     public static void QueryWaiting() throws InterruptedException {
-     System.out.println("|                    Please Wait                   |");
-     System.out.print("|");
-     for (int i = 0; i < 16; i++) {
-
-     System.out.print("=");
-     Thread.sleep(133);
-     System.out.print("=");
-     Thread.sleep(133);
-     System.out.print("=");
-     Thread.sleep(133);
-     }
-     System.out.print("==|\n");
-
-
-
-     }
+    public static void QueryWaiting() throws InterruptedException {
+    System.out.println("|                    Please Wait                   |");
+    System.out.print("|");
+    for (int i = 0; i < 16; i++) {
+    
+    System.out.print("=");
+    Thread.sleep(133);
+    System.out.print("=");
+    Thread.sleep(133);
+    System.out.print("=");
+    Thread.sleep(133);
+    }
+    System.out.print("==|\n");
+    
+    
+    
+    }
      */
 
     public static void obtainResult(String filename, int flag) {
