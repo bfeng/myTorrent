@@ -137,4 +137,8 @@ public class FileBusinessCard {
         else
             return 0;
     }
+    
+    public void setTTR(int ttr) {
+        this.TTR_threshold = ttr;
+    }
 }
