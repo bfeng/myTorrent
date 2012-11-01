@@ -305,11 +305,7 @@ public class P2PProtocol {
         }
 
         public QueryMessage getQueryMessage() {
-            if (this.cmd == Command.QUERYMSG) {
-                return queryMessage;
-            } else {
-                return null;
-            }
+            return queryMessage;
         }
 
         public void setQueryMessage(QueryMessage queryMessage) {
