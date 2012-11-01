@@ -62,6 +62,7 @@ public class IndexServer extends Thread {
         this.host = host;
         this.neighbors = neighbors;
         this.versionMonitor = new VersionMonitor(this.host);
+        this.versionMonitor.start();
     }
 
     public void updateFileHash(String[] files) {
