@@ -498,6 +498,9 @@ public class IndexServer extends Thread {
                                     filenameCard.setTTRvalue(0);
                                     filenameCard.set_state(FileBusinessCard.State.VALID);
                                 }
+                                if(returnCard.get_approach()==FileBusinessCard.Approach.NULL && filenameCard.get_approach()==FileBusinessCard.Approach.PULL){
+                                    filenameCard.set_approach(FileBusinessCard.Approach.NULL);
+                                }
 
 
                             } catch (UnknownHostException ex) {
