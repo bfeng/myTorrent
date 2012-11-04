@@ -91,7 +91,7 @@ public class VersionMonitor extends Thread {
         }
         
         
-        System.out.println("VersionMonitor Started!");
+        //System.out.println("VersionMonitor Started!");
 
 
     }
