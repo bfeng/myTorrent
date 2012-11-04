@@ -491,6 +491,11 @@ public class IndexServer extends Thread {
                                         filenameCard.set_state(FileBusinessCard.State.INVALID);
                                         System.out.println(filenameCard.get_filename()+" is invalidated ! (PULL)");
                                     }
+                                } else {
+                                    if(filenameCard.get_state()!= FileBusinessCard.State.TTR_EXPIRED){
+                                        System.out.println("TTR_EXPIRED!");
+                                    }
+                                    filenameCard.setTTR(0);
                                 }
 
 
