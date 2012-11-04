@@ -386,14 +386,14 @@ public class IndexServer extends Thread {
                     if (!versionMonitor.Push_broadcast_external.isEmpty()) {
                         String toBroadcast = versionMonitor.Push_broadcast_external.poll();
                         //to broadcast push invalidate to neighbors
-                        System.out.println(toBroadcast + " need to broadcast !");
+                        System.out.println("#PUSH INFO#:"+ toBroadcast + " need to broadcast !");
                         broadcast_INVALIDATE(toBroadcast, 10);
 
                     }
                     if (!versionMonitor.Pull_poll_external.isEmpty()) {
                         String toPoll = versionMonitor.Pull_poll_external.poll();
                         poll_CARD_update(toPoll);
-                        System.out.println("Polling " + toPoll);
+                        System.out.println("#PULL INFO#: Polling " + toPoll);
                     }
                     Thread.sleep(1000);
                 } catch (InterruptedException ex) {

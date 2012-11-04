@@ -278,7 +278,7 @@ public class VersionMonitor extends Thread {
         public void fileCreated(FileChangeEvent fce) throws Exception {
             //after init, new file is copied to 'shared' folder
             FileObject temp = fce.getFile();
-            System.out.println(" *** \"" + temp.getName().getBaseName() + "\" created in shared folder, ready for push! ***");
+            System.out.println("#Shared Folder INFO# \"" + temp.getName().getBaseName() + "\" created in shared folder, ready for push! ***");
             //register the file into the Push_file_table, and set to NULL;
             register_with_null(temp.getName().getBaseName(), Push_file_map);
 
@@ -288,7 +288,7 @@ public class VersionMonitor extends Thread {
         public void fileDeleted(FileChangeEvent fce) throws Exception {
             //after init, a file is deleted from 'shared' folder
             FileObject temp = fce.getFile();
-            System.out.println(" *** \"" + temp.getName().getBaseName() + "\" deleted in shared folder, ready for push! ***/nPUSH WARNING: Original copy shall not be deleted!!");
+            System.out.println("#Shared Folder INFO# \"" + temp.getName().getBaseName() + "\" deleted in shared folder, ready for push! ***/nPUSH WARNING: Original copy shall not be deleted!!");
 
             Push_file_map.remove(temp.getName().getBaseName());
 
@@ -298,7 +298,7 @@ public class VersionMonitor extends Thread {
         public void fileChanged(FileChangeEvent fce) throws Exception {
             //todo
             FileObject temp = fce.getFile();
-            System.out.println("PUSH TEST: file changed, the version will be increased." + temp.getName().getBaseName());
+            System.out.println("#Shared Folder INFO# \"" + temp.getName().getBaseName() +"\" changed, the version will be increased.");
             //#-1 check approach
             FileBusinessCard targetCard = Push_file_map.get(temp.getName().getBaseName());
 
@@ -320,9 +320,9 @@ public class VersionMonitor extends Thread {
         public void fileCreated(FileChangeEvent fce) throws Exception {
             FileObject temp = fce.getFile();
             if (p2p_file_map.containsKey(temp.getName().getBaseName())) {
-                System.out.println("received folder:" + temp.getName().getBaseName() + " Local Copy Created !");
+                System.out.println("#Received Folder INFO# \"" + temp.getName().getBaseName() + "\" Local Copy Created !");
             } else {
-                System.out.println("Please don't just drag a file into \"received\" folder !");
+                System.out.println("#Received Folder INFO# Please don't just drag a file into \"received\" folder !");
             }
 
         }
@@ -332,17 +332,18 @@ public class VersionMonitor extends Thread {
             //todo
             FileObject temp = fce.getFile();
             if (p2p_file_map.containsKey(temp.getName().getBaseName())) {
-                System.out.println("received folder:" + temp.getName().getBaseName() + " Local Copy Deleted !");
+                System.out.println("#Received Folder INFO# \"" + temp.getName().getBaseName() + "\" Local Copy Deleted !");
                 p2p_file_map.remove(temp.getName().getBaseName());
             } else {
-                System.out.println("A random file in \"received\" folder deleted !");
+                System.out.println("#Received Folder INFO# A unrelated file" + temp.getName().getBaseName()+"\" in \"received\" folder deleted !");
             }
         }
 
         @Override
         public void fileChanged(FileChangeEvent fce) throws Exception {
             //todo
-            System.out.println("received folder: WARNING Local Copy shall not be modified!");
+            FileObject temp = fce.getFile();
+            System.out.println("#Received Folder WARNING# \""+temp.getName().getBaseName()+"\" local copy shall not be modified!");
         }
     }
 
