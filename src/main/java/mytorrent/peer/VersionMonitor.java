@@ -268,6 +268,7 @@ public class VersionMonitor extends Thread {
                 temp.set_state(FileBusinessCard.State.INVALID);
             }
             p2p_file_map.replace(filename, temp);
+            System.out.println(filename + "is invalidated !");
         }
     }
 

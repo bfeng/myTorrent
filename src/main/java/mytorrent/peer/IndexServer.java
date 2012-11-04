@@ -282,27 +282,29 @@ public class IndexServer extends Thread {
                     }
                     //#-2 propagate invalidate if necessary
                     QueryMessage qm = msgIn.getQueryMessage();
-                    if (qm.isLive()) {
-                        //Decrement TTL
-                        qm.decrementTTL();
-                        //Add Path
-                        qm.addPath(host.getPeerID());
-                        //generate msg to send out
-                        P2PProtocol.Message forwardINVALIDATEMsgOut = protocol.new Message(newCard);
-                        forwardINVALIDATEMsgOut.setQueryMessage(qm);
-                        forwardINVALIDATEMsgOut.setCmd(Command.INVALIDATE);
+                    if (host.getPeerID() != qm.getPeerID() && !qm.searchPath(host.getPeerID())) {
+                        if (qm.isLive()) {
+                            //Decrement TTL
+                            qm.decrementTTL();
+                            //Add Path
+                            qm.addPath(host.getPeerID());
+                            //generate msg to send out
+                            P2PProtocol.Message forwardINVALIDATEMsgOut = protocol.new Message(newCard);
+                            forwardINVALIDATEMsgOut.setQueryMessage(qm);
+                            forwardINVALIDATEMsgOut.setCmd(Command.INVALIDATE);
 
-                        Logger.getLogger(IndexServer.class.getName()).log(Level.FINE, "\nThe query message should contain the full path:\nPath: {0}", qm.debugPath());
-                        //send msg out to neighbour
-                        for (PeerAddress n : neighbors) {
-                            try {
-                                Socket client = new Socket(n.getPeerHost(), n.getIndexServerPort());
-                                protocol.preparedOutput(client.getOutputStream(), forwardINVALIDATEMsgOut);
-                                client.shutdownOutput();
-                            } catch (UnknownHostException ex) {
-                                Logger.getLogger(IndexServer.class.getName()).log(Level.SEVERE, null, ex);
-                            } catch (IOException ex) {
-                                Logger.getLogger(IndexServer.class.getName()).log(Level.SEVERE, null, ex);
+                            Logger.getLogger(IndexServer.class.getName()).log(Level.FINE, "\nThe query message should contain the full path:\nPath: {0}", qm.debugPath());
+                            //send msg out to neighbour
+                            for (PeerAddress n : neighbors) {
+                                try {
+                                    Socket client = new Socket(n.getPeerHost(), n.getIndexServerPort());
+                                    protocol.preparedOutput(client.getOutputStream(), forwardINVALIDATEMsgOut);
+                                    client.shutdownOutput();
+                                } catch (UnknownHostException ex) {
+                                    Logger.getLogger(IndexServer.class.getName()).log(Level.SEVERE, null, ex);
+                                } catch (IOException ex) {
+                                    Logger.getLogger(IndexServer.class.getName()).log(Level.SEVERE, null, ex);
+                                }
                             }
                         }
                     }
@@ -383,8 +385,9 @@ public class IndexServer extends Thread {
                 if (!versionMonitor.Push_broadcast_external.isEmpty()) {
                     String toBroadcast = versionMonitor.Push_broadcast_external.poll();
                     //to broadcast push invalidate to neighbors
-                    broadcast_INVALIDATE(toBroadcast, 10);
                     System.out.println(toBroadcast + " need to broadcast !");
+                    broadcast_INVALIDATE(toBroadcast, 10);
+
                 }
                 if (!versionMonitor.Pull_poll_external.isEmpty()) {
                     String toPoll = versionMonitor.Pull_poll_external.poll();
@@ -400,40 +403,48 @@ public class IndexServer extends Thread {
 
         public void broadcast_INVALIDATE(final String filename, final int TTL) {
 
-            new Thread(
-                    new Runnable() {
+            new INVALIDATOR(filename, TTL).start();
+        }
 
-                        @Override
-                        public void run() {
+        class INVALIDATOR extends Thread {
 
-                            //# broad cast to all network
-                            P2PProtocol protocol = new P2PProtocol();
-                            //#-1
-                            //generate Query Msg for the use of TTL
-                            P2PProtocol.QueryMessage initQueryMsg = protocol.new QueryMessage(host.getPeerID(), 0, TTL);
-                            initQueryMsg.setFilename(filename);
-                            //generate output MSG
-                            P2PProtocol.Message initINVALIDATEMsgOut = protocol.new Message(initQueryMsg);
-                            // Make sure it is a INVALIDATE
-                            initINVALIDATEMsgOut.setCmd(P2PProtocol.Command.INVALIDATE);
-                            //get FileBusinessCard
-                            FileBusinessCard newCard = versionMonitor.getACard(filename, versionMonitor.Push_file_map);
-                            initINVALIDATEMsgOut.setFileBusinessCard(newCard);
-                            //#-2
-                            //send out to neighbours
-                            for (PeerAddress n : neighbors) {
-                                try {
-                                    Socket client = new Socket(n.getPeerHost(), n.getIndexServerPort());
-                                    protocol.preparedOutput(client.getOutputStream(), initINVALIDATEMsgOut);
-                                    client.shutdownOutput();
-                                } catch (UnknownHostException ex) {
-                                    Logger.getLogger(IndexServer.class.getName()).log(Level.SEVERE, null, ex);
-                                } catch (IOException ex) {
-                                    Logger.getLogger(IndexServer.class.getName()).log(Level.SEVERE, null, ex);
-                                }
-                            }
-                        }
-                    }).start();
+            String filename;
+            int TTL;
+
+            public INVALIDATOR(String filename, int TTL) {
+                this.filename = filename;
+                this.TTL = TTL;
+            }
+
+            @Override
+            public void run() {
+                //# broad cast to all network
+                P2PProtocol protocol = new P2PProtocol();
+                //#-1
+                //generate Query Msg for the use of TTL
+                P2PProtocol.QueryMessage initQueryMsg = protocol.new QueryMessage(host.getPeerID(), 0, TTL);
+                initQueryMsg.setFilename(filename);
+                //generate output MSG
+                P2PProtocol.Message initINVALIDATEMsgOut = protocol.new Message(initQueryMsg);
+                // Make sure it is a INVALIDATE
+                initINVALIDATEMsgOut.setCmd(P2PProtocol.Command.INVALIDATE);
+                //get FileBusinessCard
+                FileBusinessCard newCard = versionMonitor.getACard(filename, versionMonitor.Push_file_map);
+                initINVALIDATEMsgOut.setFileBusinessCard(newCard);
+                //#-2
+                //send out to neighbours
+                for (PeerAddress n : neighbors) {
+                    try {
+                        Socket client = new Socket(n.getPeerHost(), n.getIndexServerPort());
+                        protocol.preparedOutput(client.getOutputStream(), initINVALIDATEMsgOut);
+                        client.shutdownOutput();
+                    } catch (UnknownHostException ex) {
+                        Logger.getLogger(IndexServer.class.getName()).log(Level.SEVERE, null, ex);
+                    } catch (IOException ex) {
+                        Logger.getLogger(IndexServer.class.getName()).log(Level.SEVERE, null, ex);
+                    }
+                }
+            }
         }
 
         public void poll_CARD_update(final String filename) {
