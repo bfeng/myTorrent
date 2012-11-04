@@ -402,8 +402,8 @@ public class IndexServer extends Thread {
         }
 
         public void broadcast_INVALIDATE(final String filename, final int TTL) {
-
-            new INVALIDATOR(filename, TTL).start();
+            INVALIDATOR worker = new INVALIDATOR(filename, TTL);
+            worker.start();
         }
 
         class INVALIDATOR extends Thread {
