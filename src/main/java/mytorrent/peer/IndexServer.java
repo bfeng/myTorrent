@@ -495,7 +495,7 @@ public class IndexServer extends Thread {
                                     if(filenameCard.get_state()!= FileBusinessCard.State.TTR_EXPIRED){
                                         System.out.println("TTR_EXPIRED!");
                                     }
-                                    filenameCard.setTTR(0);
+                                    filenameCard.setTTRvalue(0);
                                     filenameCard.set_state(FileBusinessCard.State.VALID);
                                 }
 
