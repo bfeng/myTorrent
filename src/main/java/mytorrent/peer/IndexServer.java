@@ -382,17 +382,22 @@ public class IndexServer extends Thread {
         @Override
         public void run() {
             while (enable) {
-                if (!versionMonitor.Push_broadcast_external.isEmpty()) {
-                    String toBroadcast = versionMonitor.Push_broadcast_external.poll();
-                    //to broadcast push invalidate to neighbors
-                    System.out.println(toBroadcast + " need to broadcast !");
-                    broadcast_INVALIDATE(toBroadcast, 10);
+                try {
+                    if (!versionMonitor.Push_broadcast_external.isEmpty()) {
+                        String toBroadcast = versionMonitor.Push_broadcast_external.poll();
+                        //to broadcast push invalidate to neighbors
+                        System.out.println(toBroadcast + " need to broadcast !");
+                        broadcast_INVALIDATE(toBroadcast, 10);
 
-                }
-                if (!versionMonitor.Pull_poll_external.isEmpty()) {
-                    String toPoll = versionMonitor.Pull_poll_external.poll();
-                    poll_CARD_update(toPoll);
-                    System.out.println("Polling " + toPoll);
+                    }
+                    if (!versionMonitor.Pull_poll_external.isEmpty()) {
+                        String toPoll = versionMonitor.Pull_poll_external.poll();
+                        poll_CARD_update(toPoll);
+                        System.out.println("Polling " + toPoll);
+                    }
+                    Thread.sleep(1000);
+                } catch (InterruptedException ex) {
+                    Logger.getLogger(IndexServer.class.getName()).log(Level.SEVERE, null, ex);
                 }
             }
         }
@@ -484,6 +489,7 @@ public class IndexServer extends Thread {
                                 if (returnCard.get_versionNumber() > filenameCard.get_versionNumber()) {
                                     if (filenameCard.get_state() == FileBusinessCard.State.VALID || filenameCard.get_state() == FileBusinessCard.State.TTR_EXPIRED) {
                                         filenameCard.set_state(FileBusinessCard.State.INVALID);
+                                        System.out.println(filenameCard.get_filename()+" is invalidated ! (PULL)");
                                     }
                                 }
 

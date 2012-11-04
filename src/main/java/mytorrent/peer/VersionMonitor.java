@@ -268,7 +268,7 @@ public class VersionMonitor extends Thread {
                 temp.set_state(FileBusinessCard.State.INVALID);
             }
             p2p_file_map.replace(filename, temp);
-            System.out.println(filename + "is invalidated !");
+            System.out.println(filename + " is invalidated !");
         }
     }
 
@@ -374,6 +374,7 @@ public class VersionMonitor extends Thread {
                                     //TTL expired AND state is VALID, set TTR_expire, send a job to external deque
                                     theCard.set_state(FileBusinessCard.State.TTR_EXPIRED);
                                     Pull_poll_external.offer(afile);
+                                    System.out.println(theCard.get_filename()+" is TTR expired !");
                                 }
                             }
                         }
