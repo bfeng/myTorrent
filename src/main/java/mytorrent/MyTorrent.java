@@ -145,9 +145,9 @@ public class MyTorrent {
                 String thefile = userinput[1];
                 if (mainPeer.indexServer.versionMonitor.p2p_file_map.containsKey(thefile)) {
                     System.out.println("You are not original copy owner of the file. You have disabled polling!");
-                    mainPeer.indexServer.versionMonitor.setPull(thefile, mainPeer.indexServer.versionMonitor.p2p_file_map);
+                    mainPeer.indexServer.versionMonitor.setPullStop(thefile, mainPeer.indexServer.versionMonitor.p2p_file_map);
                 } else if (mainPeer.indexServer.versionMonitor.Push_file_map.containsKey(thefile)) {
-                    mainPeer.indexServer.versionMonitor.setPull(thefile, mainPeer.indexServer.versionMonitor.Push_file_map);
+                    mainPeer.indexServer.versionMonitor.setPullStop(thefile, mainPeer.indexServer.versionMonitor.Push_file_map);
                 } else {
                     System.out.println("Wrong filename");
                 }
