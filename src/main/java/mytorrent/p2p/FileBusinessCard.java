@@ -147,4 +147,8 @@ public class FileBusinessCard {
     public void setTTRvalue(int ttr) {
         this.TTR = ttr;
     }
+    
+    public int get_TTRthreshold() {
+        return this.TTR_threshold;
+    }
 }

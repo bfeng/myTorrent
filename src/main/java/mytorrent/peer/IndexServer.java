@@ -489,7 +489,8 @@ public class IndexServer extends Thread {
                                 if (returnCard.get_versionNumber() > filenameCard.get_versionNumber()) {
                                     if (filenameCard.get_state() == FileBusinessCard.State.VALID || filenameCard.get_state() == FileBusinessCard.State.TTR_EXPIRED) {
                                         filenameCard.set_state(FileBusinessCard.State.INVALID);
-                                        System.out.println(filenameCard.get_filename()+" is invalidated !");
+                                        System.out.println(filenameCard.get_filename()+" is invalidated ! Stop polling.");
+                                        filenameCard.set_approach(FileBusinessCard.Approach.NULL);
                                     }
                                 } else {
                                     if(filenameCard.get_state()!= FileBusinessCard.State.TTR_EXPIRED){
@@ -501,6 +502,11 @@ public class IndexServer extends Thread {
                                 if(returnCard.get_approach()==FileBusinessCard.Approach.NULL && filenameCard.get_approach()==FileBusinessCard.Approach.PULL){
                                     filenameCard.set_approach(FileBusinessCard.Approach.NULL);
                                 }
+                                if(returnCard.get_TTRthreshold() != filenameCard.get_TTRthreshold()){
+                                    filenameCard.setTTR(returnCard.get_TTRthreshold());
+                                }
+                                
+                                versionMonitor.p2p_file_map.replace(filename, filenameCard);
 
 
                             } catch (UnknownHostException ex) {
