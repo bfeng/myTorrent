@@ -211,7 +211,6 @@ public class VersionMonitor extends Thread {
             //setup approach for this copy
             FileBusinessCard temp = the_map.get(filename);
             temp.set_approach(FileBusinessCard.Approach.NULL);
-            temp.set_state(FileBusinessCard.State.NULL);
 
             the_map.replace(filename, temp);
         }
