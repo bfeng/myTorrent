@@ -489,13 +489,14 @@ public class IndexServer extends Thread {
                                 if (returnCard.get_versionNumber() > filenameCard.get_versionNumber()) {
                                     if (filenameCard.get_state() == FileBusinessCard.State.VALID || filenameCard.get_state() == FileBusinessCard.State.TTR_EXPIRED) {
                                         filenameCard.set_state(FileBusinessCard.State.INVALID);
-                                        System.out.println(filenameCard.get_filename()+" is invalidated ! (PULL)");
+                                        System.out.println(filenameCard.get_filename()+" is invalidated !");
                                     }
                                 } else {
                                     if(filenameCard.get_state()!= FileBusinessCard.State.TTR_EXPIRED){
                                         System.out.println("TTR_EXPIRED!");
                                     }
                                     filenameCard.setTTR(0);
+                                    filenameCard.set_state(FileBusinessCard.State.VALID);
                                 }
 
 
