@@ -73,6 +73,7 @@ public class VersionMonitor extends Thread {
         //static values
         this.host = host_me;
         this.Push_broadcast_external = new ArrayDeque<String>();
+        this.Pull_poll_external = new ArrayDeque<String>();
         this.Push_file_map = new ConcurrentHashMap<String, FileBusinessCard>();
         this.p2p_file_map = new ConcurrentHashMap<String, FileBusinessCard>();
         

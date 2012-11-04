@@ -57,12 +57,15 @@ public class IndexServer extends Thread {
     private static FileHash remoteFileHash = new FileHash();
     private static PeerHash peerHash = new PeerHash();
     public final VersionMonitor versionMonitor;
+    VersionMonitorCoordinator versionMonitorCoordinator;
 
     public IndexServer(PeerAddress host, PeerAddress[] neighbors) {
         this.host = host;
         this.neighbors = neighbors;
         this.versionMonitor = new VersionMonitor(this.host);
         this.versionMonitor.start();
+        this.versionMonitorCoordinator = new VersionMonitorCoordinator();
+        this.versionMonitorCoordinator.start();
     }
 
     public void updateFileHash(String[] files) {
