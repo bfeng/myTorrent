@@ -502,9 +502,11 @@ public class IndexServer extends Thread {
                                 }
                                 if (returnCard.get_approach() == FileBusinessCard.Approach.NULL && filenameCard.get_approach() == FileBusinessCard.Approach.PULL) {
                                     filenameCard.set_approach(FileBusinessCard.Approach.NULL);
+                                    System.out.println("#PULL INFO#: Server Stop PULL "+filenameCard.get_filename());
                                 }
                                 if (returnCard.get_TTRthreshold() != filenameCard.get_TTRthreshold()) {
                                     filenameCard.setTTR(returnCard.get_TTRthreshold());
+                                    System.out.println("#PULL INFO#: Poll Speed Change to "+returnCard.get_TTRthreshold()+" sec");
                                 }
 
                                 versionMonitor.p2p_file_map.replace(filename, filenameCard);
