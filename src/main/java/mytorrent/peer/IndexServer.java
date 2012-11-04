@@ -274,15 +274,16 @@ public class IndexServer extends Thread {
                         }
                     }
                 } else if (msgIn.getCmd() == Command.INVALIDATE) {
-                    //#-1 check local file for invalidate
-                    FileBusinessCard newCard = msgIn.getFileBusinessCard();
-                    String filename = newCard.get_filename();
-                    if (versionMonitor.p2p_file_map.containsKey(filename) && newCard.get_versionNumber() > versionMonitor.p2p_file_map.get(filename).get_versionNumber()) {
-                        versionMonitor.justInvalidate(filename);
-                    }
-                    //#-2 propagate invalidate if necessary
                     QueryMessage qm = msgIn.getQueryMessage();
                     if (host.getPeerID() != qm.getPeerID() && !qm.searchPath(host.getPeerID())) {
+                        //#-1 check local file for invalidate
+                        FileBusinessCard newCard = msgIn.getFileBusinessCard();
+                        String filename = newCard.get_filename();
+                        if (versionMonitor.p2p_file_map.containsKey(filename) && newCard.get_versionNumber() > versionMonitor.p2p_file_map.get(filename).get_versionNumber()) {
+                            versionMonitor.justInvalidate(filename);
+                        }
+                        //#-2 propagate invalidate if necessary
+
                         if (qm.isLive()) {
                             //Decrement TTL
                             qm.decrementTTL();
@@ -386,7 +387,7 @@ public class IndexServer extends Thread {
                     if (!versionMonitor.Push_broadcast_external.isEmpty()) {
                         String toBroadcast = versionMonitor.Push_broadcast_external.poll();
                         //to broadcast push invalidate to neighbors
-                        System.out.println("#PUSH INFO#:"+ toBroadcast + " need to broadcast !");
+                        System.out.println("#PUSH INFO#:" + toBroadcast + " need to broadcast !");
                         broadcast_INVALIDATE(toBroadcast, 10);
 
                     }
@@ -489,23 +490,23 @@ public class IndexServer extends Thread {
                                 if (returnCard.get_versionNumber() > filenameCard.get_versionNumber()) {
                                     if (filenameCard.get_state() == FileBusinessCard.State.VALID || filenameCard.get_state() == FileBusinessCard.State.TTR_EXPIRED) {
                                         filenameCard.set_state(FileBusinessCard.State.INVALID);
-                                        System.out.println(filenameCard.get_filename()+" is invalidated ! Stop polling.");
+                                        System.out.println(filenameCard.get_filename() + " is invalidated ! Stop polling.");
                                         filenameCard.set_approach(FileBusinessCard.Approach.NULL);
                                     }
                                 } else {
-                                    if(filenameCard.get_state()!= FileBusinessCard.State.TTR_EXPIRED){
+                                    if (filenameCard.get_state() != FileBusinessCard.State.TTR_EXPIRED) {
                                         System.out.println("TTR_EXPIRED!");
                                     }
                                     filenameCard.setTTRvalue(0);
                                     filenameCard.set_state(FileBusinessCard.State.VALID);
                                 }
-                                if(returnCard.get_approach()==FileBusinessCard.Approach.NULL && filenameCard.get_approach()==FileBusinessCard.Approach.PULL){
+                                if (returnCard.get_approach() == FileBusinessCard.Approach.NULL && filenameCard.get_approach() == FileBusinessCard.Approach.PULL) {
                                     filenameCard.set_approach(FileBusinessCard.Approach.NULL);
                                 }
-                                if(returnCard.get_TTRthreshold() != filenameCard.get_TTRthreshold()){
+                                if (returnCard.get_TTRthreshold() != filenameCard.get_TTRthreshold()) {
                                     filenameCard.setTTR(returnCard.get_TTRthreshold());
                                 }
-                                
+
                                 versionMonitor.p2p_file_map.replace(filename, filenameCard);
 
 
